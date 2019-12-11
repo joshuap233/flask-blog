@@ -2,6 +2,7 @@
   <dictionary name="pjs">
     <words>
       <w>sqlalchemy</w>
+      <w>tablename</w>
     </words>
   </dictionary>
 </component>
