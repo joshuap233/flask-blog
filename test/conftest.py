@@ -1,7 +1,9 @@
+import os
+
 import pytest
+from sqlalchemy import event
 
 from .. import create_app, db as _db
-from sqlalchemy import event
 
 
 @pytest.fixture(scope="session")
@@ -51,7 +53,10 @@ def session(app, db, request):
         yield sess
 
         # Cleanup
+        os.system(f'rm -rf {app.config["UPLOAD_FOLDER"]}*')
         sess.remove()
         # This instruction rollback any commit that were executed in the tests.
         txn.rollback()
         conn.close()
+
+

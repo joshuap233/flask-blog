@@ -1,4 +1,6 @@
-from . import db
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from . import db, login_manager
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -34,7 +36,20 @@ class Tag(db.Model):
 
 class User(db.Model):
     id = db.Column(db.Integer, unique=True, primary_key=True)
+    nickname = db.Column(db.String(128))
+    username = db.Column(db.String(128))
+    email = db.Column(db.String(128))
+    phone = db.Column(db.String(32))
+    password_hash = db.Column(db.String(128))
     user_about = db.Column(db.Text)
 
-    def __init__(self, about):
-        self.user_about = about
+    def generate_password_hash(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+
+@login_manager.user_loader
+def load_user(uid):
+    return User.get(uid)

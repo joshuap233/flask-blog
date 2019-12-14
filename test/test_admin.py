@@ -29,7 +29,7 @@ def test_admin_posts_put(client):
 
 
 def test_admin_posts_get(client):
-    res = client.get(url_for('api.admin_posts'))
+    res = client.get(url_for('api.admin_posts'), )
     assert b'success' in res.data
 
 
@@ -42,3 +42,12 @@ def test_admin_image_post(client):
         content_type='multipart/form-data',
         data=data)
     assert b'success' in res.data
+
+
+def test_admin_get(client):
+    res = client.get(url_for('api.admin_images', timeStamp=time, filename='images.png'))
+    assert res.status_code == 200
+
+
+def test_user(client):
+    pass

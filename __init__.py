@@ -1,14 +1,17 @@
 import pymysql
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+
 from .config import config
 
 pymysql.install_as_MySQLdb()
 
 db = SQLAlchemy()
 migrate = Migrate()
+login_manager = LoginManager()
 
 
 def create_app(config_name):
@@ -22,4 +25,8 @@ def create_app(config_name):
     from .web.blueprint import main as main_blueprint
     app.register_blueprint(main_blueprint)
     migrate.init_app(app, db)
+
+    login_manager.init_app(app)
     return app
+
+

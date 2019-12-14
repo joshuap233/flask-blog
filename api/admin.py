@@ -1,12 +1,14 @@
 import os
 
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_from_directory
+from flask_login import login_required, logout_user, login_user
 
 from .blueprint import api
-from ..database import Post, Tag, db
+from ..database import Post, Tag, db, User
 
 
 @api.route('/admin/posts/<int:timesStamp>')
+@login_required
 def admin_write(timesStamp):
     post = Post.query.filter_by(post_date=timesStamp).first()
     return jsonify({
@@ -16,8 +18,10 @@ def admin_write(timesStamp):
     })
 
 
-@api.route('/admin/posts/images/', methods=['POST', 'GET'])
-def admin_images():
+@api.route('/admin/post/', methods=['POST'])
+@api.route('/admin/posts/images/<string:timeStamp>/<string:filename>', methods=['GET'])
+@login_required
+def admin_images(timeStamp=None, filename=None):
     if request.method == 'POST':
         images = request.files.getlist('images')
         date = request.form.get('timeStamp')
@@ -33,11 +37,13 @@ def admin_images():
         else:
             return jsonify({
                 'status': 'failed',
-                'msg': '图片为空'
+                'msg': 'image empty'
             })
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'] + timeStamp, filename)
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
+@login_required
 def admin_posts():
     if request.method == 'POST':
         # 添加新文章
@@ -57,7 +63,7 @@ def admin_posts():
             if not title or Post.query.filter_by(post_title=title).first():
                 return jsonify({
                     "status": "failed",
-                    "msg": "标题不能重复或为空"
+                    "msg": "title empty or repetitive"
                 })
         except AttributeError as e:
             return jsonify({
@@ -73,7 +79,7 @@ def admin_posts():
         if not post:
             return jsonify({
                 'state': 'failed',
-                "msg": '文章不存在'
+                "msg": 'post not found'
             })
         post.post_title = title
         post.post_contents = contents
@@ -84,9 +90,60 @@ def admin_posts():
         db.session.commit()
         return jsonify({
             "state": "success",
-            "msg": "add posts success"
+            "msg": "add posts"
         })
     return jsonify({
         "state": "success",
-        "msg": 'get success'
+        "msg": 'get post'
+    })
+
+
+@api.route('/admin/auth/register', methods=['POST'])
+def auth():
+    data = request.get_json()
+    username = data.get('username')
+    nickname = data.get('nickname')
+    email = data.get('email')
+    phone = str(data.get('phone'))
+    password = data.get('password')
+    if username and password and nickname:
+        user = User(username=username, nickname=nickname, phone=phone, email=email)
+        user.generate_password_hash(password)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({
+            'state': 'success',
+            'msg': 'sign in'
+        })
+    return jsonify({
+        'state': 'failed',
+        'msg': 'empty password or username'
+    })
+
+
+@api.route('/admin/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    user = User.query.filter_by(username=username).first()
+    if user and user.check_password(password):
+        login_user(user)
+        return jsonify({
+            'status': 'success',
+            'msg': 'login'
+        })
+    return jsonify({
+        'status': 'failed',
+        'msg': 'login'
+    })
+
+
+@api.route('/admin/auth/logout')
+@login_required
+def logout():
+    logout_user()
+    return jsonify({
+        'status': 'success',
+        'msg': 'logout'
     })

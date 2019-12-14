@@ -7,4 +7,3 @@ from .blueprint import main
 @main.route('/<path:path>')
 def main(path):
     return render_template('build/index.html')
-
