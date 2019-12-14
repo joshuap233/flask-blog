@@ -21,17 +21,24 @@ def admin_images():
     if request.method == 'POST':
         images = request.files.getlist('images')
         date = request.form.get('timeStamp')
-        path = os.path.join(current_app.config['UPLOAD_FOLDER'], date)
-        os.mkdir(path) if not os.path.exists(path) else None
-        [image.save(os.path.join(path, image.filename)) for image in images]
-        return jsonify({
-            'status': 'success',
-            'msg': 'image upload'
-        })
+
+        if images:
+            path = os.path.join(current_app.config['UPLOAD_FOLDER'], date)
+            os.mkdir(path) if not os.path.exists(path) else None
+            [image.save(os.path.join(path, image.filename)) for image in images]
+            return jsonify({
+                'status': 'success',
+                'msg': 'image upload'
+            })
+        else:
+            return jsonify({
+                'status': 'failed',
+                'msg': '图片为空'
+            })
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
-def admin_post():
+def admin_posts():
     if request.method == 'POST':
         # 添加新文章
         data = request.get_json()
@@ -65,7 +72,8 @@ def admin_post():
         post = Post.query.filter_by(post_date=date).first()
         if not post:
             return jsonify({
-                'state': 'failed'
+                'state': 'failed',
+                "msg": '文章不存在'
             })
         post.post_title = title
         post.post_contents = contents
