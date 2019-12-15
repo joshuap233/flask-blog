@@ -27,6 +27,10 @@ class Post(db.Model):
         self.post_change_date = date,
         self.post_publish = publish
 
+    def auto_commit(self):
+        db.session.add(self)
+        db.session.commit()
+
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +38,10 @@ class Tag(db.Model):
 
     def __init__(self, tag):
         self.tag_name = tag
+
+    def auto_commit(self):
+        db.session.add(self)
+        db.session.commit()
 
 
 class User(db.Model):
@@ -65,3 +73,7 @@ class User(db.Model):
         if data.get('id') != self.id:
             return False
         return True
+
+    def auto_commit(self):
+        db.session.add(self)
+        db.session.commit()

@@ -4,7 +4,16 @@ from functools import wraps
 from flask import jsonify, request, current_app, send_from_directory
 
 from .blueprint import api
-from ..database import Post, Tag, db, User
+from ..database import Post, Tag, User
+
+
+def generate_res(state, msg, **kwargs):
+    status = {
+        'state': state,
+        'msg': msg
+    }
+    status.update(kwargs)
+    return jsonify(status)
 
 
 def required_login(func):
@@ -16,10 +25,8 @@ def required_login(func):
         user = User.query.filter_by(id=uid).first()
         if user and user.is_active and user.confirm_token(token):
             return func(*args, **kwargs)
-        return jsonify({
-            'state': 'failed',
-            'msg': 'login check'
-        })
+        return generate_res('failed', 'check login')
+
     return check_login
 
 
@@ -27,11 +34,7 @@ def required_login(func):
 @required_login
 def admin_write(timesStamp):
     post = Post.query.filter_by(post_date=timesStamp).first()
-    return jsonify({
-        "contents": post.post_contents,
-        "title": post.post_title,
-        "tags": post.tags
-    })
+    return generate_res('success', 'get post', contents=post.post_contents, title=post.post_title, tags=post.tags)
 
 
 @api.route('/admin/post/', methods=['POST'])
@@ -46,15 +49,9 @@ def admin_images(timeStamp=None, filename=None):
             path = os.path.join(current_app.config['UPLOAD_FOLDER'], date)
             os.mkdir(path) if not os.path.exists(path) else None
             [image.save(os.path.join(path, image.filename)) for image in images]
-            return jsonify({
-                'status': 'success',
-                'msg': 'image upload'
-            })
+            return generate_res('success', 'image upload')
         else:
-            return jsonify({
-                'status': 'failed',
-                'msg': 'image empty'
-            })
+            return generate_res('failed', 'image empty')
     return send_from_directory(current_app.config['UPLOAD_FOLDER'] + timeStamp, filename)
 
 
@@ -66,26 +63,16 @@ def admin_posts():
         data = request.get_json()
         date = data.get('timeStamp')
         post = Post(date, '', date)
-        db.session.add(post)
-        db.session.commit()
-        return jsonify({
-            'status': 'success',
-            'mgs': 'new post'
-        })
+        post.auto_commit()
+        return generate_res('success', 'new post')
     elif request.method == 'PUT':
         try:
             data = request.get_json()
             title = data.get('title')
             if not title or Post.query.filter_by(post_title=title).first():
-                return jsonify({
-                    "status": "failed",
-                    "msg": "title empty or repetitive"
-                })
+                return generate_res('failed', 'title empty or repetitive')
         except AttributeError as e:
-            return jsonify({
-                "status": "failed",
-                "msg": e
-            })
+            return generate_res('failed', e)
 
         date = data.get('timeStamp')
         contents = data.get('contents')
@@ -93,25 +80,15 @@ def admin_posts():
         publish = data.get('publish') == 'true'
         post = Post.query.filter_by(post_date=date).first()
         if not post:
-            return jsonify({
-                'state': 'failed',
-                "msg": 'post not found'
-            })
+            return generate_res('failed', 'post not found')
         post.post_title = title
         post.post_contents = contents
         post.post_date = date
         post.post_publish = publish
         [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
-        db.session.add(post)
-        db.session.commit()
-        return jsonify({
-            "state": "success",
-            "msg": "add posts"
-        })
-    return jsonify({
-        "state": "success",
-        "msg": 'get post'
-    })
+        post.auto_commit()
+        return generate_res('success', 'add posts')
+    return generate_res('success', 'get post')
 
 
 @api.route('/admin/auth/register/', methods=['POST'])
@@ -125,16 +102,9 @@ def admin_register():
     if username and password and nickname:
         user = User(username=username, nickname=nickname, phone=phone, email=email)
         user.generate_password_hash(password)
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({
-            'state': 'success',
-            'msg': 'sign in'
-        })
-    return jsonify({
-        'state': 'failed',
-        'msg': 'empty password or username'
-    })
+        user.auto_commit()
+        return generate_res('success', 'sign in')
+    return generate_res('failed', 'empty password or username')
 
 
 @api.route('/admin/auth/login/', methods=['POST'])
@@ -145,19 +115,9 @@ def admin_login():
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
         user.is_active = True
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({
-            'status': 'success',
-            'msg': 'login',
-            'id': user.id,
-            'token': user.generate_token(),
-            'expiration': 3600
-        })
-    return jsonify({
-        'status': 'failed',
-        'msg': 'login'
-    })
+        user.auto_commit()
+        return generate_res('success', 'login', id=user.id, token=user.generate_token(), expiration=3600)
+    return generate_res('failed', 'login')
 
 
 @api.route('/admin/auth/logout')
@@ -166,9 +126,5 @@ def admin_logout():
     uid = request.get_json().get('id')
     user = User.query.filter_by(id=uid)
     user.is_active = False
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({
-        'status': 'success',
-        'msg': 'logout'
-    })
+    user.auto_commit()
+    return generate_res('success', 'logout')
