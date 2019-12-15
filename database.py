@@ -19,19 +19,24 @@ class Base(object):
 
 class Post(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
-    post_title = db.Column(db.String(128), unique=True, index=True)
-    post_contents = db.Column(db.Text, nullable=True)
-    post_date = db.Column(db.BigInteger, index=True)
-    post_change_date = db.Column(db.BigInteger, index=True)
-    post_publish = db.Column(db.Boolean, nullable=False, default=False)
+    title = db.Column(db.String(128), unique=True, index=True)
+    contents = db.Column(db.Text, nullable=True)
+    date = db.Column(db.BigInteger, index=True)
+    change_date = db.Column(db.BigInteger, index=True)
+    publish = db.Column(db.Boolean, nullable=False, default=False)
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
 
     def __init__(self, title, contents, date, publish=False):
-        self.post_title = title,
-        self.post_contents = contents,
-        self.post_date = date,
-        self.post_change_date = date,
-        self.post_publish = publish
+        self.title = title,
+        self.contents = contents,
+        self.date = date,
+        self.change_date = date,
+        self.publish = publish
+
+    def set_attrs(self, attrs: dict):
+        for key, value in attrs.items():
+            if hasattr(self, key) and key != 'id' and key != 'tags':
+                setattr(self, key, value)
 
 
 class Tag(db.Model, Base):
@@ -71,3 +76,8 @@ class User(db.Model, Base):
         if data.get('id') != self.id:
             return False
         return True
+
+    def set_attrs(self, attrs: dict):
+        for key, value in attrs.items():
+            if hasattr(self, key) and key != 'id':
+                setattr(self, key, value)

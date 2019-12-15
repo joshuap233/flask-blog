@@ -10,8 +10,8 @@ from ..utils import required_login, generate_res, get_attr
 @api.route('/admin/posts/<int:timesStamp>')
 @required_login
 def admin_write(timesStamp):
-    post = Post.query.filter_by(post_date=timesStamp).first()
-    return generate_res('success', 'get post', contents=post.post_contents, title=post.post_title, tags=post.tags)
+    post = Post.query.filter_by(date=timesStamp).first()
+    return generate_res('success', 'get post', contents=post.contents, title=post.title, tags=post.tags)
 
 
 @api.route('/admin/post/', methods=['POST'])
@@ -45,18 +45,15 @@ def admin_posts():
         try:
             data = request.get_json()
             title = data.get('title')
-            if not title or Post.query.filter_by(post_title=title).first():
+            if not title or Post.query.filter_by(title=title).first():
                 return generate_res('failed', 'title empty or repetitive')
         except AttributeError as e:
             return generate_res('failed', e)
-        date, contents, tags, publish = get_attr(['timeStamp', 'contents', 'tags', 'publish'], data)
-        post = Post.query.filter_by(post_date=date).first()
+        date, tags = get_attr(['timeStamp', 'tags'], data)
+        post = Post.query.filter_by(date=date).first()
         if not post:
             return generate_res('failed', 'post not found')
-        post.post_title = title
-        post.post_contents = contents
-        post.post_date = date
-        post.post_publish = publish
+        post.set_attrs(data)
         [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
         post.auto_commit()
         return generate_res('success', 'add posts')
@@ -66,10 +63,12 @@ def admin_posts():
 @api.route('/admin/auth/register/', methods=['POST'])
 def admin_register():
     data = request.get_json()
-    username, nickname, email, phone, password = get_attr(['username', 'nickname', 'email', 'phone', 'password'], data)
-    phone = str(phone)
+    if data.get('phone'):
+        data['phone'] = str(data['phone'])
+    username, nickname, password = get_attr(['username', 'nickname', 'password'], data)
     if username and password and nickname:
-        user = User(username=username, nickname=nickname, phone=phone, email=email)
+        user = User()
+        user.set_attrs(data)
         user.generate_password_hash(password)
         user.auto_commit()
         return generate_res('success', 'sign in')
