@@ -1,14 +1,30 @@
 import os
+from functools import wraps
 
 from flask import jsonify, request, current_app, send_from_directory
-from flask_login import login_required, logout_user, login_user
 
 from .blueprint import api
 from ..database import Post, Tag, db, User
 
 
+def required_login(func):
+    @wraps(func)
+    def check_login(*args, **kwargs):
+        data = request.headers
+        uid = data.get('identify')
+        token = data.get('Authorization')
+        user = User.query.filter_by(id=uid).first()
+        if user and user.is_active and user.confirm_token(token):
+            return func(*args, **kwargs)
+        return jsonify({
+            'state': 'failed',
+            'msg': 'login check'
+        })
+    return check_login
+
+
 @api.route('/admin/posts/<int:timesStamp>')
-@login_required
+@required_login
 def admin_write(timesStamp):
     post = Post.query.filter_by(post_date=timesStamp).first()
     return jsonify({
@@ -20,7 +36,7 @@ def admin_write(timesStamp):
 
 @api.route('/admin/post/', methods=['POST'])
 @api.route('/admin/posts/images/<string:timeStamp>/<string:filename>', methods=['GET'])
-@login_required
+@required_login
 def admin_images(timeStamp=None, filename=None):
     if request.method == 'POST':
         images = request.files.getlist('images')
@@ -43,7 +59,7 @@ def admin_images(timeStamp=None, filename=None):
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
-@login_required
+@required_login
 def admin_posts():
     if request.method == 'POST':
         # 添加新文章
@@ -98,8 +114,8 @@ def admin_posts():
     })
 
 
-@api.route('/admin/auth/register', methods=['POST'])
-def auth():
+@api.route('/admin/auth/register/', methods=['POST'])
+def admin_register():
     data = request.get_json()
     username = data.get('username')
     nickname = data.get('nickname')
@@ -121,17 +137,22 @@ def auth():
     })
 
 
-@api.route('/admin/auth/login', methods=['POST'])
-def login():
+@api.route('/admin/auth/login/', methods=['POST'])
+def admin_login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
-        login_user(user)
+        user.is_active = True
+        db.session.add(user)
+        db.session.commit()
         return jsonify({
             'status': 'success',
-            'msg': 'login'
+            'msg': 'login',
+            'id': user.id,
+            'token': user.generate_token(),
+            'expiration': 3600
         })
     return jsonify({
         'status': 'failed',
@@ -140,9 +161,13 @@ def login():
 
 
 @api.route('/admin/auth/logout')
-@login_required
-def logout():
-    logout_user()
+@required_login
+def admin_logout():
+    uid = request.get_json().get('id')
+    user = User.query.filter_by(id=uid)
+    user.is_active = False
+    db.session.add(user)
+    db.session.commit()
     return jsonify({
         'status': 'success',
         'msg': 'logout'

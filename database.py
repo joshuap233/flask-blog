@@ -1,6 +1,8 @@
+from flask import current_app
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import db, login_manager
+from . import db
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -42,6 +44,7 @@ class User(db.Model):
     phone = db.Column(db.String(32))
     password_hash = db.Column(db.String(128))
     user_about = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=False)
 
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
@@ -49,7 +52,16 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def generate_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'id': self.id}).decode('utf-8')
 
-@login_manager.user_loader
-def load_user(uid):
-    return User.get(uid)
+    def confirm_token(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        if data.get('id') != self.id:
+            return False
+        return True
