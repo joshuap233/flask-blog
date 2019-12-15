@@ -1,33 +1,10 @@
 import os
-from functools import wraps
 
-from flask import jsonify, request, current_app, send_from_directory
+from flask import request, current_app, send_from_directory
 
 from .blueprint import api
 from ..database import Post, Tag, User
-
-
-def generate_res(state, msg, **kwargs):
-    status = {
-        'state': state,
-        'msg': msg
-    }
-    status.update(kwargs)
-    return jsonify(status)
-
-
-def required_login(func):
-    @wraps(func)
-    def check_login(*args, **kwargs):
-        data = request.headers
-        uid = data.get('identify')
-        token = data.get('Authorization')
-        user = User.query.filter_by(id=uid).first()
-        if user and user.is_active and user.confirm_token(token):
-            return func(*args, **kwargs)
-        return generate_res('failed', 'check login')
-
-    return check_login
+from ..utils import required_login, generate_res, get_attr
 
 
 @api.route('/admin/posts/<int:timesStamp>')
@@ -44,7 +21,6 @@ def admin_images(timeStamp=None, filename=None):
     if request.method == 'POST':
         images = request.files.getlist('images')
         date = request.form.get('timeStamp')
-
         if images:
             path = os.path.join(current_app.config['UPLOAD_FOLDER'], date)
             os.mkdir(path) if not os.path.exists(path) else None
@@ -73,11 +49,7 @@ def admin_posts():
                 return generate_res('failed', 'title empty or repetitive')
         except AttributeError as e:
             return generate_res('failed', e)
-
-        date = data.get('timeStamp')
-        contents = data.get('contents')
-        tags = data.get('tags')
-        publish = data.get('publish') == 'true'
+        date, contents, tags, publish = get_attr(['timeStamp', 'contents', 'tags', 'publish'], data)
         post = Post.query.filter_by(post_date=date).first()
         if not post:
             return generate_res('failed', 'post not found')
@@ -94,11 +66,8 @@ def admin_posts():
 @api.route('/admin/auth/register/', methods=['POST'])
 def admin_register():
     data = request.get_json()
-    username = data.get('username')
-    nickname = data.get('nickname')
-    email = data.get('email')
-    phone = str(data.get('phone'))
-    password = data.get('password')
+    username, nickname, email, phone, password = get_attr(['username', 'nickname', 'email', 'phone', 'password'], data)
+    phone = str(phone)
     if username and password and nickname:
         user = User(username=username, nickname=nickname, phone=phone, email=email)
         user.generate_password_hash(password)
@@ -110,8 +79,7 @@ def admin_register():
 @api.route('/admin/auth/login/', methods=['POST'])
 def admin_login():
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    username, password = get_attr(['username', 'password'], data)
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
         user.is_active = True

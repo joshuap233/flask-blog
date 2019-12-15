@@ -11,7 +11,13 @@ tags_to_post = db.Table(
 )
 
 
-class Post(db.Model):
+class Base(object):
+    def auto_commit(self):
+        db.session.add(self)
+        db.session.commit()
+
+
+class Post(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
     post_title = db.Column(db.String(128), unique=True, index=True)
     post_contents = db.Column(db.Text, nullable=True)
@@ -27,24 +33,16 @@ class Post(db.Model):
         self.post_change_date = date,
         self.post_publish = publish
 
-    def auto_commit(self):
-        db.session.add(self)
-        db.session.commit()
 
-
-class Tag(db.Model):
+class Tag(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
     tag_name = db.Column(db.String(64), unique=True, index=True)
 
     def __init__(self, tag):
         self.tag_name = tag
 
-    def auto_commit(self):
-        db.session.add(self)
-        db.session.commit()
 
-
-class User(db.Model):
+class User(db.Model, Base):
     id = db.Column(db.Integer, unique=True, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
@@ -73,7 +71,3 @@ class User(db.Model):
         if data.get('id') != self.id:
             return False
         return True
-
-    def auto_commit(self):
-        db.session.add(self)
-        db.session.commit()

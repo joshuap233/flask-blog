@@ -87,3 +87,4 @@ def test_admin_get(client):
         'Authorization': token
     })
     assert res.status_code == 200
+
