@@ -34,10 +34,10 @@ class Post(db.Model, Base):
 
 class Tag(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
-    tag_name = db.Column(db.String(64), unique=True, index=True)
+    name = db.Column(db.String(64), unique=True, index=True)
 
     def __init__(self, tag):
-        self.tag_name = tag
+        self.name = tag
 
 
 class User(db.Model, Base):

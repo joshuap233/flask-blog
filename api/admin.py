@@ -59,7 +59,7 @@ def admin_posts():
         # TODO:优化 每次修改tag,都要删除之前的tag
         for new_tag in tags:
             post.tags.clear()
-            post.tags.append(Tag.query.filter_by(tag_name=new_tag).first() or Tag(new_tag))
+            post.tags.append(Tag.query.filter_by(name=new_tag).first() or Tag(new_tag))
         # [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
         post.auto_commit()
         return generate_res('success', 'add posts')
