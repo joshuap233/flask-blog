@@ -37,7 +37,11 @@ def admin_images():
 def admin_posts():
     if request.method == 'POST':
         # 添加新文章
-        post = Post()
+        try:
+            create_date = request.get_json().get('create_date')
+        except AttributeError:
+            return generate_res("failed", "empty create_date")
+        post = Post(create_date=create_date)
         post.auto_commit()
         return generate_res('success', 'new post', id=post.id)
     elif request.method == 'PUT':

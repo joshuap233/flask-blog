@@ -5,21 +5,24 @@ from ..database import Post
 from ..utils import generate_res
 
 
-@api.route('/archive/<page>')
+@api.route('/archive/<int:page>')
 def archive(page):
     # per_page 写入config
-    pagination = Post.query.order_by(Post.date.desc()).paginate(page=page, per_page=20, error_out=False)
+    pagination = Post.query.order_by(Post.create_date.desc()).paginate(page=page, per_page=20, error_out=False)
     posts = pagination.items
     data = []
     for post in posts:
-        timestamp = posts.date / 1000
+        timestamp = post.create_date / 1000
         year, month, date = strftime('%Y-%m-%d', localtime(timestamp)).split("-")
+        article = {"id": post.id, "title": post.title, "date": date}
+        if len(data) == 0:
+            data.append({"date": f'{year}-{month}', "articles": [article]})
+            continue
         for item in data:
-            articles = {"articles": post.id, "title": post.title, "date": date}
-            if item['date'] == f'{year}-{month}':
-                item["articles"].append(articles)
+            if item.get('date') == f'{year}-{month}':
+                item["articles"].append(article)
             else:
-                data.append({"date": f'{year}-{month}', "articles": [articles]})
+                data.append({"date": f'{year}-{month}', "articles": [article]})
     return generate_res("success", "archive", data=data)
 
 

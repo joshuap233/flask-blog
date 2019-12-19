@@ -21,7 +21,7 @@ class Post(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     contents = db.Column(db.Text, nullable=True)
-    date = db.Column(db.BigInteger, index=True)
+    create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
     publish = db.Column(db.Boolean, default=False)
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))

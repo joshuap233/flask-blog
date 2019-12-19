@@ -44,8 +44,9 @@ class Test_auth:
 @pytest.mark.repeat(4)
 class Test_posts:
     def test_admin_posts_post(self, client):
-        print(1)
-        res = client.post(url_for('api.admin_posts'), headers={
+        res = client.post(url_for('api.admin_posts'), json={
+            'create_date': timeStamp,
+        }, headers={
             'identify': uid,
             'Authorization': token
         })
@@ -56,12 +57,11 @@ class Test_posts:
         assert res.status_code == 200
 
     def test_admin_posts_put(self, client):
-        print(2)
         res = client.put(url_for('api.admin_posts'), json={
             'id': pid,
             'title': 'title'
             ,
-            'timeStamp': timeStamp,
+            'change_date': timeStamp,
             'contents': 'contests',
             'tags': ['tags2', 'tags1', 'tags3'],
             'publish': True,
