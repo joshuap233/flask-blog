@@ -41,19 +41,22 @@ def admin_posts():
         post.auto_commit()
         return generate_res('success', 'new post', id=post.id)
     elif request.method == 'PUT':
+        data = request.get_json()
         try:
-            data = request.get_json()
-            title = data.get('title')
-            if not title or Post.query.filter_by(title=title).first():
-                return generate_res('failed', 'title empty or repetitive')
-        except AttributeError as e:
-            return generate_res('failed', e)
-        pid, tags = get_attr(['id', 'tags'], data)
+            # 前端生成空标签列表
+            pid, tags = get_attr(['id', 'tags'], data)
+        except AttributeError:
+            return generate_res('failed', 'get post id adn tags failed')
         post = Post.query.filter_by(id=pid).first()
         if not post:
             return generate_res('failed', 'post not found')
         post.set_attrs(data)
-        [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
+
+        # TODO:优化 每次修改tag,都要删除之前的tag
+        for new_tag in tags:
+            post.tags.clear()
+            post.tags.append(Tag.query.filter_by(tag_name=new_tag).first() or Tag(new_tag))
+        # [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
         post.auto_commit()
         return generate_res('success', 'add posts')
     return generate_res('success', 'get post')

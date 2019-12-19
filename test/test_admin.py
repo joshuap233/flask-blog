@@ -1,8 +1,7 @@
-import random
 import time
-import pytest
 from io import BytesIO
 
+import pytest
 from faker import Faker
 from flask import url_for
 
@@ -41,8 +40,11 @@ class Test_auth:
         assert b'success' in res.data
 
 
+# --repeat-scope=class
+@pytest.mark.repeat(4)
 class Test_posts:
     def test_admin_posts_post(self, client):
+        print(1)
         res = client.post(url_for('api.admin_posts'), headers={
             'identify': uid,
             'Authorization': token
@@ -53,11 +55,11 @@ class Test_posts:
         assert b'success' in res.data
         assert res.status_code == 200
 
-    @pytest.mark.repeat(2)
     def test_admin_posts_put(self, client):
+        print(2)
         res = client.put(url_for('api.admin_posts'), json={
             'id': pid,
-            'title': 'title' + str(random.random())
+            'title': 'title'
             ,
             'timeStamp': timeStamp,
             'contents': 'contests',
