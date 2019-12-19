@@ -19,19 +19,12 @@ class Base(object):
 
 class Post(db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128), unique=True, index=True)
+    title = db.Column(db.String(128))
     contents = db.Column(db.Text, nullable=True)
     date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
-    publish = db.Column(db.Boolean, nullable=False, default=False)
+    publish = db.Column(db.Boolean, default=False)
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
-
-    def __init__(self, title, contents, date, publish=False):
-        self.title = title,
-        self.contents = contents,
-        self.date = date,
-        self.change_date = date,
-        self.publish = publish
 
     def set_attrs(self, attrs: dict):
         for key, value in attrs.items():

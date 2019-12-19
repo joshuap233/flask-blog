@@ -7,28 +7,29 @@ from ..database import Post, Tag, User
 from ..utils import required_login, generate_res, get_attr
 
 
-@api.route('/admin/posts/<int:timesStamp>')
+@api.route('/admin/posts/<int:pid>')
 @required_login
-def admin_write(timesStamp):
-    post = Post.query.filter_by(date=timesStamp).first()
+def admin_write(pid):
+    post = Post.query.filter_by(id=pid).first()
     return generate_res('success', 'get post', contents=post.contents, title=post.title, tags=post.tags)
 
 
-@api.route('/admin/post/', methods=['POST'])
-@api.route('/admin/posts/images/<string:timeStamp>/<string:filename>', methods=['GET'])
+@api.route('/admin/posts/images/', methods=['GET', 'POST'])
 @required_login
-def admin_images(timeStamp=None, filename=None):
+def admin_images():
     if request.method == 'POST':
         images = request.files.getlist('images')
-        date = request.form.get('timeStamp')
+        pid = str(request.form.get('id'))
         if images:
-            path = os.path.join(current_app.config['UPLOAD_FOLDER'], date)
+            path = os.path.join(current_app.config['UPLOAD_FOLDER'], pid)
             os.mkdir(path) if not os.path.exists(path) else None
             [image.save(os.path.join(path, image.filename)) for image in images]
             return generate_res('success', 'image upload')
         else:
             return generate_res('failed', 'image empty')
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'] + timeStamp, filename)
+    data = request.get_json()
+    pid, filename = get_attr(['id', 'filename'], data)
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'] + str(pid), filename)
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
@@ -36,11 +37,9 @@ def admin_images(timeStamp=None, filename=None):
 def admin_posts():
     if request.method == 'POST':
         # 添加新文章
-        data = request.get_json()
-        date = data.get('timeStamp')
-        post = Post(date, '', date)
+        post = Post()
         post.auto_commit()
-        return generate_res('success', 'new post')
+        return generate_res('success', 'new post', id=post.id)
     elif request.method == 'PUT':
         try:
             data = request.get_json()
@@ -49,8 +48,8 @@ def admin_posts():
                 return generate_res('failed', 'title empty or repetitive')
         except AttributeError as e:
             return generate_res('failed', e)
-        date, tags = get_attr(['timeStamp', 'tags'], data)
-        post = Post.query.filter_by(date=date).first()
+        pid, tags = get_attr(['id', 'tags'], data)
+        post = Post.query.filter_by(id=pid).first()
         if not post:
             return generate_res('failed', 'post not found')
         post.set_attrs(data)
