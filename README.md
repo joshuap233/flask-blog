@@ -9,7 +9,7 @@ py.test --count=100 -x --repeat-scope=session -s
 ```shell script
 py.test --cov=flask_blog test/ --repeat-scope=session -s
 ```
-##TODO
+## TODO
 错误处理
 邮箱登录
 密码找回
