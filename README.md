@@ -26,7 +26,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 
 
 
-###register
+### register
 url
 ```
 /api/admin/auth/register/
@@ -55,7 +55,7 @@ POST
 |msg| | | 
 
 
-###login
+### login
 url:
 ```
 /api/admin/auth/login/
@@ -73,7 +73,7 @@ POST
 **返回参数**
 
 
-###logout
+### logout
 
 url:
 ```
@@ -90,7 +90,7 @@ DELETE
 |token| string| | 
 
 
-###images
+### images
 
 ```
 /api/admin/posts/images/
@@ -126,7 +126,7 @@ put上传图片
 |id| int| 文章id| 
 
 
-###post
+### post
 url
 
 ```
@@ -188,7 +188,7 @@ post 新建文章
 |change_date| int|文章修改日期|[x]|
 
 
-###posts
+### posts
 
 url
 
