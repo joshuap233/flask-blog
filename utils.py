@@ -7,7 +7,7 @@ from .database import User
 
 def generate_res(state, msg, **kwargs):
     status = {
-        'state': state,
+        'status': state,
         'msg': msg
     }
     status.update(kwargs)

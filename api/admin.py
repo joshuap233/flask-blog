@@ -7,10 +7,10 @@ from ..database import Post, Tag, User
 from ..utils import required_login, generate_res, get_attr
 
 
-@api.route('/admin/posts/images/', methods=['GET', 'POST'])
+@api.route('/admin/posts/images/', methods=['GET', 'PUT'])
 @required_login
 def admin_images():
-    if request.method == 'POST':
+    if request.method == 'PUT':
         images = request.files.getlist('images')
         pid = str(request.form.get('id'))
         if images:
@@ -25,27 +25,36 @@ def admin_images():
     return send_from_directory(current_app.config['UPLOAD_FOLDER'] + str(pid), filename)
 
 
-@api.route('/admin/posts/<int:pid>/', methods=['GET', 'POST', 'PUT'])
+@api.route('/admin/posts/all/')
 @required_login
-def admin_post(pid):
-    post = Post.query.filter_by(id=pid).first()
-    return generate_res('success', 'get post', contents=post.contents, title=post.title, tags=post.tags)
+def admin_posts():
+    posts = Post.query.all()
+    data = []
+    for post in posts:
+        data.append({
+            "id": post.id,
+            "name": post.title,
+            "create_date": post.create_date,
+            "change_date": post.change_date,
+            "tags": [tag.name for tag in post.tags],
+            "publish": post.publish})
+    return generate_res('success', 'get post', data=data)
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
 @required_login
-def admin_posts():
+def admin_post():
+    data = request.get_json()
     if request.method == 'POST':
         # 添加新文章
         try:
-            create_date = request.get_json().get('create_date')
+            create_date = data.get('create_date')
         except AttributeError:
             return generate_res("failed", "empty create_date")
         post = Post(create_date=create_date)
         post.auto_commit()
         return generate_res('success', 'new post', id=post.id)
     elif request.method == 'PUT':
-        data = request.get_json()
         try:
             # 前端生成空标签列表
             pid, tags = get_attr(['id', 'tags'], data)
@@ -61,13 +70,9 @@ def admin_posts():
         [post.tags.append(Tag.query.filter_by(name=new_tag).first() or Tag(new_tag)) for new_tag in tags]
         post.auto_commit()
         return generate_res('success', 'add posts')
-    posts = Post.query.all()
-    data = []
-    for post in posts:
-        data.append({"name": post.title,
-                     "create_date": post.create_date,
-                     "tags": [tag.name for tag in post.tags],
-                     "publish": post.publish})
+    pid = data.get('id')
+    post = Post.query.filter_by(id=pid).first()
+    data = {id: post.id, "contents": post.contents, "title": post.title, "tags": [tag.name for tag in post.tags]}
     return generate_res('success', 'get post', data=data)
 
 
@@ -95,14 +100,13 @@ def admin_login():
         user.is_active = True
         user.auto_commit()
         return generate_res('success', 'login', id=user.id, token=user.generate_token(), expiration=3600)
-    return generate_res('failed', 'login')
 
 
-@api.route('/admin/auth/logout/')
+@api.route('/admin/auth/logout/', methods=["DELETE"])
 @required_login
 def admin_logout():
-    uid = request.get_json().get('id')
-    user = User.query.filter_by(id=uid)
+    uid = request.headers.get('identify')
+    user = User.query.filter_by(id=uid).first()
     user.is_active = False
     user.auto_commit()
     return generate_res('success', 'logout')

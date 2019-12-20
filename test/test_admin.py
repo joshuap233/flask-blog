@@ -43,8 +43,8 @@ class Test_auth:
 # --repeat-scope=class
 @pytest.mark.repeat(4)
 class Test_posts:
-    def test_admin_posts_post(self, client):
-        res = client.post(url_for('api.admin_posts'), json={
+    def test_admin_post_post(self, client):
+        res = client.post(url_for('api.admin_post'), json={
             'create_date': timeStamp,
         }, headers={
             'identify': uid,
@@ -56,8 +56,8 @@ class Test_posts:
         assert b'success' in res.data
         assert res.status_code == 200
 
-    def test_admin_posts_put(self, client):
-        res = client.put(url_for('api.admin_posts'), json={
+    def test_admin_post_put(self, client):
+        res = client.put(url_for('api.admin_post'), json={
             'id': pid,
             'title': 'title'
             ,
@@ -71,7 +71,17 @@ class Test_posts:
         })
         assert b'success' in res.data
 
-    def test_admin_posts_get(self, client):
+    def test_admin_post_get(self, client):
+        res = client.get(url_for('api.admin_post'), headers={
+            'identify': uid,
+            'Authorization': token
+        }, json={
+            "id": 1
+        })
+        data = res.get_json().get('data')
+        assert 'title' in data and 'contents' in data and 'tags' in data
+
+    def test_admin_posts(self, client):
         res = client.get(url_for('api.admin_posts'), headers={
             'identify': uid,
             'Authorization': token
@@ -79,9 +89,7 @@ class Test_posts:
         data = res.get_json().get('data')
         assert b'success' in res.data
         for d in data:
-            assert 'name' in d
-            assert 'create_date' in d
-            assert 'publish' in d
+            assert 'name' in d and 'create_date' in d and 'publish' in d
 
 
 class Test_image:
@@ -89,7 +97,7 @@ class Test_image:
         with open('/home/pjs/Pictures/epoll.png', 'rb') as f:
             pic = f.read()
         data = {'images': (BytesIO(pic), 'images.png'), 'id': pid}
-        res = client.post(
+        res = client.put(
             url_for('api.admin_images'),
             content_type='multipart/form-data',
             data=data,
@@ -109,3 +117,19 @@ class Test_image:
             'Authorization': token
         })
         assert res.status_code == 200
+
+
+class Test_logout:
+    def test_logout(self, client):
+        res = client.delete(url_for('api.admin_logout'), headers={
+            'identify': uid,
+            'Authorization': token
+        })
+        assert b'success' in res.data
+
+    def test_admin_posts(self, client):
+        res = client.get(url_for('api.admin_posts'), headers={
+            'identify': uid,
+            'Authorization': token
+        })
+        assert b'failed' in res.data

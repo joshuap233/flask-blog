@@ -14,7 +14,10 @@ tags_to_post = db.Table(
 class Base(object):
     def auto_commit(self):
         db.session.add(self)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session().rollback()
 
 
 class Post(db.Model, Base):
