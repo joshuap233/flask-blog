@@ -63,7 +63,7 @@ class Test_posts:
             ,
             'change_date': timeStamp,
             'contents': 'contests',
-            'tags': ['tags2', 'tags1', 'tags3'],
+            'tags': ['tags1', 'tags2', 'tags3'],
             'publish': True,
         }, headers={
             'identify': uid,

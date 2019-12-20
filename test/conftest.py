@@ -58,3 +58,4 @@ def session(app, db, request):
         # This instruction rollback any commit that were executed in the tests.
         txn.rollback()
         conn.close()
+

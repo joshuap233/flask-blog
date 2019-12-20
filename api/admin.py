@@ -50,15 +50,15 @@ def admin_posts():
             # 前端生成空标签列表
             pid, tags = get_attr(['id', 'tags'], data)
         except AttributeError:
-            return generate_res('failed', 'get post id adn tags failed')
+            return generate_res('failed', 'get post id and tags failed')
         post = Post.query.filter_by(id=pid).first()
         if not post:
             return generate_res('failed', 'post not found')
         post.set_attrs(data)
 
         # TODO:优化 每次修改tag,都要删除之前的tag
+        post.tags.clear()
         for new_tag in tags:
-            post.tags.clear()
             post.tags.append(Tag.query.filter_by(name=new_tag).first() or Tag(new_tag))
         # [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
         post.auto_commit()

@@ -13,11 +13,18 @@ def test_archive(client):
 
 def test_post(client):
     res = client.get(url_for("api.posts", post_id=1))
-    data:dict = res.get_json().get('data')
+    data = res.get_json().get('data')
     assert b'success' in res.data
-    # assert data
+    assert 'id' in data
+    assert 'title' in data
+    assert 'contents' in data
 
 
 def test_tags(client):
     res = client.get(url_for('api.tags'))
+    data = res.get_json().get('data')
     assert b'success' in res.data
+    for d in data:
+        assert 'name' in d
+        assert 'article' in d
+        assert len(d['article']) != 0
