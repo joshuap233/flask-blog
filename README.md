@@ -39,12 +39,12 @@ POST
 
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
-|phone_number| string| | [] |
-|email| string| | [] |
-|nickname| string| | [x] |
-|username| string| 用于登录 |[x] |
-|password| string| | [x]|
-|user_about| string|  | [] |
+|phone_number| string| |  |
+|email| string| |  |
+|nickname| string| | 是 |
+|username| string| 用于登录 |是 |
+|password| string| | 是|
+|user_about| string|  |  |
 
 
 **返回参数**
@@ -180,12 +180,12 @@ post 新建文章
  
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
-|id| int| 文章id| [x] |
-|tags| list|标签列表,没有标签则为空|[x] |
-|contents| string|文章内容(markdown)|[] |
-|title| string|文章标题|[x] |
-|publish| boolean|是否发布|[] |
-|change_date| int|文章修改日期|[x]|
+|id| int| 文章id| 是 |
+|tags| list|标签列表,没有标签则为空|是|
+|contents| string|文章内容(markdown)| |
+|title| string|文章标题|是 |
+|publish| boolean|是否发布| |
+|change_date| int|文章修改日期|是|
 
 
 ### posts
@@ -202,7 +202,7 @@ GET
 **简要描述**
 请求所有文章
 
-**G请求头**
+**GET请求头**
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
@@ -214,7 +214,7 @@ GET
  
 | 名称| 类型| 说明|
 | --- | --- | --- |
-|id| int| 文章id| [x] |
+|id| int| 文章id|  |
 |tags| list|标签列表,没有标签则为空|
 |title| string|文章标题|
 |publish| boolean|是否发布|
