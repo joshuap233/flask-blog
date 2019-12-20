@@ -76,7 +76,12 @@ class Test_posts:
             'identify': uid,
             'Authorization': token
         })
+        data = res.get_json().get('data')
         assert b'success' in res.data
+        for d in data:
+            assert 'name' in d
+            assert 'create_date' in d
+            assert 'publish' in d
 
 
 class Test_image:

@@ -7,13 +7,6 @@ from ..database import Post, Tag, User
 from ..utils import required_login, generate_res, get_attr
 
 
-@api.route('/admin/posts/<int:pid>')
-@required_login
-def admin_write(pid):
-    post = Post.query.filter_by(id=pid).first()
-    return generate_res('success', 'get post', contents=post.contents, title=post.title, tags=post.tags)
-
-
 @api.route('/admin/posts/images/', methods=['GET', 'POST'])
 @required_login
 def admin_images():
@@ -30,6 +23,13 @@ def admin_images():
     data = request.get_json()
     pid, filename = get_attr(['id', 'filename'], data)
     return send_from_directory(current_app.config['UPLOAD_FOLDER'] + str(pid), filename)
+
+
+@api.route('/admin/posts/<int:pid>/', methods=['GET', 'POST', 'PUT'])
+@required_login
+def admin_post(pid):
+    post = Post.query.filter_by(id=pid).first()
+    return generate_res('success', 'get post', contents=post.contents, title=post.title, tags=post.tags)
 
 
 @api.route('/admin/posts/', methods=['GET', 'POST', 'PUT'])
@@ -58,12 +58,17 @@ def admin_posts():
 
         # TODO:优化 每次修改tag,都要删除之前的tag
         post.tags.clear()
-        for new_tag in tags:
-            post.tags.append(Tag.query.filter_by(name=new_tag).first() or Tag(new_tag))
-        # [post.tags.append(Tag.query.filter_by(tag_name=tag).first() or Tag(tag)) for tag in tags]
+        [post.tags.append(Tag.query.filter_by(name=new_tag).first() or Tag(new_tag)) for new_tag in tags]
         post.auto_commit()
         return generate_res('success', 'add posts')
-    return generate_res('success', 'get post')
+    posts = Post.query.all()
+    data = []
+    for post in posts:
+        data.append({"name": post.title,
+                     "create_date": post.create_date,
+                     "tags": [tag.name for tag in post.tags],
+                     "publish": post.publish})
+    return generate_res('success', 'get post', data=data)
 
 
 @api.route('/admin/auth/register/', methods=['POST'])
@@ -93,7 +98,7 @@ def admin_login():
     return generate_res('failed', 'login')
 
 
-@api.route('/admin/auth/logout')
+@api.route('/admin/auth/logout/')
 @required_login
 def admin_logout():
     uid = request.get_json().get('id')

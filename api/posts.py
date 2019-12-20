@@ -3,7 +3,7 @@ from ..database import Post
 from ..utils import generate_res
 
 
-@api.route('/posts/<int:post_id>')
+@api.route('/posts/<int:post_id>/')
 def posts(post_id):
     post = Post.query.filter_by(id=post_id).first()
     article = {

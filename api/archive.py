@@ -5,7 +5,7 @@ from ..database import Post
 from ..utils import generate_res
 
 
-@api.route('/archive/<int:page>')
+@api.route('/archive/<int:page>/')
 def archive(page):
     # per_page 写入config
     pagination = Post.query.order_by(Post.create_date.desc()).paginate(page=page, per_page=20, error_out=False)

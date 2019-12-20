@@ -10,3 +10,6 @@ py.test --repeat-scope=class
 ```shell script
 py.test --cov=flask_blog test/
 ```
+
+# api
+

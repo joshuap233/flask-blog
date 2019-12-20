@@ -28,3 +28,8 @@ def test_tags(client):
         assert 'name' in d
         assert 'article' in d
         assert len(d['article']) != 0
+
+
+def test_about(client):
+    res = client.get(url_for('api.about'))
+    assert b'success' in res.data
