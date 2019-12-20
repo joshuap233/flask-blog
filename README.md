@@ -27,13 +27,8 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 
 
 ### register
-url
-```
-/api/admin/auth/register/
-```
-
-**请求方法**:
-POST
+- URL: ```/api/admin/auth/register/```
+- Method: POST
 
 **请求参数**
 
@@ -56,12 +51,8 @@ POST
 
 
 ### login
-url:
-```
-/api/admin/auth/login/
-```
-**请求方法**:
-POST
++ URL: ```/api/admin/auth/login/```
++ Method: POST
 
 **请求参数**
 
@@ -75,40 +66,27 @@ POST
 
 ### logout
 
-url:
++ URL: ```/api/admin/auth/logout/```
++ Method: DELETE
++ HTTP Headers: 
 ```
-/api/admin/auth/logout/
+{
+    "identify": "uid",
+    "token": "token"
+}
 ```
-**请求方法**:
-DELETE
-
-**请求头**
-
-| 名称| 类型| 说明| 
-| --- | --- | --- |
-|identify| string| 用户id| 
-|token| string| | 
-
 
 ### images
-
++ URL: ```/api/admin/posts/images/```
++ Method: GET, PUT
++ Describe: get请求图片,put上传图片
++ HTTP Headers: 
 ```
-/api/admin/posts/images/
+{
+    "identify": "uid",
+    "token": "token"
+}
 ```
-**请求方法**:
-GET, PUT
-
-**简要描述**
-get请求图片
-put上传图片
-
-**GET, PUT请求头**
-
-| 名称| 类型| 说明| 
-| --- | --- | --- |
-|identify| string| 用户id| 
-|token| string| | 
-
 
 **GET请求参数**
 
@@ -127,27 +105,16 @@ put上传图片
 
 
 ### post
-url
-
++ URL: ```/api/admin/posts/```
++ Method: GET, PUT, POST
++ Describe: get获取单篇文章内容 put修改文章 post新建文章
++ HTTP Headers: 
 ```
-/api/admin/posts/
+{
+    "identify": "uid",
+    "token": "token"
+}
 ```
-
-**请求方法**
-GET, PUT, POST
-
-**简要描述**
-get 获取单篇文章内容
-put 修改文章
-post 新建文章
-
-**GET,PUT,POST请求头**
-
-| 名称| 类型| 说明| 
-| --- | --- | --- |
-|identify| string| 用户id| 
-|token| string| | 
-
 
 **GET请求参数**
 
@@ -189,26 +156,16 @@ post 新建文章
 
 
 ### posts
-
-url
-
++ URL: ```/api/admin/posts/all/```
++ Method: GET
++ Describe: 请求所有文章
++ HTTP Headers: 
 ```
-/api/admin/posts/all/
+{
+    "identify": "uid",
+    "token": "token"
+}
 ```
-
-**请求方法**
-GET
-
-**简要描述**
-请求所有文章
-
-**GET请求头**
-
-| 名称| 类型| 说明| 
-| --- | --- | --- |
-|identify| string| 用户id| 
-|token| string| | 
-
 
 **返回参数**
  
