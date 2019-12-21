@@ -25,19 +25,22 @@ def admin_images():
     return send_from_directory(current_app.config['UPLOAD_FOLDER'] + str(pid), filename)
 
 
-@api.route('/admin/posts/all/')
+# TODO 分页
+@api.route('/admin/posts/page/<int:page>')
 @required_login
-def admin_posts():
-    posts = Post.query.all()
+def admin_posts(page):
+    pagination = Post.query.order_by(Post.create_date.desc()).paginate(page=page, per_page=15, error_out=False)
+    posts = pagination.items
     data = []
     for post in posts:
         data.append({
             "id": post.id,
-            "name": post.title,
+            "title": post.title,
             "create_date": post.create_date,
             "change_date": post.change_date,
             "tags": [tag.name for tag in post.tags],
-            "publish": post.publish})
+            "publish": post.publish
+        })
     return generate_res('success', 'get post', data=data)
 
 
@@ -72,7 +75,7 @@ def admin_post():
         return generate_res('success', 'add posts')
     pid = data.get('id')
     post = Post.query.filter_by(id=pid).first()
-    data = {id: post.id, "contents": post.contents, "title": post.title, "tags": [tag.name for tag in post.tags]}
+    data = {"id": post.id, "contents": post.contents, "title": post.title, "tags": [tag.name for tag in post.tags]}
     return generate_res('success', 'get post', data=data)
 
 

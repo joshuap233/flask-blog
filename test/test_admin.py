@@ -82,14 +82,14 @@ class Test_posts:
         assert 'title' in data and 'contents' in data and 'tags' in data
 
     def test_admin_posts(self, client):
-        res = client.get(url_for('api.admin_posts'), headers={
+        res = client.get(url_for('api.admin_posts', page=1), headers={
             'identify': uid,
             'Authorization': token
         })
         data = res.get_json().get('data')
         assert b'success' in res.data
         for d in data:
-            assert 'name' in d and 'create_date' in d and 'publish' in d
+            assert 'title' in d and 'create_date' in d and 'publish' in d
 
 
 class Test_image:
@@ -128,7 +128,7 @@ class Test_logout:
         assert b'success' in res.data
 
     def test_admin_posts(self, client):
-        res = client.get(url_for('api.admin_posts'), headers={
+        res = client.get(url_for('api.admin_posts', page=1), headers={
             'identify': uid,
             'Authorization': token
         })

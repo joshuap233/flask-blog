@@ -19,9 +19,9 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 - [注册](#register)
 - [登录](#login)
 - [登出](#logout)
-- [获取图片](#images)
+- [获取图片](#Images)
 - [修改单篇文章](#post)
-- [请求所有文章](#post)
+- [分页请求文章](#posts)
 
 
 
@@ -30,7 +30,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 - URL: ```/api/admin/auth/register/```
 - Method: POST
 
-**请求参数**
+*请求参数*
 
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
@@ -42,7 +42,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 |user_about| string|  |  |
 
 
-**返回参数**
+*返回参数*
 
 | 名称| 类型| 说明|
 | --- | --- | --- |
@@ -54,15 +54,18 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 + URL: ```/api/admin/auth/login/```
 + Method: POST
 
-**请求参数**
+*请求参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
 |password| string| | 
 |username| string| | 
 
-**返回参数**
-
+*返回参数*
+| 名称| 类型| 说明| 
+| --- | --- | --- |
+|id| string| 用户id| 
+|token| string| 过期时间:3600s| 
 
 ### logout
 
@@ -76,7 +79,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 }
 ```
 
-### images
+### Images
 + URL: ```/api/admin/posts/images/```
 + Method: GET, PUT
 + Describe: get请求图片,put上传图片
@@ -88,7 +91,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 }
 ```
 
-**GET请求参数**
+*GET请求参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
@@ -96,7 +99,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 |filename| string|图片名| 
 
 
-**PUT请求参数**
+*PUT请求参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
@@ -116,13 +119,13 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 }
 ```
 
-**GET请求参数**
+*GET请求参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
 |id| int| 文章id|
 
-**GET返回参数**
+*GET返回参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
@@ -131,19 +134,19 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 |title| string| 文章标题|
 
 
- **POST请求参数**
+*POST请求参数*
  
 | 名称| 类型| 说明| 
 | --- | --- | --- |
 |create_date| int| 文章创建的时间戳|
 
-**POST返回参数**
+*POST返回参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
 |id| int| 文章id|
 
- **PUT请求参数**
+*PUT请求参数*
  
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
@@ -156,7 +159,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 
 
 ### posts
-+ URL: ```/api/admin/posts/all/```
++ URL: ```/api/admin/posts/page/<int:page>```
 + Method: GET
 + Describe: 请求所有文章
 + HTTP Headers: 
@@ -167,7 +170,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 }
 ```
 
-**返回参数**
+*返回参数*
  
 | 名称| 类型| 说明|
 | --- | --- | --- |
