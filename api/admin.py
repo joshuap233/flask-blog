@@ -7,7 +7,7 @@ from ..database import Post, Tag, User
 from ..utils import required_login, generate_res, get_attr
 
 
-@api.route('/admin/posts/images/', methods=['GET', 'PUT'])
+@api.route('/admin/images/', methods=['GET', 'PUT'])
 @required_login
 def admin_images():
     if request.method == 'PUT':

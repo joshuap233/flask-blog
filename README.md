@@ -80,7 +80,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 ```
 
 ### Images
-+ URL: ```/api/admin/posts/images/```
++ URL: ```/api/admin/images/```
 + Method: GET, PUT
 + Describe: get请求图片,put上传图片
 + HTTP Headers: 
