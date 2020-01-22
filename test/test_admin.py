@@ -11,7 +11,8 @@ token = ''
 uid = ''
 username = faker.name()
 nickname = faker.name()
-email = faker.email()
+email = '1056160446@qq.com'
+# email = faker.email()
 phone = faker.phone_number()
 password = faker.password()
 timeStamp = int(time.time() * 1000)
@@ -57,8 +58,7 @@ class Test_posts:
         assert res.status_code == 200
 
     def test_admin_post_put(self, client):
-        res = client.put(url_for('api.admin_post'), json={
-            'id': pid,
+        res = client.put(url_for('api.admin_post', pid=pid), json={
             'title': 'title'
             ,
             'change_date': timeStamp,
@@ -72,7 +72,7 @@ class Test_posts:
         assert b'success' in res.data
 
     def test_admin_post_get(self, client):
-        res = client.get(url_for('api.admin_post'), headers={
+        res = client.get(url_for('api.admin_post', pid=pid), headers={
             'identify': uid,
             'Authorization': token
         }, json={
@@ -81,7 +81,7 @@ class Test_posts:
         data = res.get_json().get('data')
         assert 'title' in data and 'contents' in data and 'tags' in data
 
-    def test_admin_posts(self, client):
+    def test_admin_posts_page(self, client):
         res = client.get(url_for('api.admin_posts', page=1), headers={
             'identify': uid,
             'Authorization': token
@@ -90,6 +90,29 @@ class Test_posts:
         assert b'success' in res.data
         for d in data:
             assert 'title' in d and 'create_date' in d and 'publish' in d
+
+
+class test_admin_delete:
+
+    def test_admin_post_delete(self, client):
+        res = client.delete(url_for('api.admin_post'), json={
+            "delete_posts": [1]
+        }, headers={
+            'identify': uid,
+            'Authorization': token
+        })
+        data = res.get_json().get('data')
+        assert len(data) == 0
+
+    def test_admin_post_auth_delete(self, client):
+        res = client.delete(url_for('api.admin_post'), json={
+            "delete_posts": [1]
+        }, headers={
+            'identify': uid,
+            'Authorization': token
+        })
+        data = res.get_json().get('data')
+        assert len(data) != 0
 
 
 class Test_image:

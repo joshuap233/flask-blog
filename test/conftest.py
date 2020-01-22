@@ -53,7 +53,7 @@ def session(app, db, request):
         yield sess
 
         # Cleanup
-        os.system(f'rm -rf {app.config["UPLOAD_FOLDER"]}*')
+        os.system(f'rm -rf {app.config["UPLOAD_FOLDER"]}/*')
         sess.remove()
         # This instruction rollback any commit that were executed in the tests.
         txn.rollback()

@@ -11,16 +11,26 @@ tags_to_post = db.Table(
 )
 
 
-class Base(object):
+class Base(db.Model):
+    __abstract__ = True
+
     def auto_commit(self):
         db.session.add(self)
         try:
             db.session.commit()
         except:
-            db.session().rollback()
+            db.session.rollback()
+
+    def auto_add(self):
+        db.session.add(self)
+        self.auto_commit()
+
+    def auto_delete(self):
+        db.session.delete(self)
+        self.auto_commit()
 
 
-class Post(db.Model, Base):
+class Post(Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     contents = db.Column(db.Text, nullable=True)
@@ -30,12 +40,13 @@ class Post(db.Model, Base):
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
 
     def set_attrs(self, attrs: dict):
+        blacklist = ['id', 'tags']
         for key, value in attrs.items():
-            if hasattr(self, key) and key != 'id' and key != 'tags':
+            if hasattr(self, key) and key not in blacklist:
                 setattr(self, key, value)
 
 
-class Tag(db.Model, Base):
+class Tag(Base):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
 
@@ -43,7 +54,7 @@ class Tag(db.Model, Base):
         self.name = tag
 
 
-class User(db.Model, Base):
+class User(Base):
     id = db.Column(db.Integer, unique=True, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
@@ -52,6 +63,7 @@ class User(db.Model, Base):
     password_hash = db.Column(db.String(128))
     user_about = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=False)
+    is_validate = db.Column(db.Boolean, default=False)
 
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
@@ -74,6 +86,7 @@ class User(db.Model, Base):
         return True
 
     def set_attrs(self, attrs: dict):
+        blacklist = ['id', 'is_validate', 'is_validate', 'password_hash']
         for key, value in attrs.items():
-            if hasattr(self, key) and key != 'id':
+            if hasattr(self, key) and key not in blacklist:
                 setattr(self, key, value)

@@ -4,6 +4,7 @@
 
 ```shell script
 py.test --count=100 -x --repeat-scope=session -s
+py.test  --repeat-scope=session -s
 ```
 **test code coverage**
 ```shell script
@@ -11,9 +12,8 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 ```
 ## TODO
 错误处理
-邮箱登录
-密码找回
-文章分页(归档)
+修改密码
+手机号密码找回
 
 ## admin api
 - [注册](#register)
@@ -35,7 +35,7 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
 |phone_number| string| |  |
-|email| string| |  |
+|email| string| | 是 |
 |nickname| string| | 是 |
 |username| string| 用于登录 |是 |
 |password| string| | 是|
@@ -108,8 +108,8 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 
 
 ### post
-+ URL: ```/api/admin/posts/```
-+ Method: GET, PUT, POST
++ URL: ```/api/admin/posts/<int:pid>```
++ Method: GET, PUT, POST, DELETE
 + Describe: get获取单篇文章内容 put修改文章 post新建文章
 + HTTP Headers: 
 ```
@@ -119,11 +119,11 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 }
 ```
 
-*GET请求参数*
+*GET,PUT,DELETE路径参数*
 
 | 名称| 类型| 说明| 
 | --- | --- | --- |
-|id| int| 文章id|
+|pid| int| 文章id|
 
 *GET返回参数*
 
@@ -150,7 +150,6 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
  
 | 名称| 类型| 说明| 是否必须|
 | --- | --- | --- | --- |
-|id| int| 文章id| 是 |
 |tags| list|标签列表,没有标签则为空|是|
 |contents| string|文章内容(markdown)| |
 |title| string|文章标题|是 |

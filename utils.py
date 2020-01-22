@@ -1,7 +1,10 @@
 from functools import wraps
+from threading import Thread
 
-from flask import request, jsonify
+from flask import request, jsonify, current_app
+from flask_mail import Message
 
+from . import mail
 from .database import User
 
 
@@ -30,3 +33,21 @@ def required_login(func):
 
 def get_attr(keys: list, data: dict):
     return [data.get(key) for key in keys]
+
+
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_email(to, subject, content):
+    app = current_app._get_current_object()
+    msg = Message(
+        subject=subject,
+        sender=current_app.config['MAIL_USERNAME'],
+        recipients=[to]
+    )
+    msg.body = content
+    # msg.html = "<b>testing</b>"
+    t = Thread(target=send_async_email, args=[app, msg])
+    t.start()
