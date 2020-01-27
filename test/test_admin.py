@@ -1,6 +1,6 @@
 import time
 from io import BytesIO
-
+import os
 import pytest
 from faker import Faker
 from flask import url_for
@@ -11,7 +11,7 @@ token = ''
 uid = ''
 username = faker.name()
 nickname = faker.name()
-email = '1056160446@qq.com'
+email = os.getenv('MAIL_RECEVIER')
 # email = faker.email()
 phone = faker.phone_number()
 password = faker.password()
