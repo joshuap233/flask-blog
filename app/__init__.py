@@ -5,7 +5,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from .config import config
+from app.config import config
 
 pymysql.install_as_MySQLdb()
 
@@ -19,12 +19,21 @@ def create_app(config_name):
     app.config.from_object(config[config_name]())
     CORS(app)
     db.init_app(app)
-    from .api.blueprint import api as api_blueprint
-    app.register_blueprint(api_blueprint, url_prefix='/api')
+    from app.api.view.blueprint import api as api_blueprint
+    app.register_blueprint(api_blueprint)
 
-    from .web.blueprint import main as main_blueprint
+    from app.api.admin.blueprint import admin as admin_blueprint
+    app.register_blueprint(admin_blueprint)
+
+    from app.web.blueprint import main as main_blueprint
     app.register_blueprint(main_blueprint)
     migrate.init_app(app, db)
 
     mail.init_app(app)
     return app
+
+
+app = create_app('default')
+
+if __name__ == '__main__':
+    app.run()

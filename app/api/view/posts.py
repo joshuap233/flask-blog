@@ -1,6 +1,6 @@
 from .blueprint import api
-from ..database import Post
-from ..utils import generate_res
+from app.database import Post
+from app.utils import generate_res
 
 
 @api.route('/posts/<int:post_id>/')

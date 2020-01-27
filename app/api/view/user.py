@@ -1,6 +1,6 @@
 from .blueprint import api
-from ..database import User
-from ..utils import generate_res
+from app.database import User
+from app.utils import generate_res
 
 
 @api.route('/user/about/')

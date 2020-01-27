@@ -156,6 +156,8 @@ py.test --cov=flask_blog test/ --repeat-scope=session -s
 |publish| boolean|是否发布| |
 |change_date| int|文章修改日期|是|
 
+## TODO:
+- 文章,标签 软删除
 
 ### posts
 + URL: ```/api/admin/posts/page/<int:page>```

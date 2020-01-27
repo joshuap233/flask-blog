@@ -14,29 +14,36 @@ tags_to_post = db.Table(
 class Base(db.Model):
     __abstract__ = True
 
-    def auto_commit(self):
-        db.session.add(self)
+    def auto_add(self):
         try:
+            db.session.add(self)
             db.session.commit()
-        except:
+        except Exception as e:
+            print(e)
             db.session.rollback()
 
-    def auto_add(self):
-        db.session.add(self)
-        self.auto_commit()
-
     def auto_delete(self):
-        db.session.delete(self)
-        self.auto_commit()
+        try:
+            db.session.delete(self)
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+
+    @staticmethod
+    def total(cls):
+        return cls.count()
 
 
 class Post(Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
-    contents = db.Column(db.Text, nullable=True)
+    article = db.Column(db.Text, nullable=True)
     create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
-    publish = db.Column(db.Boolean, default=False)
+    visibility = db.Column(db.String(16), default="私密")
+    # 评论数量
+    comments = db.Column(db.Integer, default=0)
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
 
     def set_attrs(self, attrs: dict):
@@ -49,9 +56,9 @@ class Post(Base):
 class Tag(Base):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
-
-    def __init__(self, tag):
-        self.name = tag
+    describe = db.Column(db.String(128), nullable=True)
+    # 使用标签的文章数量
+    count = db.Column(db.Integer, default=0)
 
 
 class User(Base):
@@ -68,7 +75,7 @@ class User(Base):
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_passwordrequired_login(self, password):
         return check_password_hash(self.password_hash, password)
 
     def generate_token(self, expiration=3600):

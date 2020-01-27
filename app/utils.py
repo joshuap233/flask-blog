@@ -8,9 +8,9 @@ from . import mail
 from .database import User
 
 
-def generate_res(state, msg, **kwargs):
+def generate_res(status, msg, **kwargs):
     status = {
-        'status': state,
+        'status': status,
         'msg': msg
     }
     status.update(kwargs)
@@ -26,7 +26,7 @@ def required_login(func):
         user = User.query.filter_by(id=uid).first()
         if user and user.is_active and user.confirm_token(token):
             return func(*args, **kwargs)
-        return generate_res('failed', 'check login')
+        return generate_res('failed', 'check login'), 401
 
     return check_login
 

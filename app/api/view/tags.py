@@ -1,6 +1,6 @@
 from .blueprint import api
-from ..database import Tag
-from ..utils import generate_res
+from app.database import Tag
+from app.utils import generate_res
 
 
 @api.route('/tags/')
