@@ -1,5 +1,5 @@
 from .blueprint import api
-from app.database import Tag
+from app.model.db import Tag
 from app.utils import generate_res
 
 

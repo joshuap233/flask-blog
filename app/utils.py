@@ -5,7 +5,7 @@ from flask import request, jsonify, current_app
 from flask_mail import Message
 
 from . import mail
-from .database import User
+from app.model.db import User
 
 
 def generate_res(status, msg, **kwargs):
@@ -17,15 +17,19 @@ def generate_res(status, msg, **kwargs):
     return jsonify(status)
 
 
-def required_login(func):
+def login_required(func):
     @wraps(func)
     def check_login(*args, **kwargs):
         data = request.headers
         uid = data.get('identify')
         token = data.get('Authorization')
-        user = User.query.filter_by(id=uid).first()
-        if user and user.is_active and user.confirm_token(token):
+        user = User.query.get(uid)
+        if not user:
+            return generate_res('failed', 'user not found'), 401
+        if user.is_active and user.confirm_token(token) and user.is_validate:
             return func(*args, **kwargs)
+        user.is_active = False
+        user.auto_add()
         return generate_res('failed', 'check login'), 401
 
     return check_login

@@ -4,6 +4,7 @@ import os
 class Config(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = True
+    DOMAIN = 'http://localhost:5000'
     SQLALCHEMY_DATABASE_URI = 'mysql://root:root@localhost:3306/dev_blog?charset=utf8mb4'
     UPLOAD_FOLDER = os.path.join(os.getenv('HOME'), 'test')
     SECRET_KEY = os.getenv('SECRET_KEY') or os.urandom(64)
@@ -31,6 +32,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    # 如果MAIL_SUPPRESS_SEND 为True,则单元测试时不会真正发送邮件
     # MAIL_SUPPRESS_SEND = False
     SQLALCHEMY_DATABASE_URI = 'mysql://root:root@localhost:3306/test_blog?charset=utf8mb4'
 

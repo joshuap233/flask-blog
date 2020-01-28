@@ -1,7 +1,7 @@
 from time import strftime, localtime
 
 from .blueprint import api
-from app.database import Post
+from app.model.db import Post
 from app.utils import generate_res
 
 

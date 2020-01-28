@@ -1,11 +1,11 @@
 from .blueprint import api
-from app.database import Post
+from app.model.db import Post
 from app.utils import generate_res
 
 
 @api.route('/posts/<int:post_id>/')
 def posts(post_id):
-    post = Post.query.filter_by(id=post_id).first()
+    post = Post.query.get(post_id)
     article = {
         "id": post.id,
         "title": post.title,

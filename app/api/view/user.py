@@ -1,5 +1,5 @@
 from .blueprint import api
-from app.database import User
+from app.model.db import User
 from app.utils import generate_res
 
 

@@ -2,7 +2,7 @@ from flask import current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import db
+from app import db
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -30,7 +30,8 @@ class Base(db.Model):
             print(e)
             db.session.rollback()
 
-    @staticmethod
+    # 获取表的记录数
+    @classmethod
     def total(cls):
         return cls.count()
 
@@ -47,7 +48,7 @@ class Post(Base):
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
 
     def set_attrs(self, attrs: dict):
-        blacklist = ['id', 'tags']
+        blacklist = ['id', 'tags', 'comments']
         for key, value in attrs.items():
             if hasattr(self, key) and key not in blacklist:
                 setattr(self, key, value)
@@ -60,6 +61,12 @@ class Tag(Base):
     # 使用标签的文章数量
     count = db.Column(db.Integer, default=0)
 
+    def set_attrs(self, attrs: dict):
+        blacklist = ['id', 'count']
+        for key, value in attrs.items():
+            if hasattr(self, key) and key not in blacklist:
+                setattr(self, key, value)
+
 
 class User(Base):
     id = db.Column(db.Integer, unique=True, primary_key=True)
@@ -69,13 +76,15 @@ class User(Base):
     phone = db.Column(db.String(32))
     password_hash = db.Column(db.String(128))
     user_about = db.Column(db.Text)
+    # 是否登录(无法强制使jwt失效,只能通过该字段控制)
     is_active = db.Column(db.Boolean, default=False)
+    # 注册是否验证
     is_validate = db.Column(db.Boolean, default=False)
 
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
 
-    def check_passwordrequired_login(self, password):
+    def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
     def generate_token(self, expiration=3600):
@@ -92,8 +101,21 @@ class User(Base):
             return False
         return True
 
+    @classmethod
+    def confirm_register_token(cls, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        data = s.loads(token.encode('utf-8'))
+        user = cls.query.get(data.get('id'))
+        if user and not user.is_active:
+            user.is_validate = True
+            user.auto_add()
+            return True
+        return False
+
     def set_attrs(self, attrs: dict):
         blacklist = ['id', 'is_validate', 'is_validate', 'password_hash']
         for key, value in attrs.items():
             if hasattr(self, key) and key not in blacklist:
                 setattr(self, key, value)
+            if key == 'password':
+                self.generate_password_hash(value)

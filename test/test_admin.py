@@ -1,9 +1,9 @@
-import time
-from io import BytesIO
 import os
-import pytest
+
 from faker import Faker
 from flask import url_for
+
+from app.model.db import User
 
 faker = Faker('zh_CN')
 pid = 0
@@ -12,15 +12,14 @@ uid = ''
 username = faker.name()
 nickname = faker.name()
 email = os.getenv('MAIL_RECEVIER')
-# email = faker.email()
 phone = faker.phone_number()
 password = faker.password()
-timeStamp = int(time.time() * 1000)
+print('test111', os.getenv('MAIL_RECEVIER'))
 
 
 class Test_auth:
     def test_register(self, client):
-        res = client.post(url_for('api.admin_register'), json={
+        res = client.post(url_for('admin.admin_register'), json={
             'username': username,
             'nickname': nickname,
             'email': email,
@@ -29,8 +28,23 @@ class Test_auth:
         })
         assert b'success' in res.data
 
+    def test_admin_auth_register(self, client):
+        user = User.query.filter_by(email=email).first()
+        user.auto_delete()
+        user = User()
+        user.set_attrs({
+            'username': username,
+            'nickname': nickname,
+            'email': email,
+            'phone': phone,
+            'password': password
+        })
+        user.auto_add()
+        res = client.get(url_for('admin.admin_auth_register', token=user.generate_token()))
+        assert b'success' in res.data
+
     def test_login(self, client):
-        res = client.post(url_for('api.admin_login'), json={
+        res = client.post(url_for('admin.admin_login'), json={
             'username': username,
             'password': password
         })
@@ -42,117 +56,93 @@ class Test_auth:
 
 
 # --repeat-scope=class
-@pytest.mark.repeat(4)
-class Test_posts:
-    def test_admin_post_post(self, client):
-        res = client.post(url_for('api.admin_post'), json={
-            'create_date': timeStamp,
-        }, headers={
-            'identify': uid,
-            'Authorization': token
-        })
-
-        global pid
-        pid = res.get_json().get('id')
-        assert b'success' in res.data
-        assert res.status_code == 200
-
-    def test_admin_post_put(self, client):
-        res = client.put(url_for('api.admin_post', pid=pid), json={
-            'title': 'title'
-            ,
-            'change_date': timeStamp,
-            'contents': 'contests',
-            'tags': ['tags1', 'tags2', 'tags3'],
-            'publish': True,
-        }, headers={
-            'identify': uid,
-            'Authorization': token
-        })
-        assert b'success' in res.data
-
-    def test_admin_post_get(self, client):
-        res = client.get(url_for('api.admin_post', pid=pid), headers={
-            'identify': uid,
-            'Authorization': token
-        }, json={
-            "id": 1
-        })
-        data = res.get_json().get('data')
-        assert 'title' in data and 'contents' in data and 'tags' in data
-
-    def test_admin_posts_page(self, client):
-        res = client.get(url_for('api.admin_posts', page=1), headers={
-            'identify': uid,
-            'Authorization': token
-        })
-        data = res.get_json().get('data')
-        assert b'success' in res.data
-        for d in data:
-            assert 'title' in d and 'create_date' in d and 'publish' in d
-
-
-class test_admin_delete:
-
-    def test_admin_post_delete(self, client):
-        res = client.delete(url_for('api.admin_post'), json={
-            "delete_posts": [1]
-        }, headers={
-            'identify': uid,
-            'Authorization': token
-        })
-        data = res.get_json().get('data')
-        assert len(data) == 0
-
-    def test_admin_post_auth_delete(self, client):
-        res = client.delete(url_for('api.admin_post'), json={
-            "delete_posts": [1]
-        }, headers={
-            'identify': uid,
-            'Authorization': token
-        })
-        data = res.get_json().get('data')
-        assert len(data) != 0
-
-
-class Test_image:
-    def test_admin_image_post(self, client):
-        with open('/home/pjs/Pictures/epoll.png', 'rb') as f:
-            pic = f.read()
-        data = {'images': (BytesIO(pic), 'images.png'), 'id': pid}
-        res = client.put(
-            url_for('api.admin_images'),
-            content_type='multipart/form-data',
-            data=data,
-            headers={
-                'identify': uid,
-                'Authorization': token
-            })
-        assert b'success' in res.data
-
-    def test_admin_image_get(self, client):
-        data = {
-            "id": pid,
-            "filename": 'images.png'
-        }
-        res = client.get(url_for('api.admin_images'), json=data, headers={
-            'identify': uid,
-            'Authorization': token
-        })
-        assert res.status_code == 200
-
+# @pytest.mark.repeat(4)
+# class Test_posts:
+#     def test_admin_post_post(self, client):
+#         res = client.post(url_for('admin.admin_post'), json={
+#             'create_date': timeStamp,
+#         }, headers={
+#             'identify': uid,
+#             'Authorization': token
+#         })
+#
+#         global pid
+#         pid = res.get_json().get('id')
+#         assert b'success' in res.data
+#         assert res.status_code == 200
+#
+#     def test_admin_post_put(self, client):
+#         res = client.put(url_for('admin.admin_post', pid=pid), json={
+#             'title': 'title'
+#             ,
+#             'change_date': timeStamp,
+#             'contents': 'contests',
+#             'tags': ['tags1', 'tags2', 'tags3'],
+#             'publish': True,
+#         }, headers={
+#             'identify': uid,
+#             'Authorization': token
+#         })
+#         assert b'success' in res.data
+#
+#     def test_admin_post_get(self, client):
+#         res = client.get(url_for('admin.admin_post', pid=pid), headers={
+#             'identify': uid,
+#             'Authorization': token
+#         }, json={
+#             "id": 1
+#         })
+#         data = res.get_json().get('data')
+#         assert 'title' in data and 'contents' in data and 'tags' in data
+#
+#     def test_admin_posts_page(self, client):
+#         res = client.get(url_for('admin.admin_posts', page=1), headers={
+#             'identify': uid,
+#             'Authorization': token
+#         })
+#         data = res.get_json().get('data')
+#         assert b'success' in res.data
+#         for d in data:
+#             assert 'title' in d and 'create_date' in d and 'publish' in d
+#
+#
+# class test_admin_delete:
+#
+#     def test_admin_post_delete(self, client):
+#         res = client.delete(url_for('admin.admin_post'), json={
+#             "delete_posts": [1]
+#         }, headers={
+#             'identify': uid,
+#             'Authorization': token
+#         })
+#         data = res.get_json().get('data')
+#         assert len(data) == 0
+#
+#     def test_admin_post_auth_delete(self, client):
+#         res = client.delete(url_for('admin.admin_post'), json={
+#             "delete_posts": [1]
+#         }, headers={
+#             'identify': uid,
+#             'Authorization': token
+#         })
+#         data = res.get_json().get('data')
+#         assert len(data) != 0
+#
 
 class Test_logout:
     def test_logout(self, client):
-        res = client.delete(url_for('api.admin_logout'), headers={
+        print(token)
+        res = client.delete(url_for('admin.admin_logout'), headers={
             'identify': uid,
             'Authorization': token
         })
         assert b'success' in res.data
 
+    # 测试是否注销成功
     def test_admin_posts(self, client):
-        res = client.get(url_for('api.admin_posts', page=1), headers={
+        res = client.get(url_for('admin.post_view'), headers={
             'identify': uid,
             'Authorization': token
         })
+        assert res.status_code == 401
         assert b'failed' in res.data

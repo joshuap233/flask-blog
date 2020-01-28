@@ -17,7 +17,8 @@ mail = Mail()
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name]())
-    CORS(app)
+    if app.config['TESTING'] != 'production':
+        CORS(app)
     db.init_app(app)
     from app.api.view.blueprint import api as api_blueprint
     app.register_blueprint(api_blueprint)
@@ -34,6 +35,12 @@ def create_app(config_name):
 
 
 app = create_app('default')
+
+
+@app.shell_context_processor
+def make_shell_context():
+    return dict(db=db, create=db.create_all, drop=db.drop_all)
+
 
 if __name__ == '__main__':
     app.run()
