@@ -12,7 +12,7 @@ def tags():
             "name": tag.name,
             "article": [{"id": post.id, "title": post.title} for post in tag.posts]
         })
-    return generate_res('success', 'tags', data=data)
+    return generate_res('success', data=data)
 
 
 """   

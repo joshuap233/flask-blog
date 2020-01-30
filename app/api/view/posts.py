@@ -11,7 +11,7 @@ def posts(post_id):
         "title": post.title,
         "contents": post.contents
     }
-    return generate_res("success", 'post', data=article)
+    return generate_res("success", data=article)
 
 
 """ 

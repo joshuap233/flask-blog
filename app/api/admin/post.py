@@ -14,12 +14,12 @@ def post_view():
     if request.method == 'POST':
         post = Post()
         post.auto_add()
-        return generate_res('success', '', data={
+        return generate_res('success', data={
             'postId': post.id
         })
     elif request.method == 'PUT':
         if not new_post.id:
-            return generate_res("failed", ''), 404
+            return generate_res("failed"), 404
         post = Post.query.get(new_post.id)
         post.set_attrs(new_post.__dict__)
         for tag in new_post.tags:
@@ -30,16 +30,15 @@ def post_view():
             post.tags.append(tag)
             tag.count = tag.count + 1
         post.auto_add()
-        return generate_res('success', '')
+        return generate_res('success')
     elif request.method == 'DELETE':
         try:
             post = Post.query.get(new_post.id)
             db.session.delete(post)
             db.session.commit()
-            return generate_res('success', '')
+            return generate_res('success')
         except Exception as e:
             print(e)
-            return generate_res('failed', ''), 404
+            return generate_res('failed'), 404
     post = Post.query.get(new_post.id)
-    return generate_res('failed', ''), 404 if not post else generate_res(
-        'success', '', data=PostToJsonView(post).__dict__)
+    return generate_res('success', data=PostToJsonView(post).__dict__) if post else generate_res('failed'), 404

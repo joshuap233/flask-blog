@@ -23,7 +23,7 @@ def archive(page):
                 item["articles"].append(article)
             else:
                 data.append({"date": f'{year}-{month}', "articles": [article]})
-    return generate_res("success", "archive", data=data)
+    return generate_res("success", data=data)
 
 
 """

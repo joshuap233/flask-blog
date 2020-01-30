@@ -8,9 +8,6 @@ from app import create_app, db as _db
 
 @pytest.fixture(scope="session")
 def app(request):
-    """
-    Returns session-wide application.
-    """
     return create_app("testing")
 
 

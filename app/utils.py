@@ -4,14 +4,13 @@ from threading import Thread
 from flask import request, jsonify, current_app
 from flask_mail import Message
 
-from . import mail
 from app.model.db import User
+from . import mail
 
 
-def generate_res(status, msg, **kwargs):
+def generate_res(status, **kwargs):
     status = {
         'status': status,
-        'msg': msg
     }
     status.update(kwargs)
     return jsonify(status)
@@ -23,14 +22,16 @@ def login_required(func):
         data = request.headers
         uid = data.get('identify')
         token = data.get('Authorization')
-        user = User.query.get(uid)
+        if not uid or not token:
+            return generate_res('failed', msg='check login'), 401
+        user = User.query.get(int(uid or -1))
         if not user:
-            return generate_res('failed', 'user not found'), 401
+            return generate_res('failed', msg='user not found'), 401
         if user.is_active and user.confirm_token(token) and user.is_validate:
             return func(*args, **kwargs)
         user.is_active = False
         user.auto_add()
-        return generate_res('failed', 'check login'), 401
+        return generate_res('failed', msg='check login'), 401
 
     return check_login
 

@@ -15,18 +15,17 @@ def posts_view():
         pagination = Post.query.filter(
             Post.title.like(query.search)).order_by(
             query.orderBy).paginate(page=query.page, per_page=query.pageSize, error_out=False)
-        return generate_res('success', 'msg', data={
+        return generate_res('success', data={
             'total': Post.total(),
             'page': query.page,
             'post': PostsToJsonView(pagination.items).fill()
         })
-    pagination = Post.query.filter_by(
-        title=query.search).order_by(
+    pagination = Post.query.order_by(
         query.orderBy).paginate(
         page=query.page, page_size=query.pageSize, error_out=False)
     posts = pagination.items
-    return generate_res('failed', 'page not found'), 404 if not posts else generate_res('success', '...', data={
+    return generate_res('success', data={
         'total': Post.total(),
         'page': query.page,
         'post': PostsToJsonView(posts).fill()
-    })
+    }) if posts else generate_res('failed', msg='page not found'), 404

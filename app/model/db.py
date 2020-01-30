@@ -33,7 +33,7 @@ class Base(db.Model):
     # 获取表的记录数
     @classmethod
     def total(cls):
-        return cls.count()
+        return cls.query.count()
 
 
 class Post(Base):
@@ -60,6 +60,11 @@ class Tag(Base):
     describe = db.Column(db.String(128), nullable=True)
     # 使用标签的文章数量
     count = db.Column(db.Integer, default=0)
+
+    def __init__(self, *args, **kwargs):
+        if 'count' not in kwargs:
+            kwargs['count'] = self.__table__.c.count.default.arg
+        super().__init__(*args, **kwargs)
 
     def set_attrs(self, attrs: dict):
         blacklist = ['id', 'count']

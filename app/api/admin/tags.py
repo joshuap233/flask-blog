@@ -11,50 +11,49 @@ from .blueprint import admin
 @login_required
 def all_tags_view():
     tags = [tag.name for tag in Tag.query.all()]
-    return generate_res('success', '', data=tags)
+    return generate_res('success', data=tags)
 
 
 # 获取所有标签,包含标签以及详细信息
 @admin.route('/tags/', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def tags_view():
-    query = QueryView(request.args)
+    if request.method == 'GET':
+        query = QueryView(request.args)
+        if query.search:
+            # TODO: 暂时只支持按标签名查找
+            pagination = Tag.query.filter(
+                Tag.name.like(query.search)).order_by(
+                query.orderBy).paginate(
+                page=query.page, per_page=query.pageSize, error_out=False)
+            return generate_res('success', data=TagsToJsonView(pagination.items).fill(query.page))
+        pagination = Tag.query.paginate(page=query.page, per_page=query.pageSize, error_out=False)
+        tags = pagination.items
+        return generate_res(
+            'success', data=TagsToJsonView(tags).fill(query.page)
+        ) if tags else generate_res('failed'), 404
+
     new_tag = JsonToTagView(request.get_json())
     if request.method == 'PUT':
         tag = Tag.query.get(new_tag.id)
         if not tag:
-            return generate_res('failed', ''), 404
+            return generate_res('failed'), 404
+        # 如果修改了标签名,且修改后的标签名已存在
+        if tag.name != new_tag.name and Tag.query.filter_by(name=new_tag.name).first():
+            return generate_res('failed'), 404
         tag.set_attrs(new_tag.__dict__)
         tag.auto_add()
-        return generate_res('success', '')
+        return generate_res('success')
     elif request.method == 'DELETE':
         tag = Tag.query.get(new_tag.id)
         if not tag:
-            return generate_res('failed', ''), 404
+            return generate_res('failed'), 404
         tag.auto_delete()
-        return generate_res('success', '')
+        return generate_res('success')
     elif request.method == 'POST':
-        if Tag.quary.filter_by(new_tag.name):
-            return generate_res('failed', '标签已存在')
+        if Tag.query.filter_by(name=new_tag.name).first():
+            return generate_res('failed', msg='标签已存在')
         tag = Tag()
         tag.set_attrs(new_tag.__dict__)
         tag.auto_add()
-        return generate_res('success', '')
-    if query.search:
-        # TODO: 暂时只支持按标签名查找
-        pagination = Tag.query.filter(
-            Tag.name.like(query.search)).order_by(
-            query.orderBy).paginate(
-            page=query.page, per_page=query.pageSize, error_out=False)
-        return generate_res('success', '', data={
-            'total': Tag.total(),
-            'page': query.page,
-            'tags': TagsToJsonView(pagination.items).fill()
-        })
-    pagination = Tag.query.paginate(page=query.page, page_size=query.pageSize, error_out=False)
-    tags = pagination.items
-    return generate_res('failed', 'page not found'), 404 if not tags else generate_res('success', '', data={
-        'total': Tag.total(),
-        'page': query.page,
-        'tags': TagsToJsonView(tags).fill()
-    })
+        return generate_res('success')
