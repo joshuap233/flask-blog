@@ -23,12 +23,12 @@ class PostsToJsonView:
 class PostToJsonView:
     def __init__(self, post):
         self.postId = int(post.id)
-        self.title = post.title
+        self.title = post.title or ''
         self.tags = [tag.name for tag in post.tags]
         self.visibility = post.visibility
         self.createDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.create_date))
         self.changeDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.change_date))
-        self.article = post.article
+        self.article = post.article or ''
 
 
 # 格式化从数据库获取的标签
@@ -59,9 +59,10 @@ class QueryView:
         filters = query.get('filters')
         if orderBy:
             orderBy = json.loads(orderBy)
-            self.orderBy = self._getOrderByField(orderBy, query.get('orderDirection'))
+        self.orderBy = self._getOrderByField(orderBy, query.get('orderDirection'))
         if filters:
-            self.filters = json.loads(filters)
+            filters = json.loads(filters)
+        self.filters = filters
         # TODO: 设置默认第一页,每页10条记录(写入配置
         self.page = int(query.get('page') or 1)
         self.pageSize = int(query.get('pageSize') or 10)
@@ -69,12 +70,14 @@ class QueryView:
 
     @staticmethod
     def _getOrderByField(orderBy, orderDirection):
+        if not orderBy:
+            return db.desc('id')
         # TODO: 默认降序
         field = orderBy.get('field')
         # 列表为可查询字段名,列表为可查询字段名 分别为 标签名与标签的文章数量  文章标题,状态(私密,公开,..),评论数,修改日期,创建日期
         if field and field in ['name', 'count', 'title', 'visibility', 'comments', 'changeDate', 'createDate']:
             return db.desc(field) if orderDirection != 'asc' else db.asc(field)
-        return db.desc()
+        return db.desc('id')
 
     @staticmethod
     def _getSearch(search):
@@ -92,7 +95,7 @@ class JsonToPostView:
         self.visibility = post.get('visibility')
         if post.get('createDate'):
             self.create_date = time.mktime(time.strptime(post.get('createDate'), '%Y/%m/%d %H:%M'))
-        if post.get('changeDate'):
+        if post.get('change_date'):
             self.change_date = time.mktime(time.strptime(post.get('changeDate'), '%Y/%m/%d %H:%M'))
         self.article = post.get('article')
 

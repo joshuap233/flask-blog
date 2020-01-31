@@ -66,7 +66,7 @@ class Test_auth:
     def test_login(self, client):
         res = client.post(url_for('admin.login_view'), json=USER)
         global HEADERS
-        data = res.get_json()
+        data = res.get_json().get('data')
         HEADERS['Authorization'] = data.get('token')
         HEADERS['identify'] = data.get('id')
         assert b'success' in res.data

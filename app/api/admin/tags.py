@@ -31,7 +31,7 @@ def tags_view():
         tags = pagination.items
         return generate_res(
             'success', data=TagsToJsonView(tags).fill(query.page)
-        ) if tags else generate_res('failed'), 404
+        )
 
     new_tag = JsonToTagView(request.get_json())
     if request.method == 'PUT':
@@ -55,5 +55,6 @@ def tags_view():
             return generate_res('failed', msg='标签已存在')
         tag = Tag()
         tag.set_attrs(new_tag.__dict__)
+        tag.count = 1
         tag.auto_add()
         return generate_res('success')

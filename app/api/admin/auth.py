@@ -36,7 +36,11 @@ def login_view():
     if user and user.check_password(password) and user.is_validate:
         user.is_active = True
         user.auto_add()
-        return generate_res('success', id=user.id, token=user.generate_token(), expiration=3600)
+        return generate_res('success', data={
+            'id': user.id,
+            'token': user.generate_token(),
+        })
+    return generate_res('failed')
 
 
 @admin.route('/auth/logout/', methods=["DELETE"])
@@ -47,3 +51,10 @@ def logout_view():
     user.is_active = False
     user.auto_add()
     return generate_res('success')
+
+
+# 单独用于登录验证
+@admin.route('/auth/')
+@login_required
+def auth_view():
+    return generate_res('success', data={'auth': True})

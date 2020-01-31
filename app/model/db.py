@@ -47,6 +47,11 @@ class Post(Base):
     comments = db.Column(db.Integer, default=0)
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
 
+    def __init__(self, *args, **kwargs):
+        if 'comments' not in kwargs:
+            kwargs['comments'] = self.__table__.c.comments.default.arg
+        super().__init__(*args, **kwargs)
+
     def set_attrs(self, attrs: dict):
         blacklist = ['id', 'tags', 'comments']
         for key, value in attrs.items():

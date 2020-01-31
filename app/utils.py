@@ -24,7 +24,7 @@ def login_required(func):
         token = data.get('Authorization')
         if not uid or not token:
             return generate_res('failed', msg='check login'), 401
-        user = User.query.get(int(uid or -1))
+        user = User.query.get(int(uid))
         if not user:
             return generate_res('failed', msg='user not found'), 401
         if user.is_active and user.confirm_token(token) and user.is_validate:
