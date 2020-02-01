@@ -51,18 +51,21 @@ TAGS = []
 class Test_auth:
     def test_register(self, client):
         res = client.post(url_for('admin.register_view'), json=USER)
+        data = res.get_json().get('data')
+        uid = data.get('userId')
+        assert uid is not None
+        global HEADERS
+        HEADERS['identify'] = uid
         assert b'success' in res.data
 
-    # 登录邮件验证
+    # 添加邮件,并认证
     def test_auth_register(self, client):
-        user = User.query.filter_by(email=USER['email']).first()
-        user.auto_delete()
-        user = User()
-        user.set_attrs(USER)
+        user = User.query.get(HEADERS['identify'])
         user.auto_add()
-        res = client.get(url_for('admin.auth_register_view', token=user.generate_token()))
+        res = client.get(url_for('admin.auth_email_view', token=user.generate_token()))
         assert b'success' in res.data
 
+    # 测试用户名登录
     def test_login(self, client):
         res = client.post(url_for('admin.login_view'), json=USER)
         global HEADERS
@@ -90,9 +93,7 @@ class Test_post_view:
         assert b'success' in res.data
 
     def test_post_get(self, client):
-        res = client.get(url_for('admin.post_view'), json={
-            'postId': POST['postId']
-        }, headers=HEADERS)
+        res = client.get(url_for('admin.post_view', postId=POST['postId']), headers=HEADERS)
         data = res.get_json().get('data')
         assert 'title' in data and 'tags' in data
 

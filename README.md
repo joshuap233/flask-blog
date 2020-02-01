@@ -11,9 +11,9 @@ py.test  --repeat-scope=session -s
 py.test --cov=flask_blog test/ --repeat-scope=session -s
 ```
 ## TODO
-错误处理
-修改密码
-手机号密码找回
+- 修改密码
+- 手机号登录
+- 多用户
 
 ## admin api
 - [注册](#register)

@@ -9,18 +9,18 @@ from .blueprint import admin
 @admin.route('/posts/post/', methods=['POST', 'GET', 'PUT', 'DELETE'])
 @login_required
 def post_view():
+    # 添加文章
     if request.method == 'POST':
         post = Post()
         post.auto_add()
         return generate_res('success', data={'postId': post.id})
-    # 添加文章
     elif request.method == 'PUT':
         new_post = JsonToPostView(request.get_json())
-
+        print(len(new_post.article))
         if not new_post.id:
             return generate_res("failed"), 404
         post = Post.query.get(new_post.id)
-        post.set_attrs(new_post.__dict__)
+        post.set_attrs(new_post.fill())
         for tag in new_post.tags:
             tag = Tag.query.filter_by(name=tag).first() or Tag(name=tag)
             # TODO: 对象对比???可能报错
@@ -44,4 +44,4 @@ def post_view():
             print(e)
             return generate_res('failed'), 404
     post = Post.query.get(int(request.args.get('postId') or -1))
-    return generate_res('success', data=PostToJsonView(post).__dict__) if post else (generate_res('failed'), 404)
+    return generate_res('success', data=PostToJsonView(post).fill()) if post else (generate_res('failed'), 404)

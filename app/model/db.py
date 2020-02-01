@@ -1,5 +1,6 @@
 from flask import current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
@@ -39,7 +40,7 @@ class Base(db.Model):
 class Post(Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
-    article = db.Column(db.Text, nullable=True)
+    article = db.Column(LONGTEXT, nullable=True)
     create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
     visibility = db.Column(db.String(16), default="私密")
@@ -89,7 +90,8 @@ class User(Base):
     # 是否登录(无法强制使jwt失效,只能通过该字段控制)
     is_active = db.Column(db.Boolean, default=False)
     # 注册是否验证
-    is_validate = db.Column(db.Boolean, default=False)
+    email_is_validate = db.Column(db.Boolean, default=False)
+    phone_is_validate = db.Column(db.Boolean, default=False)
 
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
@@ -112,18 +114,18 @@ class User(Base):
         return True
 
     @classmethod
-    def confirm_register_token(cls, token):
+    def confirm_email_token(cls, token):
         s = Serializer(current_app.config['SECRET_KEY'])
         data = s.loads(token.encode('utf-8'))
         user = cls.query.get(data.get('id'))
-        if user and not user.is_active:
-            user.is_validate = True
+        if user and not user.email_is_validate:
+            user.email_is_validate = True
             user.auto_add()
             return True
         return False
 
     def set_attrs(self, attrs: dict):
-        blacklist = ['id', 'is_validate', 'is_validate', 'password_hash']
+        blacklist = ['id', 'is_validate', 'is_validate', 'password_hash', 'email', 'phone']
         for key, value in attrs.items():
             if hasattr(self, key) and key not in blacklist:
                 setattr(self, key, value)

@@ -26,11 +26,11 @@ def tags_view():
                 Tag.name.like(query.search)).order_by(
                 query.orderBy).paginate(
                 page=query.page, per_page=query.pageSize, error_out=False)
-            return generate_res('success', data=TagsToJsonView(pagination.items).fill(query.page))
+            return generate_res('success', data=TagsToJsonView(pagination.items, query.page).fill())
         pagination = Tag.query.paginate(page=query.page, per_page=query.pageSize, error_out=False)
         tags = pagination.items
         return generate_res(
-            'success', data=TagsToJsonView(tags).fill(query.page)
+            'success', data=TagsToJsonView(tags, query.page).fill()
         )
 
     new_tag = JsonToTagView(request.get_json())
@@ -41,7 +41,7 @@ def tags_view():
         # 如果修改了标签名,且修改后的标签名已存在
         if tag.name != new_tag.name and Tag.query.filter_by(name=new_tag.name).first():
             return generate_res('failed'), 404
-        tag.set_attrs(new_tag.__dict__)
+        tag.set_attrs(new_tag.fill())
         tag.auto_add()
         return generate_res('success')
     elif request.method == 'DELETE':
@@ -54,7 +54,7 @@ def tags_view():
         if Tag.query.filter_by(name=new_tag.name).first():
             return generate_res('failed', msg='标签已存在')
         tag = Tag()
-        tag.set_attrs(new_tag.__dict__)
+        tag.set_attrs(new_tag.fill())
         tag.count = 1
         tag.auto_add()
         return generate_res('success')

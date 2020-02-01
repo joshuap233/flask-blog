@@ -27,7 +27,7 @@ def login_required(func):
         user = User.query.get(int(uid))
         if not user:
             return generate_res('failed', msg='user not found'), 401
-        if user.is_active and user.confirm_token(token) and user.is_validate:
+        if user.is_active and user.confirm_token(token):
             return func(*args, **kwargs)
         user.is_active = False
         user.auto_add()

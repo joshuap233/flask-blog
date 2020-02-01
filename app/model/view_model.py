@@ -4,8 +4,13 @@ import time
 from app.model.db import db, Tag
 
 
+class Base:
+    def fill(self):
+        return self.__dict__
+
+
 # 格式化从数据库获取的文章
-class PostsToJsonView:
+class PostsToJsonView(Base):
     def __init__(self, posts):
         self.data = []
         self.posts = posts
@@ -14,13 +19,13 @@ class PostsToJsonView:
         if not self.posts:
             return []
         for post in self.posts:
-            data = PostToJsonView(post).__dict__
+            data = PostToJsonView(post).fill()
             data['tags'] = ','.join(data['tags'])
             self.data.append(data)
         return self.data
 
 
-class PostToJsonView:
+class PostToJsonView(Base):
     def __init__(self, post):
         self.postId = int(post.id)
         self.title = post.title or ''
@@ -32,19 +37,20 @@ class PostToJsonView:
 
 
 # 格式化从数据库获取的标签
-class TagsToJsonView:
-    def __init__(self, tags):
+class TagsToJsonView(Base):
+    def __init__(self, tags, page):
         self.tags = tags
+        self.page = page
 
-    def fill(self, page):
+    def fill(self):
         return {
             'total': Tag.total(),
-            'page': page,
-            'tags': [TagToJsonView(tag).__dict__ for tag in self.tags] if self.tags else []
+            'page': self.page,
+            'tags': [TagToJsonView(tag).fill() for tag in self.tags] if self.tags else []
         }
 
 
-class TagToJsonView:
+class TagToJsonView(Base):
     def __init__(self, tag):
         self.tagId = int(tag.id or -1)
         self.name = tag.name
@@ -53,7 +59,7 @@ class TagToJsonView:
 
 
 # 格式化从前端获取的查询参数
-class QueryView:
+class QueryView(Base):
     def __init__(self, query):
         orderBy = query.get('orderBy')
         filters = query.get('filters')
@@ -85,7 +91,7 @@ class QueryView:
 
 
 # 格式化从前端接收的文章
-class JsonToPostView:
+class JsonToPostView(Base):
     def __init__(self, post):
         if not post:
             return
@@ -101,10 +107,37 @@ class JsonToPostView:
 
 
 # 格式化从前端接收的标签
-class JsonToTagView:
+class JsonToTagView(Base):
     def __init__(self, tag):
         if not tag:
             return
         self.id = int(tag.get('tagId') or -1)
         self.name = tag.get('name')
         self.describe = tag.get('describe')
+
+
+class JsonToUserView(Base):
+    def __init__(self, user: dict):
+        # 注册时,输入用户名密码注册用户,返回用户id,添加邮箱或手机时,前段添加userId字段
+        self.id = int(user.get('userId') or -1)
+        # 登录方式 没有则默认用户名登录
+        self.nickname = user.get('nickname')
+        self.username = user.get('username')
+        self.email = user.get('email')
+        self.password = user.get('password')
+        # str(None) == 'None'
+        phone = user.get('phone')
+        if phone:
+            self.phone = str(phone)
+        self.user_about = user.get('user_about')
+        self.query = self._get_query()
+
+    # 判断用邮箱登录(注册)还是用户名登录(注册)
+    def _get_query(self):
+        if self.username:
+            self.type = 'username'
+            return {"username": self.username}
+        if self.email:
+            self.type = 'email'
+            return {"email": self.email}
+        return None
