@@ -14,7 +14,7 @@ mail = Mail()
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name]())
-    if app.config['TESTING'] != 'production':
+    if config_name != 'production':
         CORS(app)
     db.init_app(app)
     from app.api.view.blueprint import api as api_blueprint

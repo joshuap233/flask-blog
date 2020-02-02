@@ -19,7 +19,8 @@ class PostsToJsonView(Base):
         if not self.posts:
             return []
         for post in self.posts:
-            data = PostToJsonView(post).fill()
+            data: dict = PostToJsonView(post).fill()
+            del data['article']
             data['tags'] = ','.join(data['tags'])
             self.data.append(data)
         return self.data
@@ -34,6 +35,7 @@ class PostToJsonView(Base):
         self.createDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.create_date))
         self.changeDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.change_date))
         self.article = post.article or ''
+        self.comments = post.comments
 
 
 # 格式化从数据库获取的标签
@@ -101,7 +103,7 @@ class JsonToPostView(Base):
         self.visibility = post.get('visibility')
         if post.get('createDate'):
             self.create_date = time.mktime(time.strptime(post.get('createDate'), '%Y/%m/%d %H:%M'))
-        if post.get('change_date'):
+        if post.get('changeDate'):
             self.change_date = time.mktime(time.strptime(post.get('changeDate'), '%Y/%m/%d %H:%M'))
         self.article = post.get('article')
 

@@ -6,7 +6,7 @@ from app.utils import generate_res, login_required
 from .blueprint import admin
 
 
-@admin.route("/posts/")
+@admin.route("/posts")
 @login_required
 def posts_view():
     query = QueryView(request.args)

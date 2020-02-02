@@ -6,7 +6,7 @@ from app.utils import generate_res, login_required, send_email
 from .blueprint import admin
 
 
-@admin.route('/auth/register/', methods=['POST'])
+@admin.route('/auth/register', methods=['POST'])
 def register_view():
     new_user = JsonToUserView(request.get_json())
     # TODO: 添加手机验证
@@ -36,7 +36,7 @@ def auth_email_view(token):
     return generate_res('success' if status else 'failed')
 
 
-@admin.route('/auth/login/', methods=['POST'])
+@admin.route('/auth/login', methods=['POST'])
 def login_view():
     # 添加手机登录,邮箱验证码登录
     user_data = JsonToUserView(request.get_json())
@@ -53,7 +53,7 @@ def login_view():
     return generate_res('failed'), 401
 
 
-@admin.route('/auth/logout/', methods=["DELETE"])
+@admin.route('/auth/logout', methods=["DELETE"])
 @login_required
 def logout_view():
     uid = request.headers.get('identify')
@@ -64,7 +64,7 @@ def logout_view():
 
 
 # 单独用于登录验证
-@admin.route('/auth/')
+@admin.route('/auth')
 @login_required
 def auth_view():
     return generate_res('success')

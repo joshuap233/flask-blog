@@ -6,7 +6,7 @@ from app.utils import generate_res, login_required
 from .blueprint import admin
 
 
-@admin.route('/posts/post/', methods=['POST', 'GET', 'PUT', 'DELETE'])
+@admin.route('/posts/post', methods=['POST', 'GET', 'PUT', 'DELETE'])
 @login_required
 def post_view():
     # 添加文章

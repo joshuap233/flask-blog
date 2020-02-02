@@ -7,7 +7,7 @@ from .blueprint import admin
 
 
 # 获取所有标签,仅包含标签名
-@admin.route('/posts/tags/')
+@admin.route('/posts/tags')
 @login_required
 def all_tags_view():
     tags = [tag.name for tag in Tag.query.all()]
@@ -15,7 +15,7 @@ def all_tags_view():
 
 
 # 获取所有标签,包含标签以及详细信息
-@admin.route('/tags/', methods=['POST', 'GET', 'DELETE', 'PUT'])
+@admin.route('/tags', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def tags_view():
     if request.method == 'GET':
