@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from app.config import config
 
 db = SQLAlchemy()
-migrate = Migrate()
+migrate = Migrate(compare_type=True, compare_server_default=True)
 mail = Mail()
 
 

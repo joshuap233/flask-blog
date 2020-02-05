@@ -1,33 +1,56 @@
 from flask import request, url_for
 
 from app.model.db import User
-from app.model.view_model import JsonToUserView
+from app.model.view_model import JsonToUserView, UserToJsonView
 from app.utils import generate_res, login_required, send_email
 from .blueprint import admin
 
 
 @admin.route('/auth/register', methods=['POST'])
 def register_view():
-    new_user = JsonToUserView(request.get_json())
+    user_data = JsonToUserView(request.get_json())
     # TODO: 添加手机验证
-    if new_user.type == 'email' and new_user.email:
-        user = User.query.get(new_user.id)
+    if user_data.type == 'email' and user_data.email:
+        user = User.query.get(user_data.id)
         if not user:
             return generate_res('failed', msg='user not found')
         user.email = user.email
         user.auto_add()
         # TODO: 验证邮件是否发送成功
-        send_email(to=new_user.email,
-                   subject='账号注册',
-                   content=url_for('admin.auth_register_view', token=user.generate_token()))
+        send_email(
+            to=user_data.email,
+            subject='账号注册',
+            content=url_for('admin.auth_register_view', token=user.generate_token())
+        )
         return generate_res('success')
 
-    elif new_user.type == 'username':
+    elif user_data.type == 'username':
         user = User()
-        user.set_attrs(new_user.fill())
+        user.set_attrs(user_data.fill())
         user.auto_add()
         return generate_res('success', data={'userId': user.id})
     return generate_res('failed', msg='field empty')
+
+
+@admin.route('/auth/user/info', methods=["GET", "PUT"])
+@login_required
+def user_info_view():
+    uid = request.headers.get('identify')
+    user = User.query.get(uid)
+    if request.method == 'PUT':
+        user_data = JsonToUserView(request.get_json())
+        if user_data.email and user_data.email != user.email:
+            user.email_is_validate = False
+            user.email = user.email
+            send_email(
+                to=user_data.email,
+                subject='邮件修改确认',
+                content=url_for('admin.auth_register_view', token=user.generate_token())
+            )
+        user.set_attrs(user_data.fill())
+        user.auto_add()
+        return generate_res('success')
+    return generate_res('success', data=UserToJsonView(user).fill())
 
 
 @admin.route('/auth/register/<string:token>')

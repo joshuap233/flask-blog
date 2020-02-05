@@ -127,12 +127,14 @@ class JsonToUserView(Base):
         self.username = user.get('username')
         self.email = user.get('email')
         self.password = user.get('password')
-        # str(None) == 'None'
+        # phone以字符串形式存入,如果phone字段为空,str(None) 为'None',所以先判断phone字段是否存在
         phone = user.get('phone')
         if phone:
             self.phone = str(phone)
         self.user_about = user.get('user_about')
         self.query = self._get_query()
+        self.user_about = user.get('about')
+        self.avatar = user.get('avatar')
 
     # 判断用邮箱登录(注册)还是用户名登录(注册)
     def _get_query(self):
@@ -143,3 +145,12 @@ class JsonToUserView(Base):
             self.type = 'email'
             return {"email": self.email}
         return None
+
+
+class UserToJsonView(Base):
+    def __init__(self, user):
+        self.nickname = user.nickname or ''
+        self.username = user.username or ''
+        self.email = user.email or ''
+        self.about = user.user_about or ''
+        self.avatar = user.avatar or ''

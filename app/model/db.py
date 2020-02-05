@@ -86,7 +86,8 @@ class User(Base):
     email = db.Column(db.String(128))
     phone = db.Column(db.String(32))
     password_hash = db.Column(db.String(128))
-    user_about = db.Column(db.Text)
+    user_about = db.Column(LONGTEXT)
+    avatar = db.Column(LONGTEXT)
     # 是否登录(无法强制使jwt失效,只能通过该字段控制)
     is_active = db.Column(db.Boolean, default=False)
     # 注册是否验证
