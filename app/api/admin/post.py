@@ -4,7 +4,6 @@ from app.model.db import Post, db, Tag
 from app.model.view_model import PostToJsonView, JsonToPostView
 from app.utils import generate_res, login_required
 from .blueprint import admin
-import time
 
 @admin.route('/posts/post', methods=['POST', 'GET', 'PUT', 'DELETE'])
 @login_required

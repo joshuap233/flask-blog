@@ -1,18 +1,41 @@
+from flask import jsonify
+
 from .blueprint import api
-from app.model.db import Tag
-from app.utils import generate_res
 
 
-@api.route('/tags/')
-def tags():
-    tags_ = Tag.query.all()
-    data = []
-    for tag in tags_:
-        data.append({
-            "name": tag.name,
-            "article": [{"id": post.id, "title": post.title} for post in tag.posts]
-        })
-    return generate_res('success', data=data)
+@api.route('/tags')
+def tag_view():
+    return jsonify({
+        'status': 'success',
+        'data': [
+            {
+                "id": 1,
+                "name": "ubuntu",
+                "count": 5,
+            },
+            {
+                "id": 2,
+                "name": "linux",
+                "count": 10
+            },
+            {
+                "id": 3,
+                "name": "python",
+                "count": 3
+            }
+        ]})
+
+
+# @api.route('/tags/')
+# def tags():
+#     tags_ = Tag.query.all()
+#     data = []
+#     for tag in tags_:
+#         data.append({
+#             "name": tag.name,
+#             "article": [{"id": post.id, "title": post.title} for post in tag.posts]
+#         })
+#     return generate_res('success', data=data)
 
 
 """   
