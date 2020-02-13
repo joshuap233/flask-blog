@@ -18,7 +18,7 @@ def posts_view():
         return generate_res('success', data={
             'total': Post.total(),
             'page': query.page,
-            'post': PostsToJsonView(pagination.items).fill()
+            'post': PostsToJsonView(pagination.items)
         })
     pagination = Post.query.order_by(
         query.orderBy).paginate(
@@ -27,5 +27,5 @@ def posts_view():
     return generate_res('success', data={
         'total': Post.total(),
         'page': query.page,
-        'post': PostsToJsonView(posts).fill()
+        'post': PostsToJsonView(posts)
     })

@@ -1,7 +1,7 @@
+from app.exception import NotFound
 from .blueprint import admin
-from app.utils import generate_res
 
 
 @admin.errorhandler(404)
 def page_not_found():
-    return generate_res('failed', msg="page not found"), 404
+    raise NotFound('page not found')

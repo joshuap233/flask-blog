@@ -26,7 +26,6 @@ USER = {
     'username': faker.name(),
     'nickname': faker.name(),
     'email': os.getenv('MAIL_RECEVIER'),
-    'phone': faker.phone_number(),
     'password': faker.password()
 }
 
@@ -61,7 +60,8 @@ class Test_auth:
     # 添加邮件,并认证
     def test_auth_register(self, client):
         user = User.query.get(HEADERS['identify'])
-        user.auto_add()
+        with user.auto_add():
+            pass
         res = client.get(url_for('admin.auth_email_view', token=user.generate_token()))
         assert b'success' in res.data
 

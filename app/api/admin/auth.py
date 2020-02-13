@@ -1,56 +1,47 @@
 from flask import request, url_for
 
 from app.model.db import User
-from app.model.view_model import JsonToUserView, UserToJsonView
+from app.model.view_model import UserInfoView
 from app.utils import generate_res, login_required, send_email
 from .blueprint import admin
+from app.exception import AuthFailed
+from app.validate.validate import RegisterValidate, UserInfoValidate,LoginValidate
 
 
 @admin.route('/auth/register', methods=['POST'])
 def register_view():
-    user_data = JsonToUserView(request.get_json())
-    # TODO: 添加手机验证
-    if user_data.type == 'email' and user_data.email:
-        user = User.query.get(user_data.id)
-        if not user:
-            return generate_res('failed', msg='user not found')
-        user.email = user.email
-        user.auto_add()
-        # TODO: 验证邮件是否发送成功
+    form = RegisterValidate().validate_api()
+    user = User()
+    with user.auto_add():
+        user.set_attrs(form.data)
+    if form.email:
         send_email(
-            to=user_data.email,
+            to=form.email,
             subject='账号注册',
             content=url_for('admin.auth_register_view', token=user.generate_token())
         )
-        return generate_res('success')
-
-    elif user_data.type == 'username':
-        user = User()
-        user.set_attrs(user_data.fill())
-        user.auto_add()
-        return generate_res('success', data={'userId': user.id})
-    return generate_res('failed', msg='field empty')
+    return generate_res('success')
 
 
 @admin.route('/auth/user/info', methods=["GET", "PUT"])
 @login_required
 def user_info_view():
     uid = request.headers.get('identify')
-    user = User.query.get(uid)
+    user = User.query.get_or_404(uid)
     if request.method == 'PUT':
-        user_data = JsonToUserView(request.get_json())
-        if user_data.email and user_data.email != user.email:
+        form = UserInfoValidate().validate_api()
+        if form.email.data and form.email.data != user.email:
             user.email_is_validate = False
-            user.email = user.email
+            user.email = form.email.data
             send_email(
-                to=user_data.email,
+                to=form.email,
                 subject='邮件修改确认',
                 content=url_for('admin.auth_register_view', token=user.generate_token())
             )
-        user.set_attrs(user_data.fill())
-        user.auto_add()
+        with user.auto_add():
+            user.set_attrs(form.data)
         return generate_res('success')
-    return generate_res('success', data=UserToJsonView(user).fill())
+    return generate_res('success', data=UserInfoView(user))
 
 
 @admin.route('/auth/register/<string:token>')
@@ -61,28 +52,25 @@ def auth_email_view(token):
 
 @admin.route('/auth/login', methods=['POST'])
 def login_view():
-    # 添加手机登录,邮箱验证码登录
-    user_data = JsonToUserView(request.get_json())
-    if not user_data.query:
-        return generate_res('failed')
-    user = User.query.filter_by(**user_data.query).first()
-    if user and user.check_password(user_data.password):
+    form = LoginValidate()
+    user = User.query.filter_by(username=form.username.data).first_or_404()
+    if not user.check_password(form.password.data):
+        raise AuthFailed()
+    with user.auto_add():
         user.is_active = True
-        user.auto_add()
-        return generate_res('success', data={
-            'id': user.id,
-            'token': user.generate_token(),
-        })
-    return generate_res('failed'), 401
+    return generate_res('success', data={
+        'id': user.id,
+        'token': user.generate_token(),
+    })
 
 
 @admin.route('/auth/logout', methods=["DELETE"])
 @login_required
 def logout_view():
     uid = request.headers.get('identify')
-    user = User.query.get(uid)
-    user.is_active = False
-    user.auto_add()
+    user = User.query.get_or_404(uid)
+    with user.auto_add():
+        user.is_active = False
     return generate_res('success')
 
 

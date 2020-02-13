@@ -1,34 +1,32 @@
 import json
 import time
 
-from app.model.db import db, Tag
-
-
-class Base:
-    def fill(self):
-        return self.__dict__
+from app.exception import ParameterException
+from app.model.base import db
+from app.model.db import Tag
 
 
 # 格式化从数据库获取的文章
-class PostsToJsonView(Base):
+class PostsToJsonView:
     def __init__(self, posts):
         self.data = []
         self.posts = posts
 
-    def fill(self):
+    @property
+    def json(self):
         if not self.posts:
             return []
         for post in self.posts:
-            data: dict = PostToJsonView(post).fill()
+            data: dict = PostToJsonView(post).__dict__
             del data['article']
             data['tags'] = ','.join(data['tags'])
             self.data.append(data)
         return self.data
 
 
-class PostToJsonView(Base):
+class PostToJsonView:
     def __init__(self, post):
-        self.postId = int(post.id)
+        self.postId = post.id
         self.title = post.title or ''
         self.tags = [tag.name for tag in post.tags]
         self.visibility = post.visibility
@@ -39,29 +37,30 @@ class PostToJsonView(Base):
 
 
 # 格式化从数据库获取的标签
-class TagsToJsonView(Base):
+class TagsToJsonView:
     def __init__(self, tags, page):
         self.tags = tags
         self.page = page
 
-    def fill(self):
+    @property
+    def json(self):
         return {
             'total': Tag.total(),
             'page': self.page,
-            'tags': [TagToJsonView(tag).fill() for tag in self.tags] if self.tags else []
+            'tags': [TagToJsonView(tag).__dict__ for tag in self.tags] if self.tags else []
         }
 
 
-class TagToJsonView(Base):
+class TagToJsonView:
     def __init__(self, tag):
-        self.tagId = int(tag.id or -1)
+        self.tagId = tag.id
         self.name = tag.name
         self.describe = tag.describe
         self.count = tag.count
 
 
 # 格式化从前端获取的查询参数
-class QueryView(Base):
+class QueryView:
     def __init__(self, query):
         orderBy = query.get('orderBy')
         filters = query.get('filters')
@@ -72,8 +71,8 @@ class QueryView(Base):
             filters = json.loads(filters)
         self.filters = filters
         # TODO: 设置默认第一页,每页10条记录(写入配置
-        self.page = int(query.get('page') or 1)
-        self.pageSize = int(query.get('pageSize') or 10)
+        self.page = int(query.get('page', 1))
+        self.pageSize = int(query.get('pageSize', 10))
         self.search = self._getSearch(query.get('search'))
 
     @staticmethod
@@ -93,11 +92,11 @@ class QueryView(Base):
 
 
 # 格式化从前端接收的文章
-class JsonToPostView(Base):
+class JsonToPostView:
     def __init__(self, post):
         if not post:
             return
-        self.id = int(post.get('postId') or -1)
+        self.id = post.get('postId')
         self.title = post.get('title')
         self.tags = post.get('tags')
         self.visibility = post.get('visibility')
@@ -109,48 +108,37 @@ class JsonToPostView(Base):
 
 
 # 格式化从前端接收的标签
-class JsonToTagView(Base):
+class JsonToTagView:
     def __init__(self, tag):
         if not tag:
             return
-        self.id = int(tag.get('tagId') or -1)
+        self.id = tag.get('tagId', -1)
         self.name = tag.get('name')
         self.describe = tag.get('describe')
 
 
-class JsonToUserView(Base):
-    def __init__(self, user: dict):
-        # 注册时,输入用户名密码注册用户,返回用户id,添加邮箱或手机时,前段添加userId字段
-        self.id = int(user.get('userId') or -1)
-        # 登录方式 没有则默认用户名登录
-        self.nickname = user.get('nickname')
-        self.username = user.get('username')
-        self.email = user.get('email')
-        self.password = user.get('password')
-        # phone以字符串形式存入,如果phone字段为空,str(None) 为'None',所以先判断phone字段是否存在
-        phone = user.get('phone')
-        if phone:
-            self.phone = str(phone)
-        self.user_about = user.get('user_about')
-        self.query = self._get_query()
-        self.user_about = user.get('about')
-        self.avatar = user.get('avatar')
-
-    # 判断用邮箱登录(注册)还是用户名登录(注册)
-    def _get_query(self):
-        if self.username:
-            self.type = 'username'
-            return {"username": self.username}
-        if self.email:
-            self.type = 'email'
-            return {"email": self.email}
-        return None
-
-
-class UserToJsonView(Base):
+class UserInfoView:
     def __init__(self, user):
-        self.nickname = user.nickname or ''
-        self.username = user.username or ''
+        self.nickname = user.nickname
+        self.username = user.username
         self.email = user.email or ''
         self.about = user.user_about or ''
         self.avatar = user.avatar or ''
+
+
+# class LoginView:
+#     def __init__(self, user):
+#         self.username = user.get('username')
+#         self.email = user.get('email')
+#         self.password = user.get('password')
+#         self.query = self._get_query()
+#
+#     # 判断用邮箱登录(注册)还是用户名登录(注册)
+#     def _get_query(self):
+#         if self.username:
+#             self.type = 'username'
+#             return {"username": self.username}
+#         if self.email:
+#             self.type = 'email'
+#             return {"email": self.email}
+#         raise ParameterException("请输入用户名或邮箱")

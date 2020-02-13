@@ -4,6 +4,7 @@ from threading import Thread
 from flask import request, jsonify, current_app
 from flask_mail import Message
 
+from app.exception import AuthFailed
 from app.model.db import User
 from . import mail
 
@@ -23,15 +24,13 @@ def login_required(func):
         uid = data.get('identify')
         token = data.get('Authorization')
         if not uid or not token:
-            return generate_res('failed', msg='check login'), 401
-        user = User.query.get(int(uid))
-        if not user:
-            return generate_res('failed', msg='user not found'), 401
-        if user.is_active and user.confirm_token(token):
-            return func(*args, **kwargs)
-        user.is_active = False
-        user.auto_add()
-        return generate_res('failed', msg='check login'), 401
+            raise AuthFailed()
+        user = User.query.get_or_404(uid)
+        if not user.is_active or not user.confirm_token(token):
+            raise AuthFailed()
+        with user.auto_add():
+            user.is_active = False
+        return func(*args, **kwargs)
 
     return check_login
 
