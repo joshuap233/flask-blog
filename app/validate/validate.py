@@ -1,6 +1,7 @@
 from wtforms import PasswordField, StringField, IntegerField, FieldList
 from wtforms.validators import DataRequired, EqualTo, Regexp, Email, NumberRange, Length, AnyOf
 
+from app.utils import time2stamp
 from .base import JsonValidate
 
 
@@ -47,14 +48,14 @@ class PostValidate(JsonValidate):
     ])
     change_date = IntegerField('文章修改日期', validators=[
         Length(min=10, max=11, message='change_date参数错误')
-    ])
+    ], filters=[time2stamp])
     create_date = IntegerField('文章创建日期', validators=[
         Length(min=10, max=11, message='change_date参数错误')
-    ])
+    ], filters=[time2stamp])
     article = StringField('文章内容')
 
 
-class UserInfoValidate(JsonValidate):
+class UserValidate(JsonValidate):
     username = StringField('用户名', validators=[
         DataRequired(message='用户名不能为空')])
     password = PasswordField('密码', validators=[
@@ -69,8 +70,8 @@ class UserInfoValidate(JsonValidate):
     about = StringField('关于')
 
 
-class TagInfoValidate(JsonValidate):
-    pass
-    # self.id = tag.get('tagId', -1)
-    # self.name = tag.get('name')
-    # self.describe = tag.get('describe')
+class TagValidate(JsonValidate):
+    id = IntegerField('标签id', validators=[
+        NumberRange(min=0, message="id不能为空")])
+    name = StringField('标签名', validators=[DataRequired(message='标签名不可为空'), Length(max=64)])
+    describe = StringField('描述', validators=[Length(min=0, max=128)])

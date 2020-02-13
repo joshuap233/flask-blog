@@ -47,6 +47,12 @@ class RepeatException(HTTPException):
     msg = '字段重复'
 
 
+# 用于邮箱验证
+class EmailValidateException(HTTPException):
+    code = 401
+    msg = 'token 验证失败'
+
+
 class UnknownException(HTTPException):
     code = 500
     msg = '服务器未知错误'

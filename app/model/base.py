@@ -33,26 +33,46 @@ class Query(BaseQuery):
 db = SQLAlchemy(query_class=Query)
 
 
+# 封装增删改查
 class Base(db.Model):
     __abstract__ = True
     blacklist = []
 
-    def update(self, attrs):
-        with self.auto_commit():
-            self.set_attrs(attrs)
-            db.session.add(self)
+    @classmethod
+    def create(cls, attrs: dict = None, **kwargs):
+        one = cls()
+        with one.auto_commit():
+            one.set_attrs(attrs)
+            one.set_attrs(kwargs)
+        return one
+
+    @classmethod
+    def delete_by_id(cls, id_):
+        one = cls.query.get_or_404(id_)
+        with one.auto_commit():
+            db.session.delete(one)
 
     def delete(self):
         with self.auto_commit():
             db.session.delete(self)
 
+    def update(self, attrs: dict = None, **kwargs):
+        with self.auto_commit():
+            self.set_attrs(attrs)
+            self.set_attrs(kwargs)
+            db.session.add(self)
+
     @classmethod
-    def create(cls, attrs=None):
-        one = cls()
+    def update_by_id(cls, id_, attrs: dict = None, **kwargs):
+        one = cls.query.get_or_404(id_)
         with one.auto_commit():
-            if attrs:
-                one.set_attrs(attrs)
-        return one
+            one.set_attrs(attrs)
+            one.set_attrs(kwargs)
+            db.session.add(one)
+
+    @classmethod
+    def search(cls, **kwargs):
+        pass
 
     # 获取表的记录数
     @classmethod
@@ -60,6 +80,8 @@ class Base(db.Model):
         return cls.query.count()
 
     def set_attrs(self, attrs: dict):
+        if not attrs:
+            return
         for key, value in attrs.items():
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)

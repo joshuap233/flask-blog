@@ -3,6 +3,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app.exception import EmailValidateException
 from .base import Base, db
 
 tags_to_post = db.Table(
@@ -13,7 +14,7 @@ tags_to_post = db.Table(
 
 
 class Post(Base):
-    blacklist = ['id', 'tags', 'comments']
+    blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     article = db.Column(LONGTEXT, nullable=True, comment='文章内容')
@@ -29,6 +30,39 @@ class Post(Base):
             kwargs['comments'] = self.__table__.c.comments.default.arg
         super().__init__(*args, **kwargs)
 
+    def set_attrs(self, attrs: dict):
+        for key, value in attrs.items():
+            if hasattr(self, key) and key not in self.blacklist:
+                setattr(self, key, value)
+            if key == 'tags':
+                self.append_tags(value)
+
+    def append_tags(self, tags):
+        for tag in tags:
+            tag = Tag.query.filter_by(name=tag).first() or Tag(name=tag)
+            if tag in self.tags:
+                continue
+            self.tags.append(tag)
+            tag.count += 1
+
+    @classmethod
+    def delete_by_id(cls, id_):
+        one = cls.query.get_or_404(id_)
+        with one.auto_commit():
+            for tag in one.tags:
+                tag.count -= 1
+            db.session.delete(one)
+
+    @classmethod
+    def search(cls, page, per_page, order_by, **kwargs):
+        # TODO: 支持按日期...查找,暂时只支持按文章标题查找
+        search = kwargs.get('search')
+        if search:
+            return cls.query.filter(cls.title.like(search)).order_by(order_by).paginate(
+                page=page, per_page=per_page, error_out=False)
+        else:
+            return cls.query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
+
 
 class Tag(Base):
     blacklist = ['id', 'count']
@@ -42,6 +76,17 @@ class Tag(Base):
         if 'count' not in kwargs:
             kwargs['count'] = self.__table__.c.count.default.arg
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def search(cls, page, per_page, order_by, **kwargs):
+        search = kwargs.get('search')
+        # TODO: 暂时只支持按标签名查找
+        if search:
+            return cls.query.filter(
+                cls.name.like(search)).order_by(order_by).paginate(
+                page=page, per_page=per_page, error_out=False)
+        else:
+            return cls.query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
 
 
 class User(Base):
@@ -80,14 +125,15 @@ class User(Base):
 
     @classmethod
     def confirm_email_token(cls, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        data = s.loads(token.encode('utf-8'))
+        try:
+            s = Serializer(current_app.config['SECRET_KEY'])
+            data = s.loads(token.encode('utf-8'))
+        except Exception as e:
+            raise EmailValidateException()
         user = cls.query.get_or_404(data.get('id'))
         if not user.email_is_validate:
             with user.auto_add():
                 user.email_is_validate = True
-            return True
-        return False
 
     def set_attrs(self, attrs: dict):
         for key, value in attrs.items():

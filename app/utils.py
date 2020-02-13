@@ -1,3 +1,4 @@
+import time
 from functools import wraps
 from threading import Thread
 
@@ -9,7 +10,11 @@ from app.model.db import User
 from . import mail
 
 
-def generate_res(status, **kwargs):
+def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
+    return int(time.mktime(time.strptime(time_, format_)))
+
+
+def generate_res(status='success', **kwargs):
     status = {
         'status': status,
     }
@@ -28,8 +33,7 @@ def login_required(func):
         user = User.query.get_or_404(uid)
         if not user.is_active or not user.confirm_token(token):
             raise AuthFailed()
-        with user.auto_add():
-            user.is_active = False
+        user.update(is_active=False)
         return func(*args, **kwargs)
 
     return check_login

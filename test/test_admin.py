@@ -30,7 +30,7 @@ USER = {
 }
 
 POST = {
-    'postId': -1,
+    'id': -1,
     'title': 'title',
     'article': 'contests',
     'tags': ['tags1', 'tags2', 'tags3'],
@@ -39,7 +39,7 @@ POST = {
     'changeDate': '2019/10/2 2:10'
 }
 TAG = {
-    'tagId': 1,
+    'id': 1,
     'name': 'tags1',
     'describe': 'describe',
 }
@@ -51,7 +51,7 @@ class Test_auth:
     def test_register(self, client):
         res = client.post(url_for('admin.register_view'), json=USER)
         data = res.get_json().get('data')
-        uid = data.get('userId')
+        uid = data.get('id')
         assert uid is not None
         global HEADERS
         HEADERS['identify'] = uid
@@ -83,7 +83,7 @@ class Test_post_view:
         res = client.post(url_for('admin.post_view'), headers=HEADERS)
 
         global POST
-        POST['postId'] = res.get_json().get('data').get('postId')
+        POST['id'] = res.get_json().get('data').get('id')
         assert b'success' in res.data
         assert res.status_code == 200
 
@@ -93,20 +93,20 @@ class Test_post_view:
         assert b'success' in res.data
 
     def test_post_get(self, client):
-        res = client.get(url_for('admin.post_view', postId=POST['postId']), headers=HEADERS)
+        res = client.get(url_for('admin.post_view', id=POST['id']), headers=HEADERS)
         data = res.get_json().get('data')
         assert 'title' in data and 'tags' in data
 
     def test_post_delete(self, client):
         res = client.delete(url_for('admin.post_view'), json={
-            'postId': POST['postId']
+            'id': POST['id']
         }, headers=HEADERS)
         assert b'success' in res.data
 
     # 测试是否删除成功
     def test_auth_post_delete(self, client):
         res = client.delete(url_for('admin.post_view'), json={
-            "postId": POST['postId']
+            "id": POST['id']
         }, headers=HEADERS)
         assert b'failed' in res.data
 
