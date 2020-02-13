@@ -16,6 +16,7 @@ class Config(object):
     MAIL_USE_TSL = False
     MAIL_DEBUG = True
     SERVER_NAME = None
+    PAGESIZE = 10
 
 
 class ProductionConfig(Config):

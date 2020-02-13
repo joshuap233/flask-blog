@@ -14,6 +14,10 @@ def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
     return int(time.mktime(time.strptime(time_, format_)))
 
 
+def format_time(timestamp, format_='%Y/%m/%d %H:%M'):
+    return time.strftime(format_, time.localtime(timestamp))
+
+
 def generate_res(status='success', **kwargs):
     status = {
         'status': status,

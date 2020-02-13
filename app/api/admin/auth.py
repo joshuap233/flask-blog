@@ -16,9 +16,9 @@ def register_view():
         send_email(
             to=form.email,
             subject='账号注册',
-            content=url_for('admin.auth_register_view', token=user.generate_token())
+            content=url_for('admin.auth_email_view', token=user.generate_token())
         )
-    return generate_res()
+    return generate_res(data={'id': user.id})
 
 
 @admin.route('/auth/user/info', methods=["GET", "PUT"])
@@ -34,7 +34,7 @@ def user_info_view():
             send_email(
                 to=form.email,
                 subject='邮件修改确认',
-                content=url_for('admin.auth_register_view', token=user.generate_token())
+                content=url_for('admin.auth_email_view', token=user.generate_token())
             )
         user.update(form.data)
         return generate_res()

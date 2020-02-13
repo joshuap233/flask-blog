@@ -13,7 +13,7 @@ class SQLAlchemy(_SQLAlchemy):
             self.session.commit()
         except Exception as e:
             self.session.rollback()
-            raise UnknownException
+            raise UnknownException()
 
 
 class Query(BaseQuery):
@@ -36,28 +36,30 @@ db = SQLAlchemy(query_class=Query)
 # 封装增删改查
 class Base(db.Model):
     __abstract__ = True
+    # 不能用set_attrs方法直接设置的字段列表
     blacklist = []
 
     @classmethod
     def create(cls, attrs: dict = None, **kwargs):
         one = cls()
-        with one.auto_commit():
+        with db.auto_commit():
             one.set_attrs(attrs)
             one.set_attrs(kwargs)
+            db.session.add(one)
         return one
 
     @classmethod
     def delete_by_id(cls, id_):
         one = cls.query.get_or_404(id_)
-        with one.auto_commit():
+        with db.auto_commit():
             db.session.delete(one)
 
     def delete(self):
-        with self.auto_commit():
+        with db.auto_commit():
             db.session.delete(self)
 
     def update(self, attrs: dict = None, **kwargs):
-        with self.auto_commit():
+        with db.auto_commit():
             self.set_attrs(attrs)
             self.set_attrs(kwargs)
             db.session.add(self)
@@ -65,7 +67,7 @@ class Base(db.Model):
     @classmethod
     def update_by_id(cls, id_, attrs: dict = None, **kwargs):
         one = cls.query.get_or_404(id_)
-        with one.auto_commit():
+        with db.auto_commit():
             one.set_attrs(attrs)
             one.set_attrs(kwargs)
             db.session.add(one)

@@ -3,6 +3,7 @@ import time
 
 from app.model.base import db
 from app.model.db import Tag, Post
+from flask import current_app,request
 
 
 # 格式化从数据库获取的文章
@@ -55,28 +56,28 @@ class TagView:
         self.count = tag.count
 
 
-# 格式化从前端获取的查询参数
+# 格式化查询参数
 class QueryView:
-    def __init__(self, query):
-        orderBy = query.get('orderBy')
+    def __init__(self):
+        query = request.args
+        order_by = query.get('orderBy')
         filters = query.get('filters')
-        if orderBy:
-            orderBy = json.loads(orderBy)
-        self.orderBy = self._getOrderByField(orderBy, query.get('orderDirection'))
+        if order_by:
+            order_by = json.loads(order_by)
+        self.order_by = self._get_order_by(order_by, query.get('orderDirection'))
         if filters:
             filters = json.loads(filters)
         self.filters = filters
-        # TODO: 设置默认第一页,每页10条记录(写入配置
-        self.page = int(query.get('page', 1))
-        self.pageSize = int(query.get('pageSize', 10))
-        self.search = self._getSearch(query.get('search'))
+        self.page = query.get('page', 1)
+        self.pagesize = query.get('pageSize', current_app.config['PAGESIZE'])
+        self.search = self._get_search(query.get('search'))
 
     @staticmethod
-    def _getOrderByField(orderBy, orderDirection):
-        if not orderBy:
+    def _get_order_by(order_by, orderDirection):
+        if not order_by:
             return db.desc('id')
         # TODO: 默认降序
-        field = orderBy.get('field')
+        field = order_by.get('field')
         # TODO:
         # 列表为可查询字段名,列表为可查询字段名 分别为 标签名与标签的文章数量  文章标题,状态(私密,公开,..),评论数,修改日期,创建日期
         if field and field in ['name', 'count', 'title', 'visibility', 'comments', 'changeDate', 'createDate']:
@@ -84,7 +85,7 @@ class QueryView:
         return db.desc('id')
 
     @staticmethod
-    def _getSearch(search):
+    def _get_search(search):
         return f"%{search}%" if search else None
 
 

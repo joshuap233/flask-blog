@@ -22,11 +22,13 @@ QUERY = {
     'orderBy': '{"field": "title", "title": "test"}',
     'orderDirection': random.choice(["asc", "desc"]),
 }
+
 USER = {
     'username': faker.name(),
     'nickname': faker.name(),
     'email': os.getenv('MAIL_RECEVIER'),
-    'password': faker.password()
+    'password': 'password123',
+    'confirm_password': 'password123'
 }
 
 POST = {
@@ -60,8 +62,6 @@ class Test_auth:
     # 添加邮件,并认证
     def test_auth_register(self, client):
         user = User.query.get(HEADERS['identify'])
-        with user.auto_add():
-            pass
         res = client.get(url_for('admin.auth_email_view', token=user.generate_token()))
         assert b'success' in res.data
 
@@ -78,7 +78,7 @@ class Test_auth:
 # --repeat-scope=class
 # @pytest.mark.repeat(4)
 class Test_post_view:
-    @pytest.mark.repeat(4)
+    # @pytest.mark.repeat(4)
     def test_post_post(self, client):
         res = client.post(url_for('admin.post_view'), headers=HEADERS)
 

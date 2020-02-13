@@ -9,11 +9,11 @@ from .blueprint import admin
 @admin.route("/posts")
 @login_required
 def posts_view():
-    query = QueryView(request.args)
+    query = QueryView()
     pagination = Post.search(
         search=query.search,
-        order_by=query.orderBy,
+        order_by=query.order_by,
         page=query.page,
-        per_page=query.pageSize
+        per_page=query.pagesize
     )
     return generate_res(data=PostsView(pagination.items, query.page))

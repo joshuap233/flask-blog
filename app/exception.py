@@ -7,9 +7,10 @@ class HTTPException(_HTTPException):
     code = 0
     status = 'failed'
 
-    def __init__(self, msg=None):
+    def __init__(self, msg=None, response=None):
         if msg:
             self.msg = msg
+        self.response = response
 
     def get_body(self, environ=None):
         body = dict(

@@ -14,6 +14,7 @@ tags_to_post = db.Table(
 
 
 class Post(Base):
+    # 不能用set_attrs方法直接设置的字段列表
     blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
@@ -31,6 +32,8 @@ class Post(Base):
         super().__init__(*args, **kwargs)
 
     def set_attrs(self, attrs: dict):
+        if not attrs:
+            return
         for key, value in attrs.items():
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)
@@ -48,7 +51,7 @@ class Post(Base):
     @classmethod
     def delete_by_id(cls, id_):
         one = cls.query.get_or_404(id_)
-        with one.auto_commit():
+        with db.auto_commit():
             for tag in one.tags:
                 tag.count -= 1
             db.session.delete(one)
@@ -90,7 +93,7 @@ class Tag(Base):
 
 
 class User(Base):
-    blacklist = ['id', 'is_validate', 'is_active', 'password_hash', 'email_is_validate']
+    blacklist = ['id', 'password_hash']
     id = db.Column(db.Integer, unique=True, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
@@ -132,10 +135,11 @@ class User(Base):
             raise EmailValidateException()
         user = cls.query.get_or_404(data.get('id'))
         if not user.email_is_validate:
-            with user.auto_add():
-                user.email_is_validate = True
+            user.update(email_is_validate=True)
 
     def set_attrs(self, attrs: dict):
+        if not attrs:
+            return
         for key, value in attrs.items():
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)

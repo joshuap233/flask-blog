@@ -12,7 +12,7 @@ class LoginValidate(JsonValidate):
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message="密码不可为空"),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+',
+        Regexp(r'^^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='用户名或密码错误'),
     ])
 
@@ -24,7 +24,7 @@ class RegisterValidate(JsonValidate):
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+',
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+'),
         EqualTo('confirm_password', message='两次输入密码不一致')
     ])
@@ -60,7 +60,7 @@ class UserValidate(JsonValidate):
         DataRequired(message='用户名不能为空')])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+',
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
     ])
     email = StringField('邮件', validators=[

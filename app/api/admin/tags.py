@@ -37,12 +37,12 @@ def tags_view():
             raise RepeatException('标签已存在')
         Tag.create(form.data, count=1)
         return generate_res()
-    query = QueryView(request.args)
+    query = QueryView()
 
     pagination = Tag.search(
         search=query.search,
-        order_by=query.orderBy,
+        order_by=query.order_by,
         page=query.page,
-        per_page=query.pageSize
+        per_page=query.pagesize
     )
     return generate_res(data=TagsView(pagination.items, query.page))
