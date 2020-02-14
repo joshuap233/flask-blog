@@ -37,8 +37,8 @@ POST = {
     'article': 'contests',
     'tags': ['tags1', 'tags2', 'tags3'],
     'visibility': '私密',
-    'createDate': '2019/2/10 10:20',
-    'changeDate': '2019/10/2 2:10'
+    'create_date': '2019/2/10 10:20',
+    'change_date': '2019/10/2 2:10'
 }
 TAG = {
     'id': 1,
@@ -87,7 +87,7 @@ class Test_post_view:
         assert b'success' in res.data
         assert res.status_code == 200
 
-    @pytest.mark.repeat(4)
+    # @pytest.mark.repeat(4)
     def test_post_put(self, client):
         res = client.put(url_for('admin.post_view'), json=POST, headers=HEADERS)
         assert b'success' in res.data

@@ -35,10 +35,11 @@ class Post(Base):
         if not attrs:
             return
         for key, value in attrs.items():
-            if hasattr(self, key) and key not in self.blacklist:
-                setattr(self, key, value)
             if key == 'tags':
                 self.append_tags(value)
+                continue
+            if hasattr(self, key) and key not in self.blacklist:
+                setattr(self, key, value)
 
     def append_tags(self, tags):
         for tag in tags:
@@ -141,7 +142,8 @@ class User(Base):
         if not attrs:
             return
         for key, value in attrs.items():
-            if hasattr(self, key) and key not in self.blacklist:
-                setattr(self, key, value)
             if key == 'password':
                 self.generate_password_hash(value)
+                continue
+            if hasattr(self, key) and key not in self.blacklist:
+                setattr(self, key, value)

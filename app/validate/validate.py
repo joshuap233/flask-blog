@@ -20,7 +20,7 @@ class LoginValidate(JsonValidate):
 class RegisterValidate(JsonValidate):
     username = StringField('用户名', validators=[
         DataRequired(message='用户名不能为空'),
-        Length(min=0, max=128, message="用户名长度在0-128字节")
+        Length(min=0, max=128, message="用户名长度在0-128字符间")
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
@@ -38,19 +38,21 @@ class RegisterValidate(JsonValidate):
 
 class PostValidate(JsonValidate):
     id = IntegerField('文章id', validators=[
-        NumberRange(min=0, message="id不能为空")])
+        DataRequired(message='id不能为空'),
+    ])
     title = StringField('文章标题', validators=[
-        Length(0, 128, message="文章标题在0~128字节之间")
+        Length(0, 128, message="文章标题在0~128字符之间")
     ])
     tags = FieldList(StringField('标签'), min_entries=0)
     visibility = StringField('文章可见性', validators=[
+        DataRequired(message='visibility不能为空'),
         AnyOf(['私密', '公开'], message="visibility只能为私密或公开")
     ])
     change_date = IntegerField('文章修改日期', validators=[
-        Length(min=10, max=11, message='change_date参数错误')
+        DataRequired(message='change_date不能为空'),
     ], filters=[time2stamp])
     create_date = IntegerField('文章创建日期', validators=[
-        Length(min=10, max=11, message='change_date参数错误')
+        DataRequired(message='change_date不能为空'),
     ], filters=[time2stamp])
     article = StringField('文章内容')
 
@@ -72,6 +74,8 @@ class UserValidate(JsonValidate):
 
 class TagValidate(JsonValidate):
     id = IntegerField('标签id', validators=[
-        NumberRange(min=0, message="id不能为空")])
-    name = StringField('标签名', validators=[DataRequired(message='标签名不可为空'), Length(max=64)])
-    describe = StringField('描述', validators=[Length(min=0, max=128)])
+        DataRequired(message="id不能为空")])
+    name = StringField('标签名', validators=[
+        DataRequired(message='标签名不可为空'),
+        Length(max=64,message="标签名最大长度为字符")])
+    describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])

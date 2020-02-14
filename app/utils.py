@@ -4,14 +4,19 @@ from threading import Thread
 
 from flask import request, jsonify, current_app
 from flask_mail import Message
+from wtforms.validators import StopValidation
 
+from app import mail
 from app.exception import AuthFailed
 from app.model.db import User
-from . import mail
 
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
-    return int(time.mktime(time.strptime(time_, format_)))
+    try:
+        return int(time.mktime(time.strptime(time_, format_)))
+    except:
+        # 停止验证
+        raise StopValidation(message="日期格错误")
 
 
 def format_time(timestamp, format_='%Y/%m/%d %H:%M'):
@@ -19,6 +24,10 @@ def format_time(timestamp, format_='%Y/%m/%d %H:%M'):
 
 
 def generate_res(status='success', **kwargs):
+    from app.model.view_model import BaseView
+    for key, value in kwargs.items():
+        if isinstance(value, BaseView):
+            kwargs[key] = value.__dict__
     status = {
         'status': status,
     }
@@ -36,8 +45,9 @@ def login_required(func):
             raise AuthFailed()
         user = User.query.get_or_404(uid)
         if not user.is_active or not user.confirm_token(token):
+            # 验证token失败直接将is_active设置为false
+            user.update(is_active=False)
             raise AuthFailed()
-        user.update(is_active=False)
         return func(*args, **kwargs)
 
     return check_login

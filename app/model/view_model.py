@@ -1,13 +1,19 @@
 import json
-import time
+
+from flask import current_app, request
 
 from app.model.base import db
 from app.model.db import Tag, Post
-from flask import current_app,request
+from app.utils import format_time
+
+
+# 用于flask jsonify序列化
+class BaseView:
+    pass
 
 
 # 格式化从数据库获取的文章
-class PostsView:
+class PostsView(BaseView):
     def __init__(self, posts, page):
         self.posts = self.fill_posts(posts)
         self.page = page,
@@ -24,20 +30,20 @@ class PostsView:
         return result
 
 
-class PostView:
+class PostView(BaseView):
     def __init__(self, post):
         self.id = post.id
         self.title = post.title or ''
         self.tags = [tag.name for tag in post.tags]
         self.visibility = post.visibility
-        self.createDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.create_date))
-        self.changeDate = time.strftime("%Y/%m/%d %H:%M", time.localtime(post.change_date))
+        self.createDate = format_time(post.create_date)
+        self.changeDate = format_time(post.change_date)
         self.article = post.article or ''
         self.comments = post.comments
 
 
 # 格式化从数据库获取的标签
-class TagsView:
+class TagsView(BaseView):
     def __init__(self, tags, page):
         self.total = Tag.total()
         self.tags = self.fill_tags(tags)
@@ -48,12 +54,21 @@ class TagsView:
         return [TagView(tag).__dict__ for tag in tags] if tags else []
 
 
-class TagView:
+class TagView(BaseView):
     def __init__(self, tag):
         self.id = tag.id
         self.name = tag.name
         self.describe = tag.describe
         self.count = tag.count
+
+
+class UserInfoView(BaseView):
+    def __init__(self, user):
+        self.nickname = user.nickname
+        self.username = user.username
+        self.email = user.email or ''
+        self.about = user.user_about or ''
+        self.avatar = user.avatar or ''
 
 
 # 格式化查询参数
@@ -87,15 +102,6 @@ class QueryView:
     @staticmethod
     def _get_search(search):
         return f"%{search}%" if search else None
-
-
-class UserInfoView:
-    def __init__(self, user):
-        self.nickname = user.nickname
-        self.username = user.username
-        self.email = user.email or ''
-        self.about = user.user_about or ''
-        self.avatar = user.avatar or ''
 
 # class LoginView:
 #     def __init__(self, user):
