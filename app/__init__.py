@@ -10,22 +10,25 @@ migrate = Migrate(compare_type=True, compare_server_default=True)
 mail = Mail()
 
 
+def register_blueprint(app_):
+    from app.api.view.blueprint import api as api_blueprint
+    app_.register_blueprint(api_blueprint)
+
+    from app.api.admin.blueprint import admin as admin_blueprint
+    app_.register_blueprint(admin_blueprint)
+
+    from app.web.blueprint import main as main_blueprint
+    app_.register_blueprint(main_blueprint)
+
+
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name]())
     if config_name != 'production':
         CORS(app)
+    register_blueprint(app)
     db.init_app(app)
-    from app.api.view.blueprint import api as api_blueprint
-    app.register_blueprint(api_blueprint)
-
-    from app.api.admin.blueprint import admin as admin_blueprint
-    app.register_blueprint(admin_blueprint)
-
-    from app.web.blueprint import main as main_blueprint
-    app.register_blueprint(main_blueprint)
     migrate.init_app(app, db)
-
     mail.init_app(app)
     return app
 

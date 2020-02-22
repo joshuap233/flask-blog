@@ -43,7 +43,7 @@ def login_required(func):
         token = data.get('Authorization')
         if not uid or not token:
             raise AuthFailed()
-        user = User.query.get_or_404(uid)
+        user = User.query.get_or_404(int(uid))
         if not user.is_active or not user.confirm_token(token):
             # 验证token失败直接将is_active设置为false
             user.update(is_active=False)
@@ -73,3 +73,7 @@ def send_email(to, subject, content):
     # msg.html = "<b>testing</b>"
     t = Thread(target=send_async_email, args=[app, msg])
     t.start()
+
+
+def send_register_email():
+    pass

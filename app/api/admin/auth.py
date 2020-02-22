@@ -33,7 +33,7 @@ def user_info_view():
             user.email = form.email.data
             send_email(
                 to=form.email,
-                subject='邮件修改确认',
+                subject='账户邮件修改确认',
                 content=url_for('admin.auth_email_view', token=user.generate_token())
             )
         user.update(form.data)
@@ -68,7 +68,7 @@ def logout_view():
     return generate_res()
 
 
-# 单独用于登录验证
+# 用于登录验证
 @admin.route('/auth')
 @login_required
 def auth_view():

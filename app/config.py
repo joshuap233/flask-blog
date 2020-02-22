@@ -17,6 +17,7 @@ class Config(object):
     MAIL_DEBUG = True
     SERVER_NAME = None
     PAGESIZE = 10
+    PIC_FILE = ''
 
 
 class ProductionConfig(Config):

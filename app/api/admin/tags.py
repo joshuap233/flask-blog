@@ -38,11 +38,5 @@ def tags_view():
         Tag.create(form.data, count=1)
         return generate_res()
     query = QueryView()
-
-    pagination = Tag.search(
-        search=query.search,
-        order_by=query.order_by,
-        page=query.page,
-        per_page=query.pagesize
-    )
+    pagination = Tag.search(**query.search_query)
     return generate_res(data=TagsView(pagination.items, query.page))

@@ -1,5 +1,5 @@
 from wtforms import PasswordField, StringField, IntegerField, FieldList
-from wtforms.validators import DataRequired, EqualTo, Regexp, Email, NumberRange, Length, AnyOf
+from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf
 
 from app.utils import time2stamp
 from .base import JsonValidate
@@ -33,6 +33,10 @@ class RegisterValidate(JsonValidate):
     ])
     confirm_password = PasswordField('确认密码', validators=[
         DataRequired(message='请确认密码')
+    ])
+    excerpt = StringField('摘要', validators=[
+        DataRequired(message='文章摘要不可为空'),
+        Length(max=300, message="摘要最大长度为300")
     ])
 
 
@@ -77,5 +81,5 @@ class TagValidate(JsonValidate):
         DataRequired(message="id不能为空")])
     name = StringField('标签名', validators=[
         DataRequired(message='标签名不可为空'),
-        Length(max=64,message="标签名最大长度为字符")])
+        Length(max=64, message="标签名最大长度为字符")])
     describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])

@@ -19,11 +19,11 @@ class Post(Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     article = db.Column(LONGTEXT, nullable=True, comment='文章内容')
+    excerpt = db.Column(db.String(300), comment="文章摘要")
     create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
     visibility = db.Column(db.String(16), default="私密", comment='文章可见性:私密/公开')
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
-    # 预留
     comments = db.Column(db.Integer, default=0, comment="评论数量")
 
     def __init__(self, *args, **kwargs):

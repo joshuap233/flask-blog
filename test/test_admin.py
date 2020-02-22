@@ -1,7 +1,6 @@
 import os
 import random
 
-import pytest
 from faker import Faker
 from flask import url_for
 
@@ -130,7 +129,7 @@ class Test_tags_view:
 
         # 测试添加新标签
         tags = TAG
-        tags['name'] = 'tags43'
+        tags['name'] = 'tags43' + str(random.randint(0, 1000))
         res = client.post(url_for('admin.tags_view'), headers=HEADERS, json=tags)
         assert b'success' in res.data
 
