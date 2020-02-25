@@ -12,15 +12,16 @@ from .blueprint import admin
 def register_view():
     form = RegisterValidate().validate_api()
     user = User.create(form.data)
-    if form.email:
+    if form.email.data:
         send_email(
-            to=form.email,
+            to=form.email.data,
             subject='账号注册',
             content=url_for('admin.auth_email_view', token=user.generate_token())
         )
     return generate_res(data={'id': user.id})
 
 
+# 修改获取用户信息
 @admin.route('/auth/user/info', methods=["GET", "PUT"])
 @login_required
 def user_info_view():
@@ -32,7 +33,7 @@ def user_info_view():
             user.email_is_validate = False
             user.email = form.email.data
             send_email(
-                to=form.email,
+                to=form.email.data,
                 subject='账户邮件修改确认',
                 content=url_for('admin.auth_email_view', token=user.generate_token())
             )

@@ -12,6 +12,13 @@ tags_to_post = db.Table(
     db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True)
 )
 
+# 文章链接(图片/...)
+link_to_post = db.Table(
+    'link_to_post',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('link_id', db.Integer, db.ForeignKey('link.id'), primary_key=True)
+)
+
 
 class Post(Base):
     # 不能用set_attrs方法直接设置的字段列表
@@ -23,8 +30,10 @@ class Post(Base):
     create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
     visibility = db.Column(db.String(16), default="私密", comment='文章可见性:私密/公开')
-    tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
     comments = db.Column(db.Integer, default=0, comment="评论数量")
+
+    tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
+    links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts'), lazy='dynamic')
 
     def __init__(self, *args, **kwargs):
         if 'comments' not in kwargs:
@@ -37,6 +46,9 @@ class Post(Base):
         for key, value in attrs.items():
             if key == 'tags':
                 self.append_tags(value)
+                continue
+            if key == 'links':
+                self.links.append(Link(url=value))
                 continue
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)
@@ -75,6 +87,8 @@ class Tag(Base):
     describe = db.Column(db.String(128), nullable=True)
     # 使用标签的文章数量
     count = db.Column(db.Integer, default=0)
+    # 图片链接(用于图床)或图片名(本地)
+    picture = db.Column(db.String(255))
 
     def __init__(self, *args, **kwargs):
         if 'count' not in kwargs:
@@ -147,3 +161,11 @@ class User(Base):
                 continue
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)
+
+
+# 用于储存图片链接
+class Link(Base):
+    id = db.Column(db.Integer, unique=True, primary_key=True)
+    describe = db.Column(db.String(255), comment="链接描述")
+    # 图片链接(用于图床)或图片名(本地)
+    url = db.Column(db.String(255))

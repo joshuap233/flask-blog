@@ -73,24 +73,18 @@ class UserInfoView(BaseView):
         self.avatar = user.avatar or ''
 
 
-# 格式化查询参数
+# 解析查询参数
 class QueryView:
     def __init__(self):
-        query = request.args
-        order_by = query.get('orderBy')
-        filters = query.get('filters')
-        if order_by:
-            order_by = json.loads(order_by)
-        self.order_by = self._get_order_by(order_by, query.get('orderDirection'))
-        if filters:
-            filters = json.loads(filters)
-        self.filters = filters
-        self.page = int(query.get('page', 1)) + 1  # 前端第一页为0,但sqlalchemy分页查询第一页为1
-        self.pagesize = int(query.get('pageSize', current_app.config['PAGESIZE']))
-        self.search = self._get_search(query.get('search'))
+        self.query = request.args
+        self.order_by = self._get_order_by()
+        self.filters = self._get_filters()
+        self.page = self._get_page()
+        self.pagesize = self._get_pagesize()
+        self.search = self._get_search()
 
     @property
-    def search_query(self):
+    def search_parameter(self):
         return dict(
             search=self.search,
             order_by=self.order_by,
@@ -98,19 +92,32 @@ class QueryView:
             per_page=self.pagesize
         )
 
-    @staticmethod
-    def _get_order_by(order_by, orderDirection):
+    def _get_page(self):
+        # 前端第一页为0,但sqlalchemy分页查询第一页为1
+        return int(self.query.get('page', 0)) + 1
+
+    def _get_pagesize(self):
+        return int(self.query.get('pageSize', current_app.config['PAGESIZE']))
+
+    def _get_filters(self):
+        filters = self.query.get('filters')
+        return json.loads(filters) if filters else filters
+
+    def _get_order_by(self):
+        order_by = self.query.get('orderBy')
+        orderDirection = self.query.get('orderDirection')
         if not order_by:
             # 默认按id降序
             return db.desc('id')
+        order_by = json.loads(order_by)
         field = order_by.get('field')
-        # 列表为可查询字段名,列表为可查询字段名 分别为 标签名与标签的文章数量  文章标题,状态(私密,公开,..),评论数,修改日期,创建日期
+        # 列表为可查询字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
         if field and field in ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']:
-            return db.desc(field) if orderDirection != 'asc' else db.asc(field)
+            return db.asc(field) if orderDirection == 'asc' else db.desc(field)
         return db.desc('id')
 
-    @staticmethod
-    def _get_search(search):
+    def _get_search(self):
+        search = self.query.get('search')
         return f"%{search}%" if search else None
 
 # class LoginView:

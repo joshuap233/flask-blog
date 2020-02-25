@@ -1,17 +1,16 @@
 import time
 from functools import wraps
-from threading import Thread
 
 from flask import request, jsonify, current_app
 from flask_mail import Message
-from wtforms.validators import StopValidation
 
 from app import mail
-from app.exception import AuthFailed
+from app.exception import AuthFailed, ParameterException
 from app.model.db import User
 
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
+    from wtforms.validators import StopValidation
     try:
         return int(time.mktime(time.strptime(time_, format_)))
     except:
@@ -63,6 +62,7 @@ def send_async_email(app, msg):
 
 
 def send_email(to, subject, content):
+    from threading import Thread
     app = current_app._get_current_object()
     msg = Message(
         subject=subject,
@@ -77,3 +77,14 @@ def send_email(to, subject, content):
 
 def send_register_email():
     pass
+
+
+def filters_filename(filename):
+    from uuid import uuid1
+    from werkzeug.utils import secure_filename
+    from os import path
+    filename = secure_filename(filename)
+    ext_name = path.splitext(filename)[-1]
+    if ext_name not in current_app.config['ALLOWED_EXTENSIONS']:
+        raise ParameterException('扩展名错误')
+    return str(uuid1()) + ext_name

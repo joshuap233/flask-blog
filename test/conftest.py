@@ -22,6 +22,7 @@ def db(app, request):
         _db.create_all()
 
 
+# 数据库回滚
 # @pytest.fixture(scope="session", autouse=True)
 # def session(app, db, request):
 #     """
@@ -50,10 +51,10 @@ def db(app, request):
 #         _db.session = sess
 #         yield sess
 #
-#         # Cleanup
+#         # 删除上传文件
 #         os.system(f'rm -rf {app.config["UPLOAD_FOLDER"]}/*')
 #         sess.remove()
 #         # This instruction rollback any commit that were executed in the tests.
 #         txn.rollback()
 #         conn.close()
-
+#

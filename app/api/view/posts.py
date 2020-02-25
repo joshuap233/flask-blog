@@ -5,7 +5,7 @@ from .blueprint import api
 # @api.route('/posts')
 # def posts():
 #     query = QueryView()
-#     pagination = Post.search(**query.search_query)
+#     pagination = Post.search(**query.search_parameter)
 #     return generate_res("success", data=[{
 #         'id': post.id,
 #         'title': post.title,

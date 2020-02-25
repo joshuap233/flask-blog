@@ -1,5 +1,5 @@
 from wtforms import PasswordField, StringField, IntegerField, FieldList
-from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf
+from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf, Optional
 
 from app.utils import time2stamp
 from .base import JsonValidate
@@ -29,14 +29,11 @@ class RegisterValidate(JsonValidate):
         EqualTo('confirm_password', message='两次输入密码不一致')
     ])
     email = StringField('邮件', validators=[
-        Email(message='请输入有效的邮箱地址，比如：username@domain.com')
+        Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
+        Optional()
     ])
     confirm_password = PasswordField('确认密码', validators=[
         DataRequired(message='请确认密码')
-    ])
-    excerpt = StringField('摘要', validators=[
-        DataRequired(message='文章摘要不可为空'),
-        Length(max=300, message="摘要最大长度为300")
     ])
 
 
@@ -59,6 +56,10 @@ class PostValidate(JsonValidate):
         DataRequired(message='change_date不能为空'),
     ], filters=[time2stamp])
     article = StringField('文章内容')
+    excerpt = StringField('摘要', validators=[
+        DataRequired(message='文章摘要不可为空'),
+        Length(max=300, message="摘要最大长度为300")
+    ])
 
 
 class UserValidate(JsonValidate):
@@ -83,3 +84,12 @@ class TagValidate(JsonValidate):
         DataRequired(message='标签名不可为空'),
         Length(max=64, message="标签名最大长度为字符")])
     describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])
+
+
+# class TagImgValidate(FormValidate):
+#     image = FileField('图片', validators=[
+#         DataRequired(message='图片不可为空')
+#     ])
+#     tag_name = StringField('标签名', validators=[
+#         DataRequired(message='标签名不能为空')
+#     ])

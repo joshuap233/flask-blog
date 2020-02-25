@@ -54,6 +54,12 @@ class EmailValidateException(HTTPException):
     msg = 'token 验证失败'
 
 
+# 文件太大
+class RequestEntityTooLarge(HTTPException):
+    code = 413
+    msg = '文件太大'
+
+
 class UnknownException(HTTPException):
     code = 500
     msg = '服务器未知错误'

@@ -13,7 +13,7 @@ class SQLAlchemy(_SQLAlchemy):
             self.session.commit()
         except Exception as e:
             self.session.rollback()
-            raise UnknownException()
+            raise UnknownException(e)
 
 
 class Query(BaseQuery):

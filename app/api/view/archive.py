@@ -10,7 +10,7 @@ from .blueprint import api
 # def archive():
 #     query = QueryView()
 #     # TODO :按时间排序
-#     pagination = Post.search(**query.search_query)
+#     pagination = Post.search(**query.search_parameter)
 #     data = []
 #     for post in pagination.items:
 #         year, month, date = format_time(post.create_date, format_='%Y/%m/%d ').split('/')

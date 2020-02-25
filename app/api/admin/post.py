@@ -1,8 +1,8 @@
-from flask import request
+from flask import request, current_app, send_from_directory
 
 from app.model.db import Post
 from app.model.view_model import PostView
-from app.utils import generate_res, login_required
+from app.utils import generate_res, login_required, filters_filename
 from app.validate.validate import PostValidate
 from .blueprint import admin
 
@@ -23,3 +23,20 @@ def post_view():
         return generate_res()
     post = Post.query.get_or_404(request.args.get('id'))
     return generate_res(data=PostView(post))
+
+
+# TODO: 多张图片上传,同时发送多张图片
+@admin.route('/avatar', methods=['POST', 'GET', 'DELETE', 'PUT'])
+@login_required
+def avatar_view():
+    import os
+    path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'posts')
+    if request.method == 'POST':
+        post_id = request.form.get('id')
+        img = request.files.get('image')
+        filename = filters_filename(img.filename)
+        img.save(os.path.join(path, filename))
+        Post.update_by_id(post_id, {'links': filename})
+        return generate_res()
+    picture = request.args.get('picture')
+    return send_from_directory(path, picture)

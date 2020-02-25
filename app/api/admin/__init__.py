@@ -1,1 +1,1 @@
-from . import auth, error, post, posts, tags
+from . import auth, error, post, posts, tags, file_upload
