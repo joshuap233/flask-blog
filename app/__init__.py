@@ -7,9 +7,13 @@ from flask_sqlalchemy import get_debug_queries
 
 from app.logging_ import register_logging
 from app.model.base import db
+from flask_jwt_extended import JWTManager
+from app.exception import AuthFailed
 
 migrate = Migrate(compare_type=True, compare_server_default=True)
 mail = Mail()
+jwt = JWTManager()
+blacklist = set()
 
 
 def create_upload_file(app_):
@@ -65,6 +69,20 @@ def register_logstash():
     pass
 
 
+def register_blacklist_loader():
+    @jwt.token_in_blacklist_loader
+    def check_if_token_in_blacklist(decrypted_token):
+        jti = decrypted_token['jti']
+        return jti in blacklist
+
+
+def register_jwt_error():
+    pass
+    # @jwt.revoked_token_loader
+    # def my_expired_token_callback():
+    #     return {'status': 'failed'}, 401
+
+
 def register_before_request(app_):
     @app_.before_request
     def before_request():
@@ -111,10 +129,14 @@ def create_app(config_name):
     register_before_request(app)
     register_after_request(app)
     register_sentry_sdk()
+    register_blacklist_loader()
+    register_jwt_error()
 
+    jwt.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
+
     return app
 
 

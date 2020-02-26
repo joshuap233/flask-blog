@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 
 class Config(object):
@@ -22,6 +23,12 @@ class Config(object):
     SLOW_DB_QUERY_TIME = 0.5
     # 存放日志文件夹名称
     LOG_DIR = 'log'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
+    JWT_SECRET_KEY = os.urandom(32)
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
+    # token到现在1h时自动刷新
+    JWT_MIN_REFRESH_SPACE = timedelta(hours=1)
 
 
 class ProductionConfig(Config):

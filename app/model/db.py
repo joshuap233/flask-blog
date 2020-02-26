@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.exception import EmailValidateException
 from .base import Base, db
+from flask_jwt_extended import create_access_token
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -116,10 +117,11 @@ class User(Base):
     password_hash = db.Column(db.String(128))
     about = db.Column(LONGTEXT, comment="关于用户")
     avatar = db.Column(LONGTEXT)
-    # 是否登录(无法强制使jwt失效,只能通过该字段控制)
-    is_active = db.Column(db.Boolean, default=False)
+
     # 注册是否验证
     email_is_validate = db.Column(db.Boolean, default=False)
+    # 保留字段
+    is_active = db.Column(db.Boolean, default=False)
 
     def generate_password_hash(self, password):
         self.password_hash = generate_password_hash(password)
@@ -127,6 +129,11 @@ class User(Base):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    # def generate_token(self, expiration=current_app.config['JWT_SECRET_KEY']):
+    #     return create_access_token(identity=self.id, fresh=expiration)
+
+    # def confirm_token(self):
+    #     pass
     def generate_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'id': self.id}).decode('utf-8')

@@ -6,6 +6,8 @@ from app.model.view_model import UserInfoView
 from app.utils import generate_res, login_required, send_email
 from app.validate.validate import RegisterValidate, UserValidate, LoginValidate
 from .blueprint import admin
+from app import blacklist
+from flask_jwt_extended import get_raw_jwt, create_refresh_token
 
 
 @admin.route('/auth/register', methods=['POST'])
@@ -57,19 +59,19 @@ def login_view():
     user.update(is_active=True)
     return generate_res(data={
         'id': user.id,
-        'token': user.generate_token(),
+        'token': create_refresh_token(identity=user.id)
     })
 
 
 @admin.route('/auth/logout', methods=["DELETE"])
 @login_required
 def logout_view():
-    uid = request.headers.get('identify')
-    User.update_by_id(uid, is_active=False)
+    jti = get_raw_jwt()['jti']
+    blacklist.add(jti)
     return generate_res()
 
 
-# 用于登录验证
+# # 用于登录验证
 @admin.route('/auth')
 @login_required
 def auth_view():

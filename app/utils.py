@@ -3,11 +3,12 @@ from functools import wraps
 
 from flask import request, jsonify, current_app
 from flask_mail import Message
-
+from flask_jwt_extended import verify_jwt_in_request
 from app import mail
 from app.exception import AuthFailed, ParameterException
 from app.model.db import User
-
+from flask_jwt_extended import verify_jwt_refresh_token_in_request, get_jwt_identity, get_raw_jwt, create_refresh_token
+from datetime import datetime
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
     from wtforms.validators import StopValidation
@@ -37,18 +38,19 @@ def generate_res(status='success', **kwargs):
 def login_required(func):
     @wraps(func)
     def check_login(*args, **kwargs):
-        data = request.headers
-        uid = data.get('identify')
-        token = data.get('Authorization')
-        if not uid or not token:
-            raise AuthFailed()
-        user = User.query.get_or_404(int(uid))
-        if not user.is_active or not user.confirm_token(token):
-            # 验证token失败直接将is_active设置为false
-            user.update(is_active=False)
-            raise AuthFailed()
+        """
+            verify_jwt_refresh_token_in_request()
+            needs to be run before get_raw_jwt in order for
+            the token to be parsed and saved for this request
+        """
+        verify_jwt_refresh_token_in_request()
+        identify = get_jwt_identity()
+        expires_time = datetime.fromtimestamp(get_raw_jwt().get('exp'))
+        remaining = expires_time - datetime.now()
+        # 自动刷新token
+        if remaining < current_app.config['JWT_MIN_REFRESH_SPACE']:
+            create_refresh_token(identity=identify)
         return func(*args, **kwargs)
-
     return check_login
 
 
