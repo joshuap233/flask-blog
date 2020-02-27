@@ -2,10 +2,9 @@ from flask import current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from app.exception import EmailValidateException
 from .base import Base, db
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, decode_token
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -129,35 +128,14 @@ class User(Base):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # def generate_token(self, expiration=current_app.config['JWT_SECRET_KEY']):
-    #     return create_access_token(identity=self.id, fresh=expiration)
-
-    # def confirm_token(self):
-    #     pass
-    def generate_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'id': self.id}).decode('utf-8')
-
-    def confirm_token(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token.encode('utf-8'))
-        except:
-            return False
-        if data.get('id') != self.id:
-            return False
-        return True
+    def generate_access_token(self, expiration=current_app.config['JWT_SECRET_KEY']):
+        return create_access_token(identity=self.id, fresh=expiration)
 
     @classmethod
     def confirm_email_token(cls, token):
-        try:
-            s = Serializer(current_app.config['SECRET_KEY'])
-            data = s.loads(token.encode('utf-8'))
-        except Exception as e:
-            raise EmailValidateException()
-        user = cls.query.get_or_404(data.get('id'))
-        if not user.email_is_validate:
-            user.update(email_is_validate=True)
+        res = decode_token(token)
+        id_ = res.get('identity')
+        cls.update_by_id(id_, email_is_validate=True)
 
     def set_attrs(self, attrs: dict):
         if not attrs:

@@ -10,6 +10,7 @@ from app.model.db import User
 from flask_jwt_extended import verify_jwt_refresh_token_in_request, get_jwt_identity, get_raw_jwt, create_refresh_token
 from datetime import datetime
 
+
 def time2stamp(time_, format_='%Y/%m/%d %H:%M'):
     from wtforms.validators import StopValidation
     try:

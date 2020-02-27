@@ -7,7 +7,7 @@ from app.utils import generate_res, login_required, send_email
 from app.validate.validate import RegisterValidate, UserValidate, LoginValidate
 from .blueprint import admin
 from app import blacklist
-from flask_jwt_extended import get_raw_jwt, create_refresh_token
+from flask_jwt_extended import get_raw_jwt, create_refresh_token, decode_token, get_jwt_identity
 
 
 @admin.route('/auth/register', methods=['POST'])
@@ -18,7 +18,7 @@ def register_view():
         send_email(
             to=form.email.data,
             subject='账号注册',
-            content=url_for('admin.auth_email_view', token=user.generate_token())
+            content=url_for('admin.auth_email_view', token=user.generate_access_token())
         )
     return generate_res(data={'id': user.id})
 
@@ -37,7 +37,7 @@ def user_info_view():
             send_email(
                 to=form.email.data,
                 subject='账户邮件修改确认',
-                content=url_for('admin.auth_email_view', token=user.generate_token())
+                content=url_for('admin.auth_email_view', token=user.generate_access_token())
             )
         user.update(form.data)
         return generate_res()
@@ -71,8 +71,24 @@ def logout_view():
     return generate_res()
 
 
-# # 用于登录验证
+# 用于登录验证
 @admin.route('/auth')
 @login_required
 def auth_view():
     return generate_res()
+
+#
+# @admin.route('/generate_token')
+# def generate_token():
+#     from flask_jwt_extended import create_access_token
+#     return generate_res(data={
+#         'token': create_access_token(identity=1)
+#     })
+#
+#
+# @admin.route("/auth_token/<token>")
+# def auth_token(token):
+#     from flask_jwt_extended import decode_token
+#     res = decode_token(token)
+#     res.get('identity')
+#     return generate_res()
