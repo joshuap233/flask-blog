@@ -55,10 +55,6 @@ def user_info_view():
     return generate_res(data=UserInfoView(user))
 
 
-# if form.email.data and form.email.data != user.email:
-#     user.email_is_validate = False
-#     user.email = form.email.data
-#     send_change_email_email(form, user)
 
 @admin.route('/user/password/reset', methods=['GET', 'POST'])
 @login_required
@@ -68,7 +64,6 @@ def reset_password_view():
     return generate_res()
 
 
-# TODO: 无邮件修改密码, 邮件修改密码确认,
 # 邮箱用于登录/修改密码验证
 @admin.route('/user/email', methods=['PUT'])
 @login_required
