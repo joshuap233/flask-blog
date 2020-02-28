@@ -1,20 +1,28 @@
 from wtforms import PasswordField, StringField, IntegerField, FieldList
 from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf, Optional
-
+from app.exception import ParameterException
 from app.utils import time2stamp
 from .base import JsonValidate
 
 
 class LoginValidate(JsonValidate):
-    username = StringField('用户名', validators=[
-        DataRequired(message="用户名不可为空"),
-        Length(min=0, max=128, message="用户名或密码错误")
-    ])
     password = PasswordField('密码', validators=[
         DataRequired(message="密码不可为空"),
         Regexp(r'^^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='用户名或密码错误'),
     ])
+    username = StringField('用户名', validators=[
+        Length(min=0, max=128, message="用户名或密码错误"),
+    ])
+    email = StringField('邮件', validators=[
+        Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
+        Optional()
+    ])
+
+    def validate_username(self, value):
+        if not (value.data or self.email.data):
+            raise ParameterException("请输入用户名或邮箱")
+        setattr(self, 'login', {'username': value.data} if value.data else {'email': self.email.data})
 
 
 class RegisterValidate(JsonValidate):
@@ -22,18 +30,23 @@ class RegisterValidate(JsonValidate):
         DataRequired(message='用户名不能为空'),
         Length(min=0, max=128, message="用户名长度在0-128字符间")
     ])
+    nickname = StringField('昵称', validators=[
+        DataRequired(message='昵称不能为空'),
+        Length(min=0, max=128, message="昵称长度在0-128字符间")
+    ])
+
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
         Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+'),
         EqualTo('confirm_password', message='两次输入密码不一致')
     ])
+    confirm_password = PasswordField('确认密码', validators=[
+        DataRequired(message='请确认密码')
+    ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
         Optional()
-    ])
-    confirm_password = PasswordField('确认密码', validators=[
-        DataRequired(message='请确认密码')
     ])
 
 
@@ -64,15 +77,14 @@ class PostValidate(JsonValidate):
 
 class UserValidate(JsonValidate):
     username = StringField('用户名', validators=[
-        DataRequired(message='用户名不能为空')])
-    password = PasswordField('密码', validators=[
-        DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
-               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+        DataRequired(message='用户名不能为空'),
+        Length(min=0, max=128, message="用户名长度在0-128字符间")
     ])
-    email = StringField('邮件', validators=[
-        Email(message='请输入有效的邮箱地址，比如：username@domain.com')
+    nickname = StringField('昵称', validators=[
+        DataRequired(message='昵称不能为空'),
+        Length(min=0, max=128, message="昵称长度在0-128字符间")
     ])
+    # TODO 添加验证
     avatar = StringField('头像')
     about = StringField('关于')
 
@@ -85,6 +97,19 @@ class TagValidate(JsonValidate):
         Length(max=64, message="标签名最大长度为字符")])
     describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])
 
+
+class ResetEmailValidate(JsonValidate):
+    email = StringField('邮件', validators=[
+        Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
+    ])
+
+
+class ResetPasswordValidate(JsonValidate):
+    password = PasswordField('密码', validators=[
+        DataRequired(message='密码不可为空'),
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+    ])
 
 # class TagImgValidate(FormValidate):
 #     image = FileField('图片', validators=[

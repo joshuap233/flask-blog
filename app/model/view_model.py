@@ -6,10 +6,13 @@ from app.model.base import db
 from app.model.db import Tag, Post
 from app.utils import format_time
 
-
 # 用于flask jsonify序列化
 class BaseView:
-    pass
+    # 将None字段设置为''
+    def set_field_not_None(self):
+        for key, value in self.__dict__.items():
+            if value is None:
+                setattr(self, key, '')
 
 
 # 格式化从数据库获取的文章
@@ -68,9 +71,16 @@ class UserInfoView(BaseView):
     def __init__(self, user):
         self.nickname = user.nickname
         self.username = user.username
-        self.email = user.email or ''
-        self.about = user.about or ''
-        self.avatar = user.avatar or ''
+        self.email = user.email
+        self.about = user.about
+        self.avatar = user.avatar
+        self.set_field_not_None()
+
+
+class LoginView(BaseView):
+    def __init__(self, user):
+        self.id = user.id
+        self.token = user.generate_refresh_token()
 
 
 # 解析查询参数
@@ -119,20 +129,3 @@ class QueryView:
     def _get_search(self):
         search = self.query.get('search')
         return f"%{search}%" if search else None
-
-# class LoginView:
-#     def __init__(self, user):
-#         self.username = user.get('username')
-#         self.email = user.get('email')
-#         self.password = user.get('password')
-#         self.query = self._get_query()
-#
-#     # 判断用邮箱登录(注册)还是用户名登录(注册)
-#     def _get_query(self):
-#         if self.username:
-#             self.type = 'username'
-#             return {"username": self.username}
-#         if self.email:
-#             self.type = 'email'
-#             return {"email": self.email}
-#         raise ParameterException("请输入用户名或邮箱")

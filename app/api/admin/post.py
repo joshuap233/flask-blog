@@ -2,9 +2,10 @@ from flask import request, current_app, send_from_directory
 
 from app.model.db import Post
 from app.model.view_model import PostView
-from app.utils import generate_res, login_required, filters_filename
+from app.utils import generate_res, filters_filename
 from app.validate.validate import PostValidate
 from .blueprint import admin
+from app.token_manager import login_required
 
 
 @admin.route('/posts/post', methods=['POST', 'GET', 'PUT', 'DELETE'])

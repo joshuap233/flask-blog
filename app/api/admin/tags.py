@@ -3,9 +3,10 @@ from flask import request, current_app, send_from_directory
 from app.exception import RepeatException
 from app.model.db import Tag
 from app.model.view_model import TagsView, QueryView
-from app.utils import generate_res, login_required, filters_filename
+from app.utils import generate_res, filters_filename
 from app.validate.validate import TagValidate
 from .blueprint import admin
+from app.token_manager import login_required
 
 
 # 获取所有标签,仅包含标签名
