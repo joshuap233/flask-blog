@@ -22,11 +22,10 @@ def post_view():
     elif request.method == 'DELETE':
         Post.delete_by_id(request.get_json().get('id'))
         return generate_res()
-    post = Post.query.get_or_404(request.args.get('id'))
+    post = Post.search_by_id(request.args.get('id'))
     return generate_res(data=PostView(post))
 
 
-# TODO: 多张图片上传,同时发送多张图片
 @admin.route('/avatar', methods=['POST', 'GET', 'DELETE', 'PUT'])
 @login_required
 def avatar_view():

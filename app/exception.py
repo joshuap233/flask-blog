@@ -48,6 +48,11 @@ class RepeatException(HTTPException):
     msg = '字段重复'
 
 
+class ValidateCodeException(HTTPException):
+    code = 400
+    msg = '验证码错误或过期'
+
+
 # 用于邮箱验证
 class EmailValidateException(HTTPException):
     code = 401
@@ -63,3 +68,8 @@ class RequestEntityTooLarge(HTTPException):
 class UnknownException(HTTPException):
     code = 500
     msg = '服务器未知错误'
+
+
+class ServerException(HTTPException):
+    code = 500
+    msg = "服务器错误"

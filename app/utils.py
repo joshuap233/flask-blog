@@ -3,6 +3,7 @@ import time
 from flask import jsonify, current_app
 from app.exception import ParameterException
 from secrets import randbelow
+import datetime
 
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M') -> int:
@@ -50,3 +51,13 @@ def generate_verification_code() -> int:
     for i in range(current_app.config['VERIFICATION_CODE_LENGTH']):
         code += str(randbelow(9))
     return int(code)
+
+
+def get_now_timestamp() -> int:
+    return int(datetime.datetime.now().timestamp())
+
+
+def get_code_exp_stamp() -> int:
+    now = datetime.datetime.now()
+    expire_time = now + current_app.config['VERIFICATION_CODE_EXPIRE']
+    return int(expire_time.timestamp())

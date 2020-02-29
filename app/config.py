@@ -30,11 +30,13 @@ class Config(object):
     # token离过期1小时自动刷新
     JWT_MIN_REFRESH_SPACE = timedelta(hours=1)
     VERIFICATION_CODE_LENGTH = 6
+    # 验证码过期时间
+    VERIFICATION_CODE_EXPIRE = timedelta(minutes=5)
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
-    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'picture')
     SECRET_KEY = os.getenv('SECRET_KEY')
     MAIL_DEBUG = False
 

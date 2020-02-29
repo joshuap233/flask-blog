@@ -6,6 +6,7 @@ from app.model.base import db
 from app.model.db import Tag, Post
 from app.utils import format_time
 
+
 # 用于flask jsonify序列化
 class BaseView:
     # 将None字段设置为''

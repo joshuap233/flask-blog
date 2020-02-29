@@ -34,7 +34,7 @@ def add_token_to_blacklist(token=None):
             res = decode_token(token)
             jti = res.get('jti')
         except Exception as e:
-            raise AuthFailed(e)
+            raise AuthFailed(e.args)
     blacklist.add(jti)
 
 

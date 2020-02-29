@@ -1,10 +1,11 @@
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.exception import AuthFailed
-from .base import Base, db
+from app.exception import AuthFailed, ValidateCodeException
+from .base import Base, db, BaseSearch
 from flask_jwt_extended import create_refresh_token
 from flask_jwt_extended import get_jwt_identity
-from app.utils import generate_verification_code
+from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
+import time
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -20,14 +21,13 @@ link_to_post = db.Table(
 )
 
 
-class Post(Base):
+class Post(BaseSearch):
     # 不能用set_attrs方法直接设置的字段列表
     blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     article = db.Column(LONGTEXT, nullable=True, comment='文章内容')
     excerpt = db.Column(db.String(300), comment="文章摘要")
-    create_date = db.Column(db.BigInteger, index=True)
     change_date = db.Column(db.BigInteger, index=True)
     visibility = db.Column(db.String(16), default="私密", comment='文章可见性:私密/公开')
     comments = db.Column(db.Integer, default=0, comment="评论数量")
@@ -43,18 +43,17 @@ class Post(Base):
     def set_attrs(self, attrs: dict):
         for key, value in attrs.items():
             if key == 'tags':
-                self.set_tags(value)
+                self._set_tags(value)
                 continue
             if key == 'links':
-                self.set_links(value)
+                self._set_links(value)
                 continue
-            if hasattr(self, key) and key not in self.blacklist:
-                setattr(self, key, value)
+            self._set_attr(key, value)
 
-    def set_links(self, url):
+    def _set_links(self, url):
         self.links.append(Link(url=url))
 
-    def set_tags(self, tags):
+    def _set_tags(self, tags):
         for tag in tags:
             tag = Tag.query.filter_by(name=tag).first() or Tag(name=tag)
             if tag in self.tags:
@@ -64,7 +63,7 @@ class Post(Base):
 
     @classmethod
     def delete_by_id(cls, id_):
-        one = cls.query.get_or_404(id_)
+        one = cls.get_or_404(id_)
         with db.auto_commit():
             for tag in one.tags:
                 tag.count -= 1
@@ -73,23 +72,19 @@ class Post(Base):
     @classmethod
     def search(cls, page, per_page, order_by, **kwargs):
         # TODO: 支持按日期...查找,暂时只支持按文章标题查找
-        search = kwargs.get('search')
-        if search:
-            return cls.query.filter(cls.title.like(search)).order_by(order_by).paginate(
-                page=page, per_page=per_page, error_out=False)
-        else:
-            return cls.query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
+        super().search(page, per_page, order_by, filters=cls.title.like, **kwargs)
 
 
-class Tag(Base):
+class Tag(BaseSearch):
     blacklist = ['id', 'count']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
     describe = db.Column(db.String(128), nullable=True)
     # 使用标签的文章数量
     count = db.Column(db.Integer, default=0)
+
     # 图片链接(用于图床)或图片名(本地)
-    picture = db.Column(db.String(255))
+    link = db.relationship('Link', backref='tag', lazy=True, uselist=False)
 
     def __init__(self, *args, **kwargs):
         if 'count' not in kwargs:
@@ -98,18 +93,12 @@ class Tag(Base):
 
     @classmethod
     def search(cls, page, per_page, order_by, **kwargs):
-        search = kwargs.get('search')
         # TODO: 暂时只支持按标签名查找
-        if search:
-            return cls.query.filter(
-                cls.name.like(search)).order_by(order_by).paginate(
-                page=page, per_page=per_page, error_out=False)
-        else:
-            return cls.query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
+        super().search(page, per_page, order_by, filters=cls.name.like, **kwargs)
 
 
 class User(Base):
-    blacklist = ['id', 'password_hash', 'email']
+    blacklist = ['id', 'password_hash']
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
@@ -117,11 +106,11 @@ class User(Base):
     password_hash = db.Column(db.String(128))
     about = db.Column(LONGTEXT, comment="关于用户")
     avatar = db.Column(LONGTEXT)
-    # email_is_validate = db.Column(db.Boolean, default=False)
+    email_is_validate = db.Column(db.Boolean, default=False)
+    # 验证码
+    code = db.relationship('Code', backref='user', lazy=True, uselist=False)
     # 保留字段
     is_active = db.Column(db.Boolean, default=False)
-    # 验证码
-    ver_code = db.Column(db.Integer)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -137,46 +126,63 @@ class User(Base):
         for key, value in attrs.items():
             if key == 'password':
                 self.set_password(value)
-            if hasattr(self, key) and key not in self.blacklist:
-                setattr(self, key, value)
-
-    def is_change_email(self, form):
-        return self.email != form.email.data
-
-    @classmethod
-    def update_email_by_id(cls, uid, email):
-        # 只能用该方法设置邮箱(验证后设置)
-        user = cls.query.get_or_404(uid)
-        with db.auto_commit():
-            user.email = email
-            db.session.add(user)
+            self._set_attr(key, value)
 
     @classmethod
     def reset_password(cls, form):
-        id_ = get_jwt_identity()
-        user = cls.query.get_or_404(id_)
-        user.check_password(form.old_password.data)
+        """
+            登录状态下调用
+        """
+        uid = get_jwt_identity()
+        user = cls.get_or_404(uid)
         user.update(password=form.password.data)
         return user
 
+    # 邮箱修改/密码找回
     @classmethod
-    def set_ver_code(cls, form):
-        user = cls.search_by(email=form.email.data)
-        code = generate_verification_code()
+    def set_code_by(cls, form=None, uid=None) -> tuple:
+        user = cls.search_by(form.code.data) if form else cls.get_or_404(uid)
+        if not user.email_is_validate:
+            raise AuthFailed("您的邮箱未验证")
+        code = Code()
         user.update(code=code)
-        return code
+        return code.code, user
 
     @classmethod
-    def confirm_ver_code(cls, form):
-        code = form.code.data
+    def validate_code(cls, form):
+        user = cls.search_by(email=form.email.data)
+        code: Code = user.code
+        code.validate_code(form.code.data)
+        return user
 
 
 # 验证码
 class Code(Base):
     id = db.Column(db.Integer, primary_key=True)
-    ver_code = db.Column(db.Integer)
-    create_date = db.Column(db.BigInteger, index=True)
+    code = db.Column(db.Integer)
     expire_date = db.Column(db.BigInteger, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __init__(self, *args, **kwargs):
+        self.code = generate_verification_code()
+        self.expire_date = get_code_exp_stamp()
+        super(Code, self).__init__(*args, **kwargs)
+
+    @property
+    def _is_expire(self):
+        now = get_now_timestamp()
+        return now > self.expire_date
+
+    def _set_code_expire(self):
+        expire_date = get_now_timestamp() - 1
+        self.update(expire_date=expire_date)
+
+    def validate_code(self, code):
+        if self.code != code:
+            raise ValidateCodeException("验证码错误")
+        if self._is_expire:
+            raise ValidateCodeException("验证码已过期")
+        self._set_code_expire()
 
 
 # 用于储存图片链接
@@ -185,3 +191,4 @@ class Link(Base):
     describe = db.Column(db.String(255), comment="链接描述")
     # 图片链接(用于图床)或图片名(本地)
     url = db.Column(db.String(255))
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
