@@ -80,7 +80,7 @@ class UserInfoView(BaseView):
 class LoginView(BaseView):
     def __init__(self, user):
         self.id = user.id
-        self.token = user.generate_refresh_token()
+        self.token = user.generate_login_token()
 
 
 # 解析查询参数

@@ -1,10 +1,9 @@
 import time
 
-from flask import Flask, current_app, g
+from flask import Flask, g
 from flask_migrate import Migrate
-from flask_sqlalchemy import get_debug_queries
 
-from app.logging_ import register_logging
+from app.logging_manager import register_logging, register_sentry_sdk, log_database_and_response_time
 from app.model.base import db
 from app.exception import AuthFailed
 from app.token_manager import register_blacklist_loader, jwt, register_jwt_error
@@ -47,21 +46,6 @@ def register_blueprint(app_):
     # app_.register_blueprint(main_blueprint)
 
 
-def register_sentry_sdk():
-    """
-        错误处理集成
-        参见:https://sentry.io/for/flask/
-    :return:
-    """
-    from sentry_sdk.integrations.flask import FlaskIntegration
-    import sentry_sdk
-    import os
-    sentry_sdk.init(
-        dsn=os.getenv('SENTRY_DSN'),
-        integrations=[FlaskIntegration()]
-    )
-
-
 def register_logstash():
     pass
 
@@ -76,26 +60,7 @@ def register_before_request(app_):
 def register_after_request(app_):
     @app_.after_request
     def after_all_request(response):
-        # 记录时间长的sql查询详情
-        query_list = []
-        for query in get_debug_queries():
-            if query.duration >= current_app.config['SLOW_DB_QUERY_TIME']:
-                query_list.append(query)
-        # 计算响应时间
-        diff = time.time() - g.start_time
-        if not query_list:
-            current_app.logger.info(f'response time:{diff}')
-        else:
-            query_list = [{
-                'Slow query': query.statement,
-                'Parameters:': query.parameters,
-                'Duration': query.duration,
-                'Context': query.context
-            } for query in query_list]
-            current_app.logger.warning(
-                'response_time: %s\n query: %s'
-                % (diff, query_list)
-            )
+        log_database_and_response_time()
         return response
 
 

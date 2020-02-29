@@ -27,8 +27,9 @@ class Config(object):
     JWT_SECRET_KEY = os.urandom(32)
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
-    # token到现在1h时自动刷新
+    # token离过期1小时自动刷新
     JWT_MIN_REFRESH_SPACE = timedelta(hours=1)
+    VERIFICATION_CODE_LENGTH = 6
 
 
 class ProductionConfig(Config):

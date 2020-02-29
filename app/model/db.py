@@ -1,11 +1,10 @@
-from flask import current_app
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.exception import EmailValidateException, AuthFailed
+from app.exception import AuthFailed
 from .base import Base, db
-from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
-from datetime import timedelta
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from app.utils import generate_verification_code
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -42,19 +41,20 @@ class Post(Base):
         super().__init__(*args, **kwargs)
 
     def set_attrs(self, attrs: dict):
-        if not attrs:
-            return
         for key, value in attrs.items():
             if key == 'tags':
-                self.append_tags(value)
+                self.set_tags(value)
                 continue
             if key == 'links':
-                self.links.append(Link(url=value))
+                self.set_links(value)
                 continue
             if hasattr(self, key) and key not in self.blacklist:
                 setattr(self, key, value)
 
-    def append_tags(self, tags):
+    def set_links(self, url):
+        self.links.append(Link(url=url))
+
+    def set_tags(self, tags):
         for tag in tags:
             tag = Tag.query.filter_by(name=tag).first() or Tag(name=tag)
             if tag in self.tags:
@@ -110,40 +110,73 @@ class Tag(Base):
 
 class User(Base):
     blacklist = ['id', 'password_hash', 'email']
-    id = db.Column(db.Integer, unique=True, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
     email = db.Column(db.String(128), nullable=True)
     password_hash = db.Column(db.String(128))
     about = db.Column(LONGTEXT, comment="关于用户")
     avatar = db.Column(LONGTEXT)
-
-    # 注册是否验证
     # email_is_validate = db.Column(db.Boolean, default=False)
     # 保留字段
     is_active = db.Column(db.Boolean, default=False)
+    # 验证码
+    ver_code = db.Column(db.Integer)
 
-    def generate_password_hash(self, password):
+    def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         if not check_password_hash(self.password_hash, password):
             raise AuthFailed("密码错误")
 
-    # 用于登录
-    def generate_refresh_token(self):
+    def generate_login_token(self):
         return create_refresh_token(identity=self.id)
+
+    def set_attrs(self, attrs: dict):
+        for key, value in attrs.items():
+            if key == 'password':
+                self.set_password(value)
+            if hasattr(self, key) and key not in self.blacklist:
+                setattr(self, key, value)
+
+    def is_change_email(self, form):
+        return self.email != form.email.data
 
     @classmethod
     def update_email_by_id(cls, uid, email):
+        # 只能用该方法设置邮箱(验证后设置)
         user = cls.query.get_or_404(uid)
         with db.auto_commit():
             user.email = email
             db.session.add(user)
 
-# if key == 'password':
-#     self.generate_password_hash(value)
-#     continue
+    @classmethod
+    def reset_password(cls, form):
+        id_ = get_jwt_identity()
+        user = cls.query.get_or_404(id_)
+        user.check_password(form.old_password.data)
+        user.update(password=form.password.data)
+        return user
+
+    @classmethod
+    def set_ver_code(cls, form):
+        user = cls.search_by(email=form.email.data)
+        code = generate_verification_code()
+        user.update(code=code)
+        return code
+
+    @classmethod
+    def confirm_ver_code(cls, form):
+        code = form.code.data
+
+
+# 验证码
+class Code(Base):
+    id = db.Column(db.Integer, primary_key=True)
+    ver_code = db.Column(db.Integer)
+    create_date = db.Column(db.BigInteger, index=True)
+    expire_date = db.Column(db.BigInteger, index=True)
 
 
 # 用于储存图片链接

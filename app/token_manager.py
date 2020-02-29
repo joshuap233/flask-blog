@@ -26,8 +26,15 @@ def register_blacklist_loader():
         return jti in blacklist
 
 
-def add_token_to_blacklist():
-    jti = get_raw_jwt()['jti']
+def add_token_to_blacklist(token=None):
+    if not token:
+        jti = get_raw_jwt()['jti']
+    else:
+        try:
+            res = decode_token(token)
+            jti = res.get('jti')
+        except Exception as e:
+            raise AuthFailed(e)
     blacklist.add(jti)
 
 

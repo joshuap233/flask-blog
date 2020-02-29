@@ -7,7 +7,7 @@ formatters:
     datefmt: '%Y/%m/%d %H:%M:%S'
     format: "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
   request:
-    (): app.logging_.RequestFormatter
+    (): app.logging_manager.RequestFormatter
     format: "[%(asctime)s] %(remote_addr)s requested %(url)s\n%(levelname)s in %(module)s: %(message)s"
     datefmt: '%Y/%m/%d %H:%M:%S'
 handlers:

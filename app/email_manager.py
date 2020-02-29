@@ -48,9 +48,8 @@ def send_validate_email_email(user=None, uid=None, form=None, addr=None):
         ))
 
 
-def send_change_email_email(user=None, uid=None, form=None, addr=None):
-    uid = uid if uid else user.id
-    email = addr if addr else form.email.data
+def send_change_email_email(uid, form):
+    email = form.email.data
     send_email(
         to=email,
         subject='邮箱地址修改确认',
@@ -63,12 +62,17 @@ def send_change_email_email(user=None, uid=None, form=None, addr=None):
         ))
 
 
-def send_change_password_email(user=None, uid=None, addr=None):
-    uid = uid if uid else user.id
+def forget_password_email(form, code):
     send_email(
-        to=addr,
-        subject='修改密码确认',
-        content=url_for(
-            'admin.auth_email_view',
-            token=create_access_token(identity=uid)
-        ))
+        to=form.email.data,
+        subject='邮箱地址修改确认',
+        content=code
+    )
+
+
+def send_change_password_warn(user):
+    send_email(
+        to=user.id,
+        subject='密码已修改',
+        content='密码已修改'
+    )

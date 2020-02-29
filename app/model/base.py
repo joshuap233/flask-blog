@@ -39,6 +39,16 @@ class Base(db.Model):
     # 不能用set_attrs方法直接设置的字段列表
     blacklist = []
 
+    def delete(self):
+        with db.auto_commit():
+            db.session.delete(self)
+
+    def update(self, attrs: dict = None, **kwargs):
+        with db.auto_commit():
+            self.set_attrs(attrs)
+            self.set_attrs(kwargs)
+            db.session.add(self)
+
     @classmethod
     def create(cls, attrs: dict = None, **kwargs):
         one = cls()
@@ -54,16 +64,6 @@ class Base(db.Model):
         with db.auto_commit():
             db.session.delete(one)
 
-    def delete(self):
-        with db.auto_commit():
-            db.session.delete(self)
-
-    def update(self, attrs: dict = None, **kwargs):
-        with db.auto_commit():
-            self.set_attrs(attrs)
-            self.set_attrs(kwargs)
-            db.session.add(self)
-
     @classmethod
     def update_by_id(cls, id_, attrs: dict = None, **kwargs):
         one = cls.query.get_or_404(id_)
@@ -73,8 +73,10 @@ class Base(db.Model):
             db.session.add(one)
 
     @classmethod
-    def search(cls, **kwargs):
-        pass
+    def search_by(cls, attrs: dict = None, **kwargs):
+        if len(attrs) != 1 or len(kwargs) != 1:
+            pass
+        return cls.query.filter_by(**(attrs or kwargs)).first_or_404()
 
     # 获取表的记录数
     @classmethod

@@ -2,7 +2,11 @@ import logging
 from functools import wraps
 from logging.config import dictConfig
 
-from flask import has_request_context, request, current_app
+from flask import has_request_context, request
+from flask_sqlalchemy import get_debug_queries
+import time
+
+from flask import Flask, current_app, g
 
 
 class RequestFormatter(logging.Formatter):
@@ -53,3 +57,39 @@ def register_log_rollback(app):
     time_file_handler = logging.handlers.TimedRotatingFileHandler(
         app.config['LOG_DIR']
     )
+
+
+def register_sentry_sdk():
+    """
+        错误处理集成
+        参见:https://sentry.io/for/flask/
+    :return:
+    """
+    from sentry_sdk.integrations.flask import FlaskIntegration
+    import sentry_sdk
+    import os
+    sentry_sdk.init(
+        dsn=os.getenv('SENTRY_DSN'),
+        integrations=[FlaskIntegration()]
+    )
+
+
+def log_database_and_response_time():
+    query_list = []
+    for query in get_debug_queries():
+        if query.duration >= current_app.config['SLOW_DB_QUERY_TIME']:
+            query_list.append(query)
+    response_time = time.time() - g.start_time
+    if not query_list:
+        current_app.logger.info(f'response time:{response_time}')
+    else:
+        query_list = [{
+            'Slow query': query.statement,
+            'Parameters:': query.parameters,
+            'Duration': query.duration,
+            'Context': query.context
+        } for query in query_list]
+        current_app.logger.warning(
+            'response_time: %s\n query: %s'
+            % (response_time, query_list)
+        )

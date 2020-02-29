@@ -39,10 +39,11 @@ class RegisterValidate(JsonValidate):
         DataRequired(message='密码不可为空'),
         Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+'),
-        EqualTo('confirm_password', message='两次输入密码不一致')
     ])
     confirm_password = PasswordField('确认密码', validators=[
-        DataRequired(message='请确认密码')
+        DataRequired(message='请确认密码'),
+        EqualTo('password', message='两次输入密码不一致')
+
     ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
@@ -98,17 +99,39 @@ class TagValidate(JsonValidate):
     describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])
 
 
-class ResetEmailValidate(JsonValidate):
+class EmailValidate(JsonValidate):
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
     ])
 
 
 class ResetPasswordValidate(JsonValidate):
+    old_password = PasswordField('密码', validators=[
+        DataRequired(message='密码不可为空'),
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+    ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
         Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+    ])
+    confirm_password = PasswordField('确认密码', validators=[
+        DataRequired(message='请确认密码'),
+        EqualTo('password', message='两次输入密码不一致')
+    ])
+
+
+class ForgetPasswordValidate(JsonValidate):
+    code = IntegerField('验证码')
+    password = PasswordField('密码', validators=[
+        DataRequired(message='密码不可为空'),
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+    ])
+    confirm_password = PasswordField('确认密码', validators=[
+        DataRequired(message='请确认密码'),
+        EqualTo('password', message='两次输入密码不一致')
     ])
 
 # class TagImgValidate(FormValidate):

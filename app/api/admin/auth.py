@@ -5,12 +5,12 @@ from app.model.view_model import UserInfoView, LoginView
 from app.utils import generate_res, get_attr
 from app.validate.validate import (
     RegisterValidate, UserValidate, LoginValidate,
-    ResetEmailValidate, ResetPasswordValidate)
+    EmailValidate, ForgetPasswordValidate, ResetPasswordValidate)
 from .blueprint import admin
 from flask_jwt_extended import get_jwt_identity
 from app.email_manager import (
     send_validate_email_email, send_change_email_email,
-    MailType, send_change_password_email)
+    MailType, send_change_password_warn, forget_password_email)
 from app.token_manager import confirm_email_token, add_token_to_blacklist, login_required
 
 
@@ -26,7 +26,7 @@ def register_view():
 @admin.route('/user/login', methods=['POST'])
 def login_view():
     form = LoginValidate().validate_api()
-    user = User.query.filter_by(**form.login).first_or_404()
+    user = User.search_by(form.login)
     user.check_password(form.password.data)
     return generate_res(data=LoginView(user))
 
@@ -55,12 +55,22 @@ def user_info_view():
     return generate_res(data=UserInfoView(user))
 
 
+@admin.route('/user/password/forget', methods=['POST', 'GET'])
+def forget_password_view():
+    form = EmailValidate().validate_api()
+    if request.method == 'POST':
+        form = ForgetPasswordValidate().validate_api()
+    code = User.set_ver_code(form)
+    forget_password_email(form=form, code=code)
+    return generate_res()
 
-@admin.route('/user/password/reset', methods=['GET', 'POST'])
+
+@admin.route('/user/password/reset', methods=['POST'])
 @login_required
 def reset_password_view():
-    id_ = get_jwt_identity()
-    send_change_password_email(uid=id_)
+    form = ResetPasswordValidate().validate_api()
+    user = User.reset_password(form)
+    send_change_password_warn(user=user)
     return generate_res()
 
 
@@ -68,10 +78,10 @@ def reset_password_view():
 @admin.route('/user/email', methods=['PUT'])
 @login_required
 def add_or_reset_email_view():
-    form = ResetEmailValidate().validate_api()
+    form = EmailValidate().validate_api()
     id_ = get_jwt_identity()
     user = User.query.get_or_404(id_)
-    if user.email != form.email.data:
+    if user.is_change_email(form):
         send_change_email_email(uid=id_, form=form)
     else:
         send_validate_email_email(uid=id_, form=form)
@@ -87,4 +97,5 @@ def auth_email_view(token):
         send_validate_email_email(uid=id_, addr=email)
     elif mail_type == MailType.NEW_EMAIL.value:
         User.update_email_by_id(uid=id_, email=email)
+        add_token_to_blacklist(token)
     return generate_res()
