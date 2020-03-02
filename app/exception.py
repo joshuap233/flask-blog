@@ -53,6 +53,16 @@ class ValidateCodeException(HTTPException):
     msg = '验证码错误或过期'
 
 
+class EmailMissingException(HTTPException):
+    code = 400
+    msg = '未添加邮件地址'
+
+
+class EmailNotValidFailed(HTTPException):
+    code = 422
+    msg = '邮箱未验证'
+
+
 # 用于邮箱验证
 class EmailValidateException(HTTPException):
     code = 401
@@ -62,7 +72,7 @@ class EmailValidateException(HTTPException):
 # 文件太大
 class RequestEntityTooLarge(HTTPException):
     code = 413
-    msg = '文件太大'
+    msg = '文件过大'
 
 
 class UnknownException(HTTPException):

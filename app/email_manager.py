@@ -6,6 +6,9 @@ from flask_mail import Mail
 mail = Mail()
 
 
+# TODO :
+# 判断邮箱是否验证
+
 def send_async_email(app, msg):
     with app.app_context():
         mail.send(msg)
@@ -25,38 +28,33 @@ def send_email(to, subject, content):
     t.start()
 
 
-# 添加新邮件
-def send_validate_email_email(user=None, uid=None, form=None, addr=None):
-    email = addr if addr else form.email.data
-    uid = uid if uid else user.id
+def send_validate_new_email_email(email, code):
     send_email(
         to=email,
-        subject='新邮件确认',
-        content=url_for(
-            'admin.auth_email_view',
-            token=create_access_token(identity=uid, user_claims={'email': email})
-        ))
+        subject='新邮件地址验证',
+        content=code
+    )
 
 
-def send_change_email_email(user, code):
+def send_change_pass_warn(email):
     send_email(
-        to=user.email,
+        to=email,
+        subject='您已修改密码',
+        content='您已修改密码'
+    )
+
+
+def send_change_email_email(email, code):
+    send_email(
+        to=email,
         subject='邮箱地址修改确认',
         content=code
     )
 
 
-def send_forget_password_email(form, code):
+def send_recovery_pass_email(email, code):
     send_email(
-        to=form.email.data,
+        to=email,
         subject='修改密码',
         content=code
-    )
-
-
-def send_change_password_warn(user):
-    send_email(
-        to=user.id,
-        subject='密码已修改',
-        content='密码已修改'
     )

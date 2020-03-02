@@ -27,7 +27,7 @@ def tags_view():
         return generate_res(data={'id': tag.id})
     elif request.method == 'PUT':
         form = TagValidate().validate_api()
-        tag = Tag.search_by_id(form.id.data)
+        tag = Tag.search_by(id=form.id.data)
         # 如果修改了标签名,且修改后的标签名已存在
         if tag.name != form.name.data and Tag.query.filter_by(name=form.name.data).first():
             raise RepeatException(msg='标签名已存在')
@@ -37,7 +37,7 @@ def tags_view():
         Tag.delete_by_id(request.get_json().get('id'))
         return generate_res()
     query = QueryView()
-    pagination = Tag.search(**query.search_parameter)
+    pagination = Tag.paging_search(**query.search_parameter)
     return generate_res(data=TagsView(pagination.items, query.page))
 
 

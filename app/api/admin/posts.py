@@ -9,5 +9,5 @@ from app.token_manager import login_required
 @login_required
 def posts_view():
     query = QueryView()
-    pagination = Post.search(**query.search_parameter)
+    pagination = Post.paging_search(**query.search_parameter)
     return generate_res(data=PostsView(pagination.items, query.page))

@@ -17,12 +17,12 @@ def post_view():
         return generate_res(data={'id': post.id})
     elif request.method == 'PUT':
         form = PostValidate().validate_api()
-        Post.update_by_id(form.id.data, form.data)
+        Post.update_by_id(form.id.data, **form.data)
         return generate_res()
     elif request.method == 'DELETE':
         Post.delete_by_id(request.get_json().get('id'))
         return generate_res()
-    post = Post.search_by_id(request.args.get('id'))
+    post = Post.search_by(id=request.args.get('id'))
     return generate_res(data=PostView(post))
 
 
@@ -36,7 +36,7 @@ def avatar_view():
         img = request.files.get('image')
         filename = filters_filename(img.filename)
         img.save(os.path.join(path, filename))
-        Post.update_by_id(post_id, {'links': filename})
+        Post.update_by_id(post_id, links=filename)
         return generate_res()
     picture = request.args.get('picture')
     return send_from_directory(path, picture)

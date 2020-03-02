@@ -22,7 +22,6 @@ def db(app, request):
         _db.create_all()
 
 
-# 数据库回滚
 @pytest.fixture(scope="session", autouse=True)
 def session(app, db, request):
     """

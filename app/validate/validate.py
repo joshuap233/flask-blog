@@ -105,7 +105,7 @@ class EmailValidate(JsonValidate):
     ])
 
 
-class ChangeEmailValidate(JsonValidate):
+class EmailCodeValidate(JsonValidate):
     code = IntegerField('验证码')
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
@@ -115,12 +115,12 @@ class ChangeEmailValidate(JsonValidate):
 class ResetPasswordValidate(JsonValidate):
     old_password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
     ])
     confirm_password = PasswordField('确认密码', validators=[
@@ -129,14 +129,14 @@ class ResetPasswordValidate(JsonValidate):
     ])
 
 
-class ForgetPasswordValidate(JsonValidate):
+class RecoveryPasswordValidate(JsonValidate):
     code = IntegerField('验证码')
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6-20}$',
+        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
                message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
     ])
     confirm_password = PasswordField('确认密码', validators=[

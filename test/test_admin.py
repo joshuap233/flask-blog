@@ -5,7 +5,7 @@ import pytest
 from faker import Faker
 from flask import url_for
 
-from app.model.db import User
+from app.model.db import User, db
 
 faker = Faker('zh_CN')
 
@@ -58,27 +58,31 @@ TAGS = []
 class Test_auth:
     def test_register(self, client):
         res = client.post(url_for('admin.register_view'), json=USER)
-        data = res.get_json().get('data')
-        uid = data.get('id')
-        assert uid is not None
-        global HEADERS
-        HEADERS['identify'] = uid
         assert b'success' in res.data
 
     # 添加邮件,并认证
     def test_auth_register(self, client):
-        user = User.query.get(HEADERS['identify'])
-        res = client.get(url_for('admin.auth_email_view', token=user.generate_token()))
-        assert b'success' in res.data
+        with db.auto_commit():
+            user = User.create(
+                **USER,
+                email_is_validate=True
+            )
+            db.session.add(user)
 
     # 测试用户名登录
-    def test_login(self, client):
+    def test_username_login(self, client):
         res = client.post(url_for('admin.login_view'), json=USER)
         global HEADERS
         data = res.get_json().get('data')
         HEADERS['Authorization'] = data.get('token')
         HEADERS['identify'] = data.get('id')
         assert b'success' in res.data
+
+    def test_email_login(self, client):
+        res = client.post(url_for('admin.login_view'), json=dict(
+            password=USER['password'],
+            email=USER['email']
+        ))
 
 
 # --repeat-scope=class
