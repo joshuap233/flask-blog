@@ -1,36 +1,28 @@
-import json
+from flask import current_app, request, url_for
 
-from flask import current_app, request
-
-from app.model.base import db
-from app.model.db import Tag, Post
+from app.model.baseDb import db
+from app.model.db import Tag, Post, Link
 from app.utils import format_time
+from .baseView import BaseView, TableView
 
 
-# 用于flask jsonify序列化
-class BaseView:
-    # 将None字段设置为''
-    def set_field_not_None(self):
-        for key, value in self.__dict__.items():
-            if value is None:
-                setattr(self, key, '')
+class IdView(BaseView):
+    def __init__(self, source):
+        self.id = source.id
 
 
 # 格式化从数据库获取的文章
-class PostsView(BaseView):
+class PostsView(BaseView, TableView):
     def __init__(self, posts, page):
-        self.posts = self._fill_posts(posts)
-        self.page = page,
-        self.total = Post.total()
+        super().__init__(posts, page, Post)
 
     @staticmethod
-    def _fill_posts(posts):
+    def _fill(posts):
         result = []
         for item in posts:
-            post = PostView(item).__dict__
-            del post['article']
-            del post['excerpt']
-            post['tags'] = ','.join(post['tags'])
+            post = PostView(item)
+            del post.article
+            del post.excerpt
             result.append(post)
         return result
 
@@ -49,15 +41,13 @@ class PostView(BaseView):
 
 
 # 格式化从数据库获取的标签
-class TagsView(BaseView):
+class TagsView(BaseView, TableView):
     def __init__(self, tags, page):
-        self.total = Tag.total()
-        self.tags = self._fill_tags(tags)
-        self.page = page
+        super().__init__(tags, page, Tag)
 
     @staticmethod
-    def _fill_tags(tags):
-        return [TagView(tag).__dict__ for tag in tags] if tags else []
+    def _fill(tags):
+        return [TagView(tag) for tag in tags] if tags else []
 
 
 class TagView(BaseView):
@@ -66,6 +56,7 @@ class TagView(BaseView):
         self.name = tag.name
         self.describe = tag.describe
         self.count = tag.count
+        self.image = ImageUrlView(tag.links.url if tag.links else '')
 
 
 class UserInfoView(BaseView):
@@ -76,20 +67,86 @@ class UserInfoView(BaseView):
         self.about = user.about
         self.avatar = user.avatar
         self.set_field_not_None()
+        # self.email_is_validate = user.email_is_validate
+        self.password = ''
 
 
 class LoginView(BaseView):
     def __init__(self, user):
         self.id = user.id
         self.token = user.generate_login_token()
+    #     if self.check_email_validate(user):
+    #         self.msg = '您的邮箱未验证'
+    #
+    # @staticmethod
+    # def check_email_validate(user):
+    #     return user.email and not user.email_is_validate
 
 
-# 解析查询参数
+class ImagesView(BaseView, TableView):
+    def __init__(self, links, page):
+        super().__init__(links, page, Link)
+
+    @staticmethod
+    def _fill(links):
+        return [ImageView(link) for link in links] if links else []
+
+
+class NewImagesView(BaseView):
+    def __init__(self, links):
+        self.values = [NewImageView(link) for link in links]
+
+
+class NewImageView(BaseView):
+    def __init__(self, link):
+        self.id = link.id
+        self.image = ImageUrlView(link.url)
+
+
+class ImageView(BaseView):
+    def __init__(self, link):
+        self.id = link.id
+        self.image = ImageUrlView(link.url)
+        self.describe = link.describe
+        # 图片被使用次数
+        self.relationship = self._get_relationship(link)
+        self.count = self._get_count()
+
+    def _get_count(self):
+        return len(self.relationship)
+
+    @staticmethod
+    def _get_relationship(link):
+        relationship = [{'id': post.id, 'name': post.title, 'type': '文章'} for post in link.posts]
+        relationship.extend([
+            {'id': tag.id, 'name': tag.name, 'type': '标签'} for tag in link.tags
+        ])
+        return relationship
+
+
+class ImageUrlView(BaseView):
+    def __init__(self, filename):
+        self.name = filename
+        print(url_for('admin.send_images_view', filename=filename))
+        self.url = url_for('admin.send_images_view', filename=filename, _external=True)
+
+
 class QueryView:
+    """
+    解析查询参数
+    'orderBy':'[{field:'title',desc:True/False}]
+    'page':'0',
+    'pageSize':'10',
+    'search':'str',
+    'totalCount':'1'
+    """
+    # 列表为可查询字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
+    # TODO:去除硬编码
+    sortable = ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']
+
     def __init__(self):
         self.query = request.args
         self.order_by = self._get_order_by()
-        self.filters = self._get_filters()
         self.page = self._get_page()
         self.pagesize = self._get_pagesize()
         self.search = self._get_search()
@@ -110,22 +167,18 @@ class QueryView:
     def _get_pagesize(self):
         return int(self.query.get('pageSize', current_app.config['PAGESIZE']))
 
-    def _get_filters(self):
-        filters = self.query.get('filters')
-        return json.loads(filters) if filters else filters
-
     def _get_order_by(self):
-        order_by = self.query.get('orderBy')
-        orderDirection = self.query.get('orderDirection')
-        if not order_by:
+        order_bys = self.query.get('orderBy')
+        order_by = []
+        if not order_bys:
             # 默认按id降序
-            return db.desc('id')
-        order_by = json.loads(order_by)
-        field = order_by.get('field')
-        # 列表为可查询字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
-        if field and field in ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']:
-            return db.asc(field) if orderDirection == 'asc' else db.desc(field)
-        return db.desc('id')
+            order_by.append(db.desc('id'))
+        else:
+            for ob in order_bys:
+                field = order_bys.get('field')
+                if field in self.sortable:
+                    order_by.append(db.desc(field) if ob.get('desc') else db.asc(field))
+        return order_by
 
     def _get_search(self):
         search = self.query.get('search')

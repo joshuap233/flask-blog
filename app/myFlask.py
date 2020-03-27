@@ -1,15 +1,15 @@
 from flask import Flask as _Flask
-from flask.json import JSONEncoder as _JSONEncoder
+from flask.json import JSONEncoder
 
-from app.model.view_model import BaseView
+from app.model.baseView import BaseView
 
 
-class JSONEncoder(_JSONEncoder):
+class MyJSONEncoder(JSONEncoder):
     def default(self, o):
-        super(JSONEncoder, self).default(o)
         if isinstance(o, BaseView):
             return o.__dict__
+        super().default(o)
 
 
 class Flask(_Flask):
-    json_encoder = JSONEncoder
+    json_encoder = MyJSONEncoder

@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-
+from abc import abstractmethod
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, BaseQuery
 
-from app.exception import UnknownException, NotFound, ServerException
+from app.exception import UnknownException, NotFound
 
 from app.utils import get_now_timestamp
 
@@ -19,16 +19,22 @@ class SQLAlchemy(_SQLAlchemy):
 
 
 class Query(BaseQuery):
-    def get_or_404(self, ident, description=None):
+    def get_or_404(self, ident, description=None, error=True):
         rv = self.get(ident)
         if rv is None:
-            raise NotFound()
+            if error:
+                raise NotFound()
+            else:
+                return None
         return rv
 
-    def first_or_404(self, description=None):
+    def first_or_404(self, description=None, error=True):
         rv = self.first()
         if rv is None:
-            raise NotFound()
+            if error:
+                raise NotFound()
+            else:
+                return None
         return rv
 
 
@@ -47,15 +53,18 @@ class Base(db.Model):
 
     def __init__(self, *args, **kwargs):
         self.create_date = get_now_timestamp()
-        super(Base, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def search_by(cls, **kwargs) -> db.Model:
-        if len(kwargs) != 1:
-            ServerException('参数错误')
+        if 'error' in kwargs:
+            error = kwargs['error']
+            del kwargs['error']
+        else:
+            error = True
         if 'id' in kwargs:
-            return cls.query.get_or_404(kwargs['id'])
-        return cls.query.filter_by(**kwargs).first_or_404()
+            return cls.query.get_or_404(kwargs['id'], error=error)
+        return cls.query.filter_by(**kwargs).first_or_404(error=error)
 
     def delete(self):
         with db.auto_commit():
@@ -91,6 +100,7 @@ class Base(db.Model):
     def total(cls):
         return cls.query.count()
 
+    @abstractmethod
     def _set_attrs(self, attrs: dict):
         for key, value in attrs.items():
             self._set_attr(key, value)
@@ -105,10 +115,11 @@ class BaseSearch(Base):
     __abstract__ = True
 
     @classmethod
+    @abstractmethod
     def paging_search(cls, page, per_page, order_by, filters, **kwargs):
         search = kwargs.get('search')
         if search:
-            return cls.query.filter(filters(search)).order_by(order_by).paginate(
+            return cls.query.filter(filters(search)).order_by(*order_by).paginate(
                 page=page, per_page=per_page, error_out=False)
         else:
-            return cls.query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
+            return cls.query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)

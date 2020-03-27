@@ -1,13 +1,9 @@
-from flask import url_for, current_app
-from flask_jwt_extended import create_access_token
-from flask_mail import Message
+from flask import current_app
 from flask_mail import Mail
+from flask_mail import Message
 
 mail = Mail()
 
-
-# TODO :
-# 判断邮箱是否验证
 
 def send_async_email(app, msg):
     with app.app_context():
@@ -28,11 +24,19 @@ def send_email(to, subject, content):
     t.start()
 
 
-def send_validate_new_email_email(email, code):
+def send_register_success_email(email):
     send_email(
         to=email,
-        subject='新邮件地址验证',
-        content=code
+        subject='注册成功',
+        content='注册成功'
+    )
+
+
+def send_change_email_success_email(email):
+    send_email(
+        to=email,
+        subject='修改邮箱成功',
+        content='修改邮箱成功'
     )
 
 

@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import event
 
 from app import create_app
-from app.model.db import db as _db
+from app.model.baseDb import db as _db
 
 
 @pytest.fixture(scope="session")
@@ -12,17 +12,18 @@ def app(request):
     return create_app("testing")
 
 
+#
+# @pytest.fixture(scope="session")
+# def db(app, request):
+#     """
+#     Returns session-wide initialised database.
+#     """
+#     with app.app_context():
+#         _db.drop_all()
+#         _db.create_all()
+
+
 @pytest.fixture(scope="session")
-def db(app, request):
-    """
-    Returns session-wide initialised database.
-    """
-    with app.app_context():
-        _db.drop_all()
-        _db.create_all()
-
-
-@pytest.fixture(scope="session", autouse=True)
 def session(app, db, request):
     """
     Returns function-scoped session.
@@ -56,4 +57,3 @@ def session(app, db, request):
         # This instruction rollback any commit that were executed in the tests.
         txn.rollback()
         conn.close()
-

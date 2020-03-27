@@ -56,7 +56,6 @@ class TestUser(object):
         token = data.get('token')
         assert id_ is not None
         assert token is not None
-        global headers
         headers['identify'] = id_
         headers['Authorization'] = f'Bearer {token}'
 
@@ -76,14 +75,15 @@ class TestUser(object):
         for item in res:
             assert item is not None
 
-    # def test_change_user_info(self, client):
-    #     u = user.copy()
-    #     u['password'] = 'password_new',
-    #     res = client.patch(
-    #         url_for('admin.user_info_view'),
-    #         json=u, headers=headers
-    #     )
-    #     assert b'success' in res.data
+    def test_change_user_info(self, client):
+        u = user.copy()
+        u['password'] = 'password_new',
+        res = client.patch(
+            url_for('admin.user_info_view'),
+            json=u, headers=headers
+        )
+        assert b'success' in res.data
+
     def test_reset_email(self, client):
         res = client.get(
             url_for('admin.reset_email_view'),

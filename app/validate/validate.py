@@ -52,9 +52,6 @@ class RegisterValidate(JsonValidate):
 
 
 class PostValidate(JsonValidate):
-    id = IntegerField('文章id', validators=[
-        DataRequired(message='id不能为空'),
-    ])
     title = StringField('文章标题', validators=[
         Length(0, 128, message="文章标题在0~128字符之间")
     ])
@@ -71,8 +68,8 @@ class PostValidate(JsonValidate):
     ], filters=[time2stamp])
     article = StringField('文章内容')
     excerpt = StringField('摘要', validators=[
-        DataRequired(message='文章摘要不可为空'),
-        Length(max=300, message="摘要最大长度为300")
+        # DataRequired(message='文章摘要不可为空'),
+        # Length(max=300, message="摘要最大长度为300")
     ])
 
 
@@ -91,12 +88,16 @@ class UserValidate(JsonValidate):
 
 
 class TagValidate(JsonValidate):
-    id = IntegerField('标签id', validators=[
-        DataRequired(message="id不能为空")])
     name = StringField('标签名', validators=[
         DataRequired(message='标签名不可为空'),
         Length(max=64, message="标签名最大长度为字符")])
-    describe = StringField('描述', validators=[Length(min=0, max=128, message="描述长度为0-128字符之间")])
+    describe = StringField('描述', validators=[
+        Length(min=0, max=128, message="描述长度为0-128字符之间")
+    ])
+
+
+class DeleteValidate(JsonValidate):
+    id_list = FieldList(IntegerField('标签id'), min_entries=1)
 
 
 class EmailValidate(JsonValidate):
@@ -106,7 +107,10 @@ class EmailValidate(JsonValidate):
 
 
 class EmailCodeValidate(JsonValidate):
-    code = IntegerField('验证码')
+    # TODO:验证码位数
+    code = StringField('验证码', filters=[str], validators=[
+        Length(6, 6, message='验证码错误')
+    ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
     ])
@@ -144,10 +148,8 @@ class RecoveryPasswordValidate(JsonValidate):
         EqualTo('password', message='两次输入密码不一致')
     ])
 
-# class TagImgValidate(FormValidate):
-#     image = FileField('图片', validators=[
-#         DataRequired(message='图片不可为空')
-#     ])
-#     tag_name = StringField('标签名', validators=[
-#         DataRequired(message='标签名不能为空')
-#     ])
+
+class ChangeImageValidate(JsonValidate):
+    describe = StringField('摘要', validators=[
+        Length(max=255, message="描述最大长度为300")
+    ])

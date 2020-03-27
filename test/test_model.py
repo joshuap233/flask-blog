@@ -21,7 +21,8 @@ class TestUser:
         Email = namedtuple('Email', 'data')
         Code = namedtuple('code', 'data')
         Form = namedtuple('Form', 'email code')
-        code, _ = User.set_code_by(uid=uid)
+        user = User.search_by(id=uid)
+        code = user.set_code()
         form = Form(
             email=Email('101242@gmail.com'),
             code=Code(code)
@@ -66,7 +67,7 @@ class TestPost:
         items = pagination.items
         assert len(items) != 0
         post = items[0]
-        Post.delete_by_id(post.id)
+        Post.delete_by(id=post.id)
         Post().search_by(id=post.id)
 
 

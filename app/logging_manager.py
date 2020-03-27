@@ -43,13 +43,25 @@ def register_logging(default_level=logging.INFO):
     import os
     import yaml
     path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, 'log.yaml')
+    path = os.path.join(path, './config/log.yaml')
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
             logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
+
+
+def register_log_query_and_response_time(app):
+    @app.before_request
+    def before_request():
+        # 记录 响应开始时间
+        g.start_time = time.time()
+
+    @app.after_request
+    def after_all_request(response):
+        log_database_and_response_time()
+        return response
 
 
 def register_log_rollback(app):

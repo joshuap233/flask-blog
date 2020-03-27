@@ -20,10 +20,6 @@ def format_time(timestamp: int, format_='%Y/%m/%d %H:%M'):
 
 
 def generate_res(status='success', **kwargs):
-    from app.model.view_model import BaseView
-    for key, value in kwargs.items():
-        if isinstance(value, BaseView):
-            kwargs[key] = value.__dict__
     status = {
         'status': status,
     }
@@ -35,22 +31,19 @@ def get_attr(keys: list, data: dict) -> list:
     return [data.get(key) for key in keys]
 
 
-def filters_filename(filename) -> str:
+def filters_filename(file) -> str:
     from uuid import uuid1
-    from werkzeug.utils import secure_filename
-    from os import path
-    filename = secure_filename(filename)
-    ext_name = path.splitext(filename)[-1]
+    ext_name = file.content_type.split('/')[1]
     if ext_name not in current_app.config['ALLOWED_EXTENSIONS']:
         raise ParameterException('扩展名错误')
-    return str(uuid1()) + ext_name
+    return f'{str(uuid1())}.{ext_name}'
 
 
-def generate_verification_code() -> int:
+def generate_verification_code() -> str:
     code = ''
     for i in range(current_app.config['VERIFICATION_CODE_LENGTH']):
         code += str(randbelow(9))
-    return int(code)
+    return code
 
 
 def get_now_timestamp() -> int:
