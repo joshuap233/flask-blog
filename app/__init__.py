@@ -10,37 +10,37 @@ from .myFlask import Flask
 migrate = Migrate(compare_type=True, compare_server_default=True)
 
 
-def create_upload_file(app_):
+def create_upload_file(app):
     import os
-    base_path = app_.config['UPLOAD_FOLDER']
+    base_path = app.config['UPLOAD_FOLDER']
     if not os.path.exists(base_path):
         os.mkdir(base_path)
 
 
-def apply_cors(app_, config_name):
+def apply_cors(app, config_name):
     from flask_cors import CORS
     if config_name != 'production':
-        CORS(app_)
+        CORS(app)
 
 
-def register_blueprint(app_):
+def register_blueprint(app):
     from app.api.view.blueprint import api as api_blueprint
-    app_.register_blueprint(api_blueprint)
+    app.register_blueprint(api_blueprint)
 
     from app.api.admin.blueprint import admin as admin_blueprint
-    app_.register_blueprint(admin_blueprint)
+    app.register_blueprint(admin_blueprint)
 
     from app.web.blueprint import main as main_blueprint
-    app_.register_blueprint(main_blueprint)
+    app.register_blueprint(main_blueprint)
 
 
 def register_logstash():
     pass
 
 
-def init_db(app_):
-    db.init_app(app_)
-    with app_.app_context():
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
         db.create_all()
 
 
@@ -53,7 +53,7 @@ def create_app(config_name):
     if config_name == 'production':
         register_logging()
         register_log_query_and_response_time(app)
-        register_sentry_sdk()
+    register_sentry_sdk(app)
     create_upload_file(app)
     apply_cors(app, config_name)
     register_blueprint(app)

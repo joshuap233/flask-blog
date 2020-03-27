@@ -1,12 +1,11 @@
 import logging
+import time
 from functools import wraps
 from logging.config import dictConfig
 
+from flask import current_app, g
 from flask import has_request_context, request
 from flask_sqlalchemy import get_debug_queries
-import time
-
-from flask import Flask, current_app, g
 
 
 class RequestFormatter(logging.Formatter):
@@ -71,12 +70,11 @@ def register_log_rollback(app):
     )
 
 
-def register_sentry_sdk():
+def register_sentry_sdk(app):
     from sentry_sdk.integrations.flask import FlaskIntegration
     import sentry_sdk
-    import os
     sentry_sdk.init(
-        dsn=os.getenv('SENTRY_DSN'),
+        dsn=app.config['SENTRY_DSN'],
         integrations=[FlaskIntegration()]
     )
 
