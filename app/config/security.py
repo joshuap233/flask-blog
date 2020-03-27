@@ -24,7 +24,7 @@ class SecurityConfig(object):
     # 验证码过期时间
     VERIFICATION_CODE_EXPIRE = '' or timedelta(minutes=5)
     # 错误处理集成     参见:https://sentry.io/for/flask/
-    SENTRY_DSN = '
+    SENTRY_DSN = ''
 
 
 class ProductionConfig(SecurityConfig):
