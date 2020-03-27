@@ -72,11 +72,6 @@ def register_log_rollback(app):
 
 
 def register_sentry_sdk():
-    """
-        错误处理集成
-        参见:https://sentry.io/for/flask/
-    :return:
-    """
     from sentry_sdk.integrations.flask import FlaskIntegration
     import sentry_sdk
     import os
