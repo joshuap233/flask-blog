@@ -53,7 +53,7 @@ def create_app(config_name):
     if config_name == 'production':
         register_logging()
         register_log_query_and_response_time(app)
-    register_sentry_sdk(app)
+        register_sentry_sdk(app)
     create_upload_file(app)
     apply_cors(app, config_name)
     register_blueprint(app)
