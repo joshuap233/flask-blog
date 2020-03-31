@@ -11,7 +11,7 @@ class SecurityConfig(object):
     # 存放日志文件夹名称
     LOG_DIR = 'log'
     # token过期时间
-    JWT_ACCESS_TOKEN_EXPIRES = '' or timedelta(days=1)
+    JWT_REFRESH_TOKEN_EXPIRES = '' or timedelta(days=1)
     JWT_SECRET_KEY = '' or os.urandom(64)
     # token黑名单
     JWT_BLACKLIST_ENABLED = True
