@@ -1,7 +1,6 @@
 from flask_migrate import Migrate
 
 from app.email_manager import mail
-from app.exception import AuthFailed
 from app.logging_manager import register_logging, register_sentry_sdk, register_log_query_and_response_time
 from app.model.baseDb import db
 from app.token_manager import register_blacklist_loader, jwt, register_jwt_error
@@ -19,8 +18,10 @@ def create_upload_file(app):
 
 def apply_cors(app, config_name):
     from flask_cors import CORS
-    if config_name != 'production':
-        CORS(app)
+    CORS(app)
+
+    # if config_name != 'production':
+    #     CORS(app)
 
 
 def register_blueprint(app):
@@ -44,10 +45,13 @@ def init_db(app):
         db.create_all()
 
 
-def create_app(config_name):
+def create_app():
     from app.config.config import config as common_config
     from app.config.security import config as security_config
+    from app.config.env import ENV
+    config_name = ENV
     app = Flask(__name__, template_folder='static/', static_folder='static/build/')
+    # config_name = app.env
     app.config.from_object(common_config[config_name]())
     app.config.from_object(security_config[config_name]())
     if config_name == 'production':
@@ -70,7 +74,7 @@ def create_app(config_name):
     return app
 
 
-app = create_app('default')
+app = create_app()
 
 
 @app.shell_context_processor

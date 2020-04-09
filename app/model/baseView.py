@@ -13,7 +13,7 @@ class BaseView:
 
 class TableView(metaclass=ABCMeta):
     @abstractmethod
-    def __init__(self, values, page, model: Base):
+    def __init__(self, values, page, model):
         self.values = self._fill(values)
         self.page = page
         self.total = model.total()

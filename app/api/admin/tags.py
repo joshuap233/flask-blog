@@ -9,7 +9,7 @@ from app.token_manager import login_required
 
 
 # 获取所有标签,仅包含标签名
-@admin.route('/posts/tags')
+@admin.route('/posts/tags/all')
 @login_required
 def all_tags_view():
     return generate_res(data=[

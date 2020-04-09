@@ -50,6 +50,7 @@ def images_query_view(image_id):
         return generate_res()
     elif request.method == 'PUT':
         form = ChangeImageValidate().validate_api()
+        print(form)
         Link.update_by_id(image_id, **form.data)
         return generate_res()
     elif request.method == 'POST':

@@ -53,7 +53,7 @@ class TagsView(BaseView, TableView):
 class TagView(BaseView):
     def __init__(self, tag):
         self.id = tag.id
-        self.name = tag.name
+        self.name = tag.name or ''
         self.describe = tag.describe
         self.count = tag.count
         self.image = ImageUrlView(tag.links.url if tag.links else '')
@@ -75,6 +75,7 @@ class LoginView(BaseView):
     def __init__(self, user):
         self.id = user.id
         self.token = user.generate_login_token()
+
     #     if self.check_email_validate(user):
     #         self.msg = '您的邮箱未验证'
     #
@@ -127,8 +128,7 @@ class ImageView(BaseView):
 class ImageUrlView(BaseView):
     def __init__(self, filename):
         self.name = filename
-        print(url_for('admin.send_images_view', filename=filename))
-        self.url = url_for('admin.send_images_view', filename=filename, _external=True)
+        self.url = url_for('admin.send_images_view', filename=filename, _external=True) if filename else ''
 
 
 class QueryView:

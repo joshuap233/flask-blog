@@ -57,11 +57,7 @@ class Base(db.Model):
 
     @classmethod
     def search_by(cls, **kwargs) -> db.Model:
-        if 'error' in kwargs:
-            error = kwargs['error']
-            del kwargs['error']
-        else:
-            error = True
+        error = kwargs.pop('error', True)
         if 'id' in kwargs:
             return cls.query.get_or_404(kwargs['id'], error=error)
         return cls.query.filter_by(**kwargs).first_or_404(error=error)

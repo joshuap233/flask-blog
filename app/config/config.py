@@ -1,4 +1,4 @@
-class Config(object):
+class BaseConfig(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 邮件服务器
@@ -18,17 +18,17 @@ class Config(object):
     # 存放日志文件夹名称
 
 
-class ProductionConfig(Config):
+class ProductionConfig(BaseConfig):
     MAIL_DEBUG = False
 
 
-class DevelopmentConfig(Config):
+class DevelopmentConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
-class TestingConfig(Config):
+class TestingConfig(BaseConfig):
     # 如果MAIL_SUPPRESS_SEND 为True,则单元测试时不会真正发送邮件
     # MAIL_SUPPRESS_SEND = False
     TESTING = True
@@ -39,5 +39,5 @@ config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig
 }
+
