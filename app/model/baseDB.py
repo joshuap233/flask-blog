@@ -3,7 +3,7 @@ from abc import abstractmethod
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, BaseQuery
 
 from app.exception import UnknownException, NotFound
-
+from functools import reduce
 from app.utils import get_now_timestamp
 
 
@@ -112,10 +112,14 @@ class BaseSearch(Base):
 
     @classmethod
     @abstractmethod
-    def paging_search(cls, page, per_page, order_by, filters, **kwargs):
-        search = kwargs.get('search')
-        if search:
-            return cls.query.filter(filters(search)).order_by(*order_by).paginate(
-                page=page, per_page=per_page, error_out=False)
+    def paging_search(cls, page, per_page, order_by, query=None, filters=None, queries=None, **kwargs):
+        if query:
+            query = query
+        elif queries:
+            query = reduce(lambda pre, next_: pre.union(next_), queries)
+        elif filters:
+            queries = [cls.query.filter(filter_) for filter_ in filters]
+            query = reduce(lambda pre, next_: pre.union(next_), queries)
         else:
-            return cls.query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)
+            query = cls.query
+        return query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)

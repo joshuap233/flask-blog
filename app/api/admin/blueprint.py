@@ -1,3 +1,7 @@
 from flask import Blueprint
 
-admin = Blueprint('admin', __name__, url_prefix='/api/admin')
+admin = Blueprint(
+    'admin',
+    __name__,
+    url_prefix='/api/admin',
+)

@@ -19,8 +19,6 @@ class SecurityConfig(object):
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
     # token离过期10分钟自动刷新
     JWT_MIN_REFRESH_SPACE = '' or timedelta(minutes=10)
-    # 验证码长度
-    VERIFICATION_CODE_LENGTH = '' or 6
     # 验证码过期时间
     VERIFICATION_CODE_EXPIRE = '' or timedelta(minutes=5)
     # 错误处理集成     参见:https://sentry.io/for/flask/

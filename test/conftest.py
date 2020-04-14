@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import event
 
 from app import create_app
-from app.model.baseDb import db as _db
+from app.model.baseDB import db as _db
 
 
 @pytest.fixture(scope="session")

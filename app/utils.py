@@ -4,6 +4,7 @@ from flask import jsonify, current_app
 from app.exception import ParameterException
 from secrets import randbelow
 import datetime
+from app.config.constant import VERIFICATION_CODE_LENGTH
 
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M') -> int:
@@ -41,7 +42,7 @@ def filters_filename(file) -> str:
 
 def generate_verification_code() -> str:
     code = ''
-    for i in range(current_app.config['VERIFICATION_CODE_LENGTH']):
+    for i in range(VERIFICATION_CODE_LENGTH):
         code += str(randbelow(9))
     return code
 

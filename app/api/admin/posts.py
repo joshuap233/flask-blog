@@ -1,5 +1,3 @@
-import os
-
 from app.model.db import Post
 from app.model.view_model import PostsView, QueryView, PostView, IdView
 from app.utils import generate_res

@@ -1,8 +1,10 @@
 from flask import request
 
-from app.email_manager import (send_register_success_email,
-                               send_recovery_pass_email, send_change_email_email, send_change_pass_warn,
-                               send_change_email_success_email)
+from app.email_manager import (
+    send_register_success_email,
+    send_recovery_pass_email, send_change_email_email, send_change_pass_warn,
+    send_change_email_success_email
+)
 from app.exception import EmailNotFound, EmailHasAdd
 from app.model.db import User
 from app.model.view_model import UserInfoView, LoginView

@@ -2,7 +2,7 @@ from flask_migrate import Migrate
 
 from app.email_manager import mail
 from app.logging_manager import register_logging, register_sentry_sdk, register_log_query_and_response_time
-from app.model.baseDb import db
+from app.model.baseDB import db
 from app.token_manager import register_blacklist_loader, jwt, register_jwt_error
 from .myFlask import Flask
 
@@ -18,10 +18,9 @@ def create_upload_file(app):
 
 def apply_cors(app, config_name):
     from flask_cors import CORS
-    CORS(app)
 
-    # if config_name != 'production':
-    #     CORS(app)
+    if config_name != 'production':
+        CORS(app)
 
 
 def register_blueprint(app):
@@ -31,8 +30,11 @@ def register_blueprint(app):
     from app.api.admin.blueprint import admin as admin_blueprint
     app.register_blueprint(admin_blueprint)
 
-    from app.web.blueprint import main as main_blueprint
-    app.register_blueprint(main_blueprint)
+    from app.web.view import view_page as view_page_blueprint
+    app.register_blueprint(view_page_blueprint)
+
+    from app.web.admin import admin_page as admin_page_blueprint
+    app.register_blueprint(admin_page_blueprint)
 
 
 def register_logstash():
@@ -50,8 +52,7 @@ def create_app():
     from app.config.security import config as security_config
     from app.config.env import ENV
     config_name = ENV
-    app = Flask(__name__, template_folder='static/', static_folder='static/build/')
-    # config_name = app.env
+    app = Flask(__name__,static_folder='static/view/')
     app.config.from_object(common_config[config_name]())
     app.config.from_object(security_config[config_name]())
     if config_name == 'production':

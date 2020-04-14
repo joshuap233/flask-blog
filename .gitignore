@@ -124,10 +124,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-admin.py
 
 .idea
 secure.py
 build
 templates
 files/
+static/

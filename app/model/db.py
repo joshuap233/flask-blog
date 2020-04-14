@@ -1,7 +1,7 @@
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
-from .baseDb import Base, db, BaseSearch
+from .baseDB import Base, db, BaseSearch
 from flask_jwt_extended import create_refresh_token, get_jwt_identity
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
 
@@ -24,13 +24,19 @@ class Post(BaseSearch):
     blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), default='')
-    article = db.Column(LONGTEXT, comment='文章内容', default='')
-    excerpt = db.Column(db.TEXT, comment="文章摘要", default='')
+    # 用于编辑
+    article = db.Column(LONGTEXT, comment='文章内容(json)', default='')
+    # 用于渲染
+    article_html = db.Column(LONGTEXT, comment='文章内容(html)', default='')
+    # 用于编辑
+    excerpt = db.Column(db.TEXT, comment="文章摘要(json)", default='')
+    # 用于渲染
+    excerpt_html = db.Column(db.TEXT, comment='文章摘要(html)', default='')
     change_date = db.Column(db.BigInteger, index=True)
     visibility = db.Column(db.String(16), default="私密", comment='文章可见性:私密/公开')
     comments = db.Column(db.Integer, default=0, comment="评论数量")
 
-    tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy=True))
+    tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
 
     def __init__(self, *args, **kwargs):
@@ -68,9 +74,22 @@ class Post(BaseSearch):
             db.session.delete(one)
 
     @classmethod
-    def paging_search(cls, page, per_page, order_by, **kwargs):
-        # TODO: 支持按日期...查找,暂时只支持按文章标题查找
-        return super().paging_search(page, per_page, order_by, filters=cls.title.like, **kwargs)
+    def paging_search(cls, filters, **kwargs):
+        search = filters.get('search')
+        queries = [cls.query.filter(cls.title.like(search)), *[
+            tag.posts for tag in Tag.query.filter(Tag.name.like(search)).all()
+        ]] if search else []
+        if not kwargs.get('order_by'):
+            # kwargs['order_by'] = [Post.id.asc()]
+            kwargs['order_by'] = [db.asc('id')]
+        return super().paging_search(queries=queries, **kwargs)
+
+    @classmethod
+    def paging_by_tid(cls, tid, **kwargs):
+        query = Tag.search_by(id=tid).posts
+        if not kwargs.get('order_by'):
+            kwargs['order_by'] = [Post.id.asc()]
+        return super().paging_search(query=query, **kwargs)
 
 
 class Tag(BaseSearch):
@@ -90,9 +109,16 @@ class Tag(BaseSearch):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def paging_search(cls, page, per_page, order_by, **kwargs):
-        # TODO: 暂时只支持按标签名查找
-        return super().paging_search(page, per_page, order_by, filters=cls.name.like, **kwargs)
+    def paging_search(cls, filters, **kwargs):
+        # TODO: 完善搜索功能
+        search = filters.get('search')
+        filters_ = [
+            cls.name.like(search),
+            cls.describe.like(search)
+        ] if search else []
+        if not kwargs.get('order_by'):
+            kwargs['order_by'] = [Tag.id.asc()]
+        return super().paging_search(filters=filters_, **kwargs)
 
     # 更新标签名时查重
     @classmethod
@@ -119,7 +145,8 @@ class User(Base):
     username = db.Column(db.String(128))
     email = db.Column(db.String(128), nullable=True)
     password_hash = db.Column(db.String(128))
-    about = db.Column(LONGTEXT, comment="关于用户")
+    about = db.Column(LONGTEXT, comment="关于用户(json raw)")
+    about_html = db.Column(LONGTEXT, comment="关于用户(html)")
     avatar = db.Column(LONGTEXT)
     # 保留字段
     email_is_validate = db.Column(db.Boolean, default=False)
@@ -224,9 +251,12 @@ class Link(BaseSearch):
     tags = db.relationship('Tag', backref=db.backref('links', lazy=True))
 
     @classmethod
-    def paging_search(cls, page, per_page, order_by, **kwargs):
-        # TODO: 暂时只支持describe查找
-        return super().paging_search(page, per_page, order_by, filters=cls.describe.like, **kwargs)
+    def paging_search(cls, filters, **kwargs):
+        search = filters.get('search')
+        filters_ = [cls.describe.like(search)] if search else []
+        if not kwargs.get('order_by'):
+            kwargs['order_by'] = [Link.id.asc()]
+        return super().paging_search(filters=filters_, **kwargs)
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)

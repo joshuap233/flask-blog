@@ -3,6 +3,7 @@ from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, Any
 from app.exception import ParameterException
 from app.utils import time2stamp
 from .base import JsonValidate
+from app.config.constant import VERIFICATION_CODE_LENGTH
 
 
 class LoginValidate(JsonValidate):
@@ -67,10 +68,9 @@ class PostValidate(JsonValidate):
         DataRequired(message='change_date不能为空'),
     ], filters=[time2stamp])
     article = StringField('文章内容')
-    excerpt = StringField('摘要', validators=[
-        # DataRequired(message='文章摘要不可为空'),
-        # Length(max=300, message="摘要最大长度为300")
-    ])
+    article_html = StringField('文章内容')
+    excerpt = StringField('摘要')
+    p = StringField('摘要')
 
 
 class UserValidate(JsonValidate):
@@ -85,6 +85,7 @@ class UserValidate(JsonValidate):
     # TODO 添加验证
     avatar = StringField('头像')
     about = StringField('关于')
+    about_html = StringField('关于')
 
 
 class TagValidate(JsonValidate):
@@ -107,9 +108,9 @@ class EmailValidate(JsonValidate):
 
 
 class EmailCodeValidate(JsonValidate):
-    # TODO:验证码位数
+    # TODO: 验证码长度🌿配置
     code = StringField('验证码', filters=[str], validators=[
-        Length(6, 6, message='验证码错误')
+        Length(VERIFICATION_CODE_LENGTH, VERIFICATION_CODE_LENGTH, message='验证码错误')
     ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
@@ -134,7 +135,9 @@ class ResetPasswordValidate(JsonValidate):
 
 
 class RecoveryPasswordValidate(JsonValidate):
-    code = IntegerField('验证码')
+    code = StringField('验证码', filter=[str], validators=[
+        Length(VERIFICATION_CODE_LENGTH, VERIFICATION_CODE_LENGTH, message='验证码错误')
+    ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
     ])

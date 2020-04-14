@@ -1,9 +1,12 @@
 from flask import current_app, request, url_for
+import json
 
-from app.model.baseDb import db
+from app.model.baseDB import db
 from app.model.db import Tag, Post, Link
 from app.utils import format_time
 from .baseView import BaseView, TableView
+from app.exception import ParameterException
+from urllib.parse import unquote
 
 
 class IdView(BaseView):
@@ -36,8 +39,10 @@ class PostView(BaseView):
         self.create_date = format_time(post.create_date)
         self.change_date = format_time(post.change_date)
         self.article = post.article or ''
-        self.comments = post.comments
         self.excerpt = post.excerpt
+        # self.article_html = post.article_html or ''
+        # self.excerpt_html = post.article_html or ''
+        self.comments = post.comments
 
 
 # 格式化从数据库获取的标签
@@ -65,6 +70,7 @@ class UserInfoView(BaseView):
         self.username = user.username
         self.email = user.email
         self.about = user.about
+        self.about_html = user.about_html
         self.avatar = user.avatar
         self.set_field_not_None()
         # self.email_is_validate = user.email_is_validate
@@ -138,26 +144,27 @@ class QueryView:
     'page':'0',
     'pageSize':'10',
     'search':'str',
-    'totalCount':'1'
+    'totalCount':'1',
+    'filter_by':{tid:1}
     """
-    # 列表为可查询字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
     # TODO:去除硬编码
+    # 列表为可排序字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
     sortable = ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']
 
-    def __init__(self):
+    def __init__(self, order_by=True):
         self.query = request.args
-        self.order_by = self._get_order_by()
+        self.order_by = self._get_order_by() if order_by else None
         self.page = self._get_page()
         self.pagesize = self._get_pagesize()
-        self.search = self._get_search()
+        self.filters = self._get_filters()
 
     @property
     def search_parameter(self):
         return dict(
-            search=self.search,
             order_by=self.order_by,
             page=self.page,
-            per_page=self.pagesize
+            per_page=self.pagesize,
+            filters=self.filters
         )
 
     def _get_page(self):
@@ -166,6 +173,20 @@ class QueryView:
 
     def _get_pagesize(self):
         return int(self.query.get('pageSize', current_app.config['PAGESIZE']))
+
+    def _get_filters(self) -> {}:
+        # 支持搜索
+        filters = {}
+        search = self.query.get('search')
+        filters['search'] = f"%{unquote(search)}%" if search else None
+        # 支持按标签查找
+        try:
+            filter_by = json.loads(self.query.get('filter') or '{}')
+            tid = int(filter_by.get('tid') or -1)
+        except Exception as e:
+            raise ParameterException(e.args)
+        filters['tid'] = tid if tid and tid > 0 else None
+        return filters
 
     def _get_order_by(self):
         order_bys = self.query.get('orderBy')
@@ -179,7 +200,3 @@ class QueryView:
                 if field in self.sortable:
                     order_by.append(db.desc(field) if ob.get('desc') else db.asc(field))
         return order_by
-
-    def _get_search(self):
-        search = self.query.get('search')
-        return f"%{search}%" if search else None

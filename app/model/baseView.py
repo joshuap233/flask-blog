@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from app.model.baseDb import Base
+from app.model.baseDB import Base
 
 
 # 用于flask jsonify序列化

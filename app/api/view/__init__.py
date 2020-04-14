@@ -1,1 +1,1 @@
-from . import archive, comments, posts, tags, user, post
+from . import comments, posts, tags, user, post
