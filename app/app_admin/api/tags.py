@@ -3,9 +3,9 @@ from flask import request
 from app.model.db import Tag
 from app.model.view_model import TagsView, QueryView, IdView
 from app.utils import generate_res
-from app.validate.validate import TagValidate, DeleteValidate
+from ..validate.validate import TagValidate, DeleteValidate
 from .blueprint import admin
-from app.token_manager import login_required
+from ..token_manager import login_required
 
 
 # 获取所有标签,仅包含标签名

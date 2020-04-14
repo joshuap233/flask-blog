@@ -1,8 +1,8 @@
 from app.utils import generate_res
 from .blueprint import api
 from flask import url_for, current_app, send_from_directory
-from app.model.db import Tag
-from app.model.view_model import QueryView
+from app.shared.model.db import Tag
+from app.shared.model.view_model import QueryView
 
 
 @api.route('/tags')
@@ -21,12 +21,6 @@ def tags_view():
             }
         } for tag in pagination.items if len(tag.posts.all())]
     })
-
-
-@api.route('/images/image/<filename>')
-def send_images_view(filename):
-    path = current_app.config['UPLOAD_FOLDER']
-    return send_from_directory(path, filename)
 
 
 @api.route('/tags/all')

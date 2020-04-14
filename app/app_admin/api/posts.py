@@ -2,8 +2,8 @@ from app.model.db import Post
 from app.model.view_model import PostsView, QueryView, PostView, IdView
 from app.utils import generate_res
 from .blueprint import admin
-from app.token_manager import login_required
-from app.validate.validate import PostValidate, DeleteValidate
+from ..token_manager import login_required
+from ..validate.validate import PostValidate, DeleteValidate
 from flask import request
 
 

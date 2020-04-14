@@ -1,4 +1,4 @@
-from app.model.db import User, Post, Tag
+from app.shared.model.db import User, Post, Tag
 from app.utils import generate_res
 from .blueprint import api
 

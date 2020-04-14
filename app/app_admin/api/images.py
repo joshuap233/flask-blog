@@ -5,9 +5,9 @@ from flask import request, current_app, send_from_directory
 from app.exception import NotFound
 from app.model.db import Post, Link, Tag
 from app.model.view_model import QueryView, ImagesView, ImageUrlView, NewImageView
-from app.token_manager import login_required
+from ..token_manager import login_required
 from app.utils import generate_res, filters_filename
-from app.validate.validate import DeleteValidate, ChangeImageValidate
+from ..validate.validate import DeleteValidate, ChangeImageValidate
 from .blueprint import admin
 
 
