@@ -1,6 +1,6 @@
 from flask import request
 
-from app.shared.model.db import Post
+from app.model.db import Post
 from app.utils import generate_res
 from .blueprint import api
 

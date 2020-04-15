@@ -33,8 +33,8 @@ def register_app_shell(app):
         return dict(db=db, create=db.create_all, drop=db.drop_all)
 
 
-def create_app(register_config, **kwargs):
-    app = Flask(__name__, **kwargs)
+def create_app(register_config, *args, **kwargs):
+    app = Flask(*args, **kwargs)
     from app.config.env import ENV
     config_name = ENV
 
@@ -51,5 +51,5 @@ def create_app(register_config, **kwargs):
     register_app_shell(app)
 
     migrate.init_app(app, db)
-
+    init_db(app)
     return app

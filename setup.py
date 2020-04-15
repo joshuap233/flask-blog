@@ -5,6 +5,6 @@ setup(
     packages=['app'],
     include_package_data=True,
     install_requires=[
-        'flask', 'PyYAML', 'PyYAML'
+        'flask', 'PyYAML', 'PyYAML', 'dotenv', 'python-dotenv'
     ],
 )

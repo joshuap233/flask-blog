@@ -1,7 +1,7 @@
 from app.utils import generate_res
 from .blueprint import api
-from app.shared.model.view_model import QueryView
-from app.shared.model.db import Post
+from app.model.view_model import QueryView
+from app.model.db import Post
 
 
 @api.route('/posts/')
