@@ -9,6 +9,7 @@ from ..token_manager import login_required
 from app.utils import generate_res, filters_filename
 from ..validate.validate import DeleteValidate, ChangeImageValidate
 from .blueprint import admin
+from app.utils import security_remove_file
 
 
 # 图片上传
@@ -45,12 +46,11 @@ def images_query_view(image_id):
         form = DeleteValidate().validate_api()
         for identify in form.id_list.data:
             link = Link.search_by(id=identify)
-            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], link.url))
+            security_remove_file(link.url)
             link.delete()
         return generate_res()
     elif request.method == 'PUT':
         form = ChangeImageValidate().validate_api()
-        print(form)
         Link.update_by_id(image_id, **form.data)
         return generate_res()
     elif request.method == 'POST':

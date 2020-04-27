@@ -3,13 +3,14 @@ import os
 import pytest
 from sqlalchemy import event
 
-from app import create_app
+from app.app_admin import create_admin_app
+from app.app_admin import register_config
 from app.model.baseDB import db as _db
 
 
 @pytest.fixture(scope="session")
 def app(request):
-    return create_app("testing")
+    return create_admin_app(env="testing")
 
 
 #

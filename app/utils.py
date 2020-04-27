@@ -1,10 +1,11 @@
 import time
-
+from app.exception import NotFound
 from flask import jsonify, current_app
 from app.exception import ParameterException
 from secrets import randbelow
 import datetime
 from app.config.constant import VERIFICATION_CODE_LENGTH
+import os
 
 
 def time2stamp(time_, format_='%Y/%m/%d %H:%M') -> int:
@@ -55,3 +56,10 @@ def get_code_exp_stamp() -> int:
     now = datetime.datetime.now()
     expire_time = now + current_app.config['VERIFICATION_CODE_EXPIRE']
     return int(expire_time.timestamp())
+
+
+def security_remove_file(path):
+    try:
+        os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], path))
+    except FileNotFoundError:
+        raise NotFound('文件不存在')

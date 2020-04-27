@@ -24,31 +24,12 @@ def register_config(app, config_name):
         register_log_query_and_response_time(app)
 
 
-app = create_app(
-    register_config,
-    __name__,
-    static_folder='static/',
-    static_url_path=''
-)
-
-
-# TODO:
-# 写成<path:path> 似乎会是catch all 失效
-# 另外一个app <path:path> 生效,
-# 前端我手动替换history的原因?
-@app.route('/', defaults={'path': ''})
-@app.route('/<path>')
-@app.route('/post/<path>')
-def admin_view(path):
-    return app.send_static_file('index.html')
-
-
-if __name__ == '__main__':
-    run_simple(
-        hostname='localhost',
-        port=5000,
-        application=app,
-        use_reloader=True,
-        use_debugger=True,
-        use_evalex=True
+def create_admin_app(env=None):
+    app = create_app(
+        register_config,
+        __name__,
+        static_folder='static/',
+        static_url_path='',
+        env=env
     )
+    return app

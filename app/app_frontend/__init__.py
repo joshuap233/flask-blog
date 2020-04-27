@@ -16,26 +16,12 @@ def register_config(app, config_name):
         register_log_query_and_response_time(app)
 
 
-app = create_app(
-    register_config,
-    __name__,
-    static_folder='static/',
-    static_url_path='/view/'
-)
-
-
-@app.route('/<path:path>')
-@app.route('/', defaults={'path': ''})
-def font_end_view(path):
-    return app.send_static_file('index.html')
-
-
-if __name__ == '__main__':
-    run_simple(
-        hostname='localhost',
-        port=5000,
-        application=app,
-        use_reloader=True,
-        use_debugger=True,
-        use_evalex=True
+def create_view_app(env=None):
+    app = create_app(
+        register_config,
+        __name__,
+        static_folder='static/',
+        static_url_path='',
+        env=None
     )
+    return app

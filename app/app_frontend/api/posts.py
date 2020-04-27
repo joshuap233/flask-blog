@@ -2,6 +2,7 @@ from app.utils import generate_res
 from .blueprint import api
 from app.model.view_model import QueryView
 from app.model.db import Post
+from app.model.baseDB import Visibility
 
 
 @api.route('/posts/')
@@ -9,8 +10,11 @@ def posts_view():
     query = QueryView(order_by=False)
     tid = query.filters.get('tid')
     posts = Post.paging_by_tid(
-        tid, **query.search_parameter) if tid else Post.paging_search(
-        **query.search_parameter
+        tid, **query.search_parameter,
+        visibility=Visibility.public.value
+    ) if tid else Post.paging_search(
+        **query.search_parameter,
+        visibility=Visibility.public.value
     )
     return generate_res("success", data={
         'page': query.page,

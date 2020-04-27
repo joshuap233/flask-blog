@@ -1,9 +1,10 @@
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
-from .baseDB import Base, db, BaseSearch
+from .baseDB import Base, db, BaseSearch, Visibility
 from flask_jwt_extended import create_refresh_token, get_jwt_identity
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
+from functools import reduce
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -33,7 +34,7 @@ class Post(BaseSearch):
     # 用于渲染
     excerpt_html = db.Column(db.TEXT, comment='文章摘要(html)', default='')
     change_date = db.Column(db.BigInteger, index=True)
-    visibility = db.Column(db.String(16), default="私密", comment='文章可见性:私密/公开')
+    visibility = db.Column(db.String(16), default=Visibility.privacy.value, comment='文章可见性:私密/公开')
     comments = db.Column(db.Integer, default=0, comment="评论数量")
 
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
@@ -66,6 +67,12 @@ class Post(BaseSearch):
             tag.count += 1
 
     @classmethod
+    def total(cls, visibility=False):
+        if not visibility:
+            return super().total()
+        return cls.query.filter_by(visibility=Visibility.public.value).count()
+
+    @classmethod
     def delete_by_id(cls, identify):
         one = cls.search_by(id=identify)
         with db.auto_commit():
@@ -74,22 +81,26 @@ class Post(BaseSearch):
             db.session.delete(one)
 
     @classmethod
-    def paging_search(cls, filters, **kwargs):
+    def paging_search(cls, filters, visibility=None, **kwargs):
         search = filters.get('search')
-        queries = [cls.query.filter(cls.title.like(search)), *[
-            tag.posts for tag in Tag.query.filter(Tag.name.like(search)).all()
-        ]] if search else []
-        if not kwargs.get('order_by'):
-            # kwargs['order_by'] = [Post.id.asc()]
-            kwargs['order_by'] = [db.asc('id')]
-        return super().paging_search(queries=queries, **kwargs)
+        query = cls.query
+        if search:
+            queries = [cls.query.filter(cls.title.like(search)), *[
+                tag.posts for tag in Tag.query.filter(Tag.name.like(search)).all()
+            ]]
+            query = reduce(lambda pre, next_: pre.union(next_), queries)
+
+        if visibility:
+            query = query.filter_by(visibility=visibility)
+        return super().paging_search(query=query, **kwargs)
 
     @classmethod
-    def paging_by_tid(cls, tid, **kwargs):
+    def paging_by_tid(cls, tid, visibility, **kwargs):
         query = Tag.search_by(id=tid).posts
-        if not kwargs.get('order_by'):
-            kwargs['order_by'] = [Post.id.asc()]
-        return super().paging_search(query=query, **kwargs)
+        if visibility:
+            query = query.filter_by(visibility=visibility)
+        order_by = kwargs.pop('order_by', [Post.id.asc()])
+        return super().paging_search(query=query, order_by=order_by, **kwargs)
 
 
 class Tag(BaseSearch):
@@ -110,15 +121,16 @@ class Tag(BaseSearch):
 
     @classmethod
     def paging_search(cls, filters, **kwargs):
-        # TODO: 完善搜索功能
         search = filters.get('search')
-        filters_ = [
-            cls.name.like(search),
-            cls.describe.like(search)
-        ] if search else []
-        if not kwargs.get('order_by'):
-            kwargs['order_by'] = [Tag.id.asc()]
-        return super().paging_search(filters=filters_, **kwargs)
+        query = cls.query
+        if search:
+            filters_ = [
+                cls.name.like(search),
+                cls.describe.like(search)
+            ]
+            queries = [cls.query.filter(filter_) for filter_ in filters_]
+            query = reduce(lambda pre, next_: pre.union(next_), queries) if queries else query
+        return super().paging_search(query=query, **kwargs)
 
     # 更新标签名时查重
     @classmethod
@@ -136,6 +148,18 @@ class Tag(BaseSearch):
                 self._set_links(value)
                 continue
             self._set_attr(key, value)
+
+    @classmethod
+    def total(cls, visibility=False):
+        if not visibility:
+            return super().total()
+        count = 0
+        for tag in Tag.query.all():
+            for post in tag.posts.all():
+                if post.visibility == Visibility.public.value:
+                    count += 1
+                    break
+        return count
 
 
 class User(Base):
@@ -253,10 +277,12 @@ class Link(BaseSearch):
     @classmethod
     def paging_search(cls, filters, **kwargs):
         search = filters.get('search')
-        filters_ = [cls.describe.like(search)] if search else []
-        if not kwargs.get('order_by'):
-            kwargs['order_by'] = [Link.id.asc()]
-        return super().paging_search(filters=filters_, **kwargs)
+        query = cls.query
+        if search:
+            filters_ = [cls.describe.like(search)]
+            queries = [cls.query.filter(filter_) for filter_ in filters_]
+            query = reduce(lambda pre, next_: pre.union(next_), queries) if queries else query
+        return super().paging_search(query=query, **kwargs)
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)

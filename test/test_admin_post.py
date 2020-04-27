@@ -18,14 +18,22 @@ headers = {
     'Authorization': ''
 }
 
+"""
+解析查询参数
+'orderBy':'[{field:'title',desc:True/False}]
+'page':'0',
+'pageSize':'10',
+'search':'str',
+'totalCount':'1',
+'filter_by':{tid:1}
+"""
 
 POST_QUERY = {
     'filters': '[1, 2, 3]',
     'page': 0,
     'pageSize': 10,
     'search': 'title',
-    'orderBy': '{"field": "title", "title": "test"}',
-    'orderDirection': random.choice(["asc", "desc"]),
+    'orderBy': '[{field:"title",desc:True/False}]'
 }
 
 
@@ -69,11 +77,15 @@ class Test_post_view:
         assert 'title' in data and 'tags' in data
 
     def test_post_delete(self, client):
-        res = client.delete(url_for('admin.post_view', pid=POST['id']), headers=headers)
+        res = client.delete(url_for('admin.post_view'), headers=headers, json={
+            'id_list': [POST['id']]
+        })
         assert b'success' in res.data
 
         # 测试是否删除成功
-        res = client.delete(url_for('admin.post_view', pid=POST['id']), headers=headers)
+        res = client.delete(url_for('admin.post_view'), headers=headers, json={
+            'id_list': [POST['id']]
+        })
         assert b'failed' in res.data
 
 

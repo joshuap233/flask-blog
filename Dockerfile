@@ -2,7 +2,7 @@ FROM tiangolo/meinheld-gunicorn:python3.7
 
 COPY ./app /app/app
 
-COPY ./setup.py /app/setup.py
+#COPY ./setup.py /app/setup.py
 
 COPY ./requirements.txt /app/requirements.txt
 

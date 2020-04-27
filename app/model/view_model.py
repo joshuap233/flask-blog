@@ -151,6 +151,7 @@ class QueryView:
     # 列表为可排序字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
     sortable = ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']
 
+    # 默认允许 order_by 参数查询
     def __init__(self, order_by=True):
         self.query = request.args
         self.order_by = self._get_order_by() if order_by else None
@@ -175,7 +176,6 @@ class QueryView:
         return int(self.query.get('pageSize', current_app.config['PAGESIZE']))
 
     def _get_filters(self) -> {}:
-        # 支持搜索
         filters = {}
         search = self.query.get('search')
         filters['search'] = f"%{unquote(search)}%" if search else None

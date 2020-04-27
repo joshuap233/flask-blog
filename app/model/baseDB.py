@@ -3,8 +3,8 @@ from abc import abstractmethod
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, BaseQuery
 
 from app.exception import UnknownException, NotFound
-from functools import reduce
 from app.utils import get_now_timestamp
+from enum import Enum, unique
 
 
 class SQLAlchemy(_SQLAlchemy):
@@ -58,8 +58,8 @@ class Base(db.Model):
     @classmethod
     def search_by(cls, **kwargs) -> db.Model:
         error = kwargs.pop('error', True)
-        if 'id' in kwargs:
-            return cls.query.get_or_404(kwargs['id'], error=error)
+        # if 'id' in kwargs:
+        #     return cls.query.get_or_404(kwargs['id'], error=error)
         return cls.query.filter_by(**kwargs).first_or_404(error=error)
 
     def delete(self):
@@ -106,20 +106,19 @@ class Base(db.Model):
             setattr(self, key, value)
 
 
+@unique
+class Visibility(Enum):
+    privacy = '私密'
+    public = '公开'
+
+
 # 提供分页查询功能
 class BaseSearch(Base):
     __abstract__ = True
 
     @classmethod
     @abstractmethod
-    def paging_search(cls, page, per_page, order_by, query=None, filters=None, queries=None, **kwargs):
-        if query:
-            query = query
-        elif queries:
-            query = reduce(lambda pre, next_: pre.union(next_), queries)
-        elif filters:
-            queries = [cls.query.filter(filter_) for filter_ in filters]
-            query = reduce(lambda pre, next_: pre.union(next_), queries)
-        else:
-            query = cls.query
+    def paging_search(cls, page, per_page, order_by=None, query=None, **kwargs):
+        order_by = [cls.id.asc()] if not order_by else order_by
+        query = query if query else cls.query
         return query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)

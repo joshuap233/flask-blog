@@ -4,6 +4,7 @@ from app.exception import ParameterException
 from app.utils import time2stamp
 from .base import JsonValidate
 from app.config.constant import VERIFICATION_CODE_LENGTH
+from app.model.baseDB import Visibility
 
 
 class LoginValidate(JsonValidate):
@@ -59,7 +60,10 @@ class PostValidate(JsonValidate):
     tags = FieldList(StringField('标签'), min_entries=0)
     visibility = StringField('文章可见性', validators=[
         DataRequired(message='visibility不能为空'),
-        AnyOf(['私密', '公开'], message="visibility只能为私密或公开")
+        AnyOf(
+            [Visibility.privacy.value, Visibility.public.value],
+            message="visibility只能为私密或公开"
+        )
     ])
     change_date = IntegerField('文章修改日期', validators=[
         DataRequired(message='change_date不能为空'),
@@ -70,7 +74,7 @@ class PostValidate(JsonValidate):
     article = StringField('文章内容')
     article_html = StringField('文章内容')
     excerpt = StringField('摘要')
-    p = StringField('摘要')
+    excerpt_html = StringField('摘要')
 
 
 class UserValidate(JsonValidate):

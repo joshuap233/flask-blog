@@ -34,9 +34,9 @@ def register_app_shell(app):
 
 
 def create_app(register_config, *args, **kwargs):
+    config = kwargs.pop('env', None)
     app = Flask(*args, **kwargs)
-    from app.config.env import ENV
-    config_name = ENV
+    config_name = config if config else app.env
 
     register_config(app, config_name)
     from app.config.config import config as common_config

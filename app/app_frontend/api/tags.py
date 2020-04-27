@@ -1,14 +1,14 @@
 from app.utils import generate_res
 from .blueprint import api
 from flask import url_for
-from app.model.db import Tag
+from app.model.db import Tag, Visibility
 from app.model.view_model import QueryView
 
 
 @api.route('/tags')
 def tags_view():
     query = QueryView(order_by=False)
-    pagination = Tag.paging_search(**query.search_parameter)
+    pagination = Tag.paging_search(**query.search_parameter, visibility=Visibility.public.value)
     return generate_res(data={
         "page": query.page,
         "content": [{
@@ -25,6 +25,12 @@ def tags_view():
 
 @api.route('/tags/all')
 def all_tags_view():
-    return generate_res(data=[{
-        tag.id: tag.name
-    } for tag in Tag.query.all()])
+    tags = []
+    for tag in Tag.query.all():
+        for post in tag.posts.all():
+            if post.visibility == Visibility.public.value:
+                tags.append({
+                    tag.id: tag.name
+                })
+                break
+    return generate_res(data=tags)

@@ -1,7 +1,7 @@
 import os
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from app.app_admin import app as adminApp
-from app.app_frontend import app
+from app.app_admin import create_admin_app
+from app.app_frontend import create_view_app
 from werkzeug import run_simple
 from dotenv import load_dotenv
 
@@ -9,9 +9,27 @@ APP_ROOT = os.path.join(os.path.dirname(__file__), '..')
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
+app = create_view_app()
+adminApp = create_admin_app()
+
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/admin': adminApp
 })
+
+
+@app.route('/<path>')
+@app.route('/', defaults={'path': ''})
+def font_end_view(path):
+    return app.send_static_file('index.html')
+
+
+# 写成<path:path> 似乎会是catch all 失效
+@adminApp.route('/', defaults={'path': ''})
+@adminApp.route('/<path>')
+@adminApp.route('/post/<path>')
+def admin_view(path):
+    return app.send_static_file('index.html')
+
 
 if __name__ == '__main__':
     run_simple(
