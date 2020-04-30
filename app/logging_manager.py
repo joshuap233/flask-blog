@@ -3,9 +3,10 @@ import time
 from functools import wraps
 from logging.config import dictConfig
 
-from flask import current_app, g
-from flask import has_request_context, request
+from flask import current_app, g, has_request_context, request
 from flask_sqlalchemy import get_debug_queries
+
+from app.myType import FlaskInstance, Response
 
 
 class RequestFormatter(logging.Formatter):
@@ -22,7 +23,7 @@ class RequestFormatter(logging.Formatter):
 
 
 # 展示定义
-def logged(level='info', message='request log'):
+def logged(level: str = 'info', message: str = 'request log'):
     def decorate(fun):
         @wraps(fun)
         def wrapper(*args, **kwargs):
@@ -51,26 +52,26 @@ def register_logging(default_level=logging.INFO):
         logging.basicConfig(level=default_level)
 
 
-def register_log_query_and_response_time(app):
+def register_log_query_and_response_time(app: FlaskInstance):
     @app.before_request
     def before_request():
         # 记录 响应开始时间
         g.start_time = time.time()
 
     @app.after_request
-    def after_all_request(response):
+    def after_all_request(response: Response):
         log_database_and_response_time()
         return response
 
 
-def register_log_rollback(app):
+def register_log_rollback(app: FlaskInstance):
     # 日志回滚
     time_file_handler = logging.handlers.TimedRotatingFileHandler(
         app.config['LOG_DIR']
     )
 
 
-def register_sentry_sdk(app):
+def register_sentry_sdk(app: FlaskInstance):
     from sentry_sdk.integrations.flask import FlaskIntegration
     import sentry_sdk
     sentry_sdk.init(

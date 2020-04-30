@@ -1,12 +1,13 @@
-from flask import current_app, request, url_for
 import json
+from urllib.parse import unquote
 
+from flask import current_app, request, url_for
+
+from app.exception import ParameterException
 from app.model.baseDB import db
 from app.model.db import Tag, Post, Link
 from app.utils import format_time
 from .baseView import BaseView, TableView
-from app.exception import ParameterException
-from urllib.parse import unquote
 
 
 class IdView(BaseView):
@@ -16,7 +17,7 @@ class IdView(BaseView):
 
 # 格式化从数据库获取的文章
 class PostsView(BaseView, TableView):
-    def __init__(self, posts, page):
+    def __init__(self, posts: dict, page: int):
         super().__init__(posts, page, Post)
 
     @staticmethod
@@ -61,7 +62,7 @@ class TagView(BaseView):
         self.name = tag.name or ''
         self.describe = tag.describe
         self.count = tag.count
-        self.image = ImageUrlView(tag.links.url if tag.links else '')
+        self.image = ImageUrlView(tag.link.url if tag.link else '')
 
 
 class UserInfoView(BaseView):
@@ -72,6 +73,8 @@ class UserInfoView(BaseView):
         self.about = user.about
         self.about_html = user.about_html
         self.avatar = user.avatar
+        self.icp = user.icp
+        self.motto = user.motto
         self.set_field_not_None()
         # self.email_is_validate = user.email_is_validate
         self.password = ''

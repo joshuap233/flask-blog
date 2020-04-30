@@ -5,29 +5,28 @@ from flask import request, current_app, send_from_directory
 from app.exception import NotFound
 from app.model.db import Post, Link, Tag
 from app.model.view_model import QueryView, ImagesView, ImageUrlView, NewImageView
-from ..token_manager import login_required
 from app.utils import generate_res, filters_filename
-from ..validate.validate import DeleteValidate, ChangeImageValidate
-from .blueprint import admin
 from app.utils import security_remove_file
+from .blueprint import admin
+from ..token_manager import login_required
+from ..validate.validate import DeleteValidate, ChangeImageValidate
 
 
 # 图片上传
 @admin.route('/images/<source>/<int:source_id>', methods=['POST'])
 @login_required
 def images_upload_view(source, source_id):
-    if source == 'tags':
-        model = Tag
-    elif source == 'posts':
-        model = Post
-    else:
+    if source not in ['posts', 'tags']:
         raise NotFound()
     path = current_app.config['UPLOAD_FOLDER']
     # TODO: 文件校验(svg过滤,压缩处理
     img = request.files.get('image')
     filename = filters_filename(img)
     img.save(os.path.join(path, filename))
-    model.update_by_id(source_id, links=filename)
+    if source == 'tags':
+        Tag.update_by_id(source_id, link=filename)
+    elif source == 'posts':
+        Post.update_by_id(source_id, links=filename)
     return generate_res(data=ImageUrlView(filename))
 
 

@@ -1,6 +1,6 @@
-from flask import Blueprint
+from app.myFlask import MyBlueprint
 
-admin = Blueprint(
+admin = MyBlueprint(
     'admin',
     __name__,
     url_prefix='/api',

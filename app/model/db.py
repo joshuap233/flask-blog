@@ -1,10 +1,13 @@
+from functools import reduce
+
+from flask_jwt_extended import create_refresh_token, get_jwt_identity
 from sqlalchemy.dialects.mysql import LONGTEXT
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
-from .baseDB import Base, db, BaseSearch, Visibility
-from flask_jwt_extended import create_refresh_token, get_jwt_identity
+from app.myType import WTForm
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
-from functools import reduce
+from .baseDB import Base, db, BaseSearch, Visibility
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -55,10 +58,10 @@ class Post(BaseSearch):
                 continue
             self._set_attr(key, value)
 
-    def _set_links(self, url):
+    def _set_links(self, url: str):
         self.links.append(Link(url=url))
 
-    def _set_tags(self, tags):
+    def _set_tags(self, tags: dict):
         for tag in tags:
             tag = Tag.search_by(name=tag, error=False) or Tag(name=tag)
             if tag in self.tags:
@@ -67,13 +70,13 @@ class Post(BaseSearch):
             tag.count += 1
 
     @classmethod
-    def total(cls, visibility=False):
+    def total(cls, visibility: bool = False):
         if not visibility:
             return super().total()
         return cls.query.filter_by(visibility=Visibility.public.value).count()
 
     @classmethod
-    def delete_by_id(cls, identify):
+    def delete_by_id(cls, identify: int):
         one = cls.search_by(id=identify)
         with db.auto_commit():
             for tag in one.tags:
@@ -81,7 +84,7 @@ class Post(BaseSearch):
             db.session.delete(one)
 
     @classmethod
-    def paging_search(cls, filters, visibility=None, **kwargs):
+    def paging_search(cls, filters: dict, visibility: bool = None, **kwargs):
         search = filters.get('search')
         query = cls.query
         if search:
@@ -95,7 +98,7 @@ class Post(BaseSearch):
         return super().paging_search(query=query, **kwargs)
 
     @classmethod
-    def paging_by_tid(cls, tid, visibility, **kwargs):
+    def paging_by_tid(cls, tid: int, visibility: bool, **kwargs):
         query = Tag.search_by(id=tid).posts
         if visibility:
             query = query.filter_by(visibility=visibility)
@@ -120,7 +123,7 @@ class Tag(BaseSearch):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def paging_search(cls, filters, **kwargs):
+    def paging_search(cls, filters: dict, **kwargs):
         search = filters.get('search')
         query = cls.query
         if search:
@@ -139,18 +142,18 @@ class Tag(BaseSearch):
         if one:
             raise RepeatException(msg='标签名已存在')
 
-    def _set_links(self, url):
-        self.links = Link(url=url)
+    def _set_link(self, url):
+        self.link = Link(url=url)
 
     def _set_attrs(self, attrs: dict):
         for key, value in attrs.items():
-            if key == 'links':
-                self._set_links(value)
+            if key == 'link':
+                self._set_link(value)
                 continue
             self._set_attr(key, value)
 
     @classmethod
-    def total(cls, visibility=False):
+    def total(cls, visibility: bool = False):
         if not visibility:
             return super().total()
         count = 0
@@ -172,6 +175,8 @@ class User(Base):
     about = db.Column(LONGTEXT, comment="关于用户(json raw)")
     about_html = db.Column(LONGTEXT, comment="关于用户(html)")
     avatar = db.Column(LONGTEXT)
+    motto = db.Column(db.String(128))
+    icp = db.Column(db.String(128))
     # 保留字段
     email_is_validate = db.Column(db.Boolean, default=False)
     # 验证码
@@ -180,7 +185,7 @@ class User(Base):
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str):
         if not check_password_hash(self.password_hash, password):
             raise AuthFailed("密码错误")
 
@@ -195,7 +200,7 @@ class User(Base):
             self._set_attr(key, value)
 
     @classmethod
-    def reset_password(cls, form):
+    def reset_password(cls, form: WTForm):
         """
             登录状态下调用
         """
@@ -205,7 +210,7 @@ class User(Base):
         return user
 
     @classmethod
-    def validate_code_by(cls, code, **kwargs):
+    def validate_code_by(cls, code: str, **kwargs):
         user = cls.search_by(**kwargs)
         user.code.validate_code(code)
         return user
@@ -255,7 +260,7 @@ class Code(Base):
         expire_date = get_now_timestamp() - 1
         self.update(expire_date=expire_date)
 
-    def validate_code(self, code):
+    def validate_code(self, code: str):
         if self.code != code:
             raise ValidateCodeException("验证码错误")
         if self._is_expire:
@@ -272,10 +277,10 @@ class Link(BaseSearch):
     describe = db.Column(db.String(255), comment="链接描述")
     # 图片链接(用于图床)或图片名(本地)
     url = db.Column(db.String(255))
-    tags = db.relationship('Tag', backref=db.backref('links', lazy=True))
+    tags = db.relationship('Tag', backref=db.backref('link', lazy=True))
 
     @classmethod
-    def paging_search(cls, filters, **kwargs):
+    def paging_search(cls, filters: dict, **kwargs):
         search = filters.get('search')
         query = cls.query
         if search:

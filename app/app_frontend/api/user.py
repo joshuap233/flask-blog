@@ -11,8 +11,8 @@ def about():
         "about": user.about_html,
         "avatar": user.avatar,
         "nickname": user.nickname,
-        "ICP": '',
-        'motto': '',
+        "icp": user.icp,
+        'motto': user.motto,
         'articleCount': Post.total(visibility=True),
         'tagsCount': Tag.total(visibility=True),
         # 放入配置

@@ -1,10 +1,11 @@
-from contextlib import contextmanager
 from abc import abstractmethod
+from contextlib import contextmanager
+from enum import Enum, unique
+
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, BaseQuery
 
 from app.exception import UnknownException, NotFound
 from app.utils import get_now_timestamp
-from enum import Enum, unique
 
 
 class SQLAlchemy(_SQLAlchemy):
@@ -77,7 +78,7 @@ class Base(db.Model):
             self._set_attrs(kwargs)
 
     @classmethod
-    def update_by_id(cls, identify, **kwargs):
+    def update_by_id(cls, identify: int, **kwargs):
         one = cls.search_by(id=identify)
         with db.auto_commit():
             one._set_attrs(kwargs)
@@ -118,7 +119,7 @@ class BaseSearch(Base):
 
     @classmethod
     @abstractmethod
-    def paging_search(cls, page, per_page, order_by=None, query=None, **kwargs):
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
         order_by = [cls.id.asc()] if not order_by else order_by
         query = query if query else cls.query
         return query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)

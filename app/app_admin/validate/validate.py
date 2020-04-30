@@ -86,8 +86,15 @@ class UserValidate(JsonValidate):
         DataRequired(message='昵称不能为空'),
         Length(min=0, max=128, message="昵称长度在0-128字符间")
     ])
-    # TODO 添加验证
+
+    icp = StringField('备案号', validators=[
+        Length(min=0, max=128, message="昵称长度在0-128字符间")
+    ])
+    motto = StringField('座右铭', validators=[
+        Length(min=0, max=128, message="昵称长度在0-128字符间")
+    ])
     avatar = StringField('头像')
+    # TODO 添加验证
     about = StringField('关于')
     about_html = StringField('关于')
 

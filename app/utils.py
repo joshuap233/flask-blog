@@ -1,27 +1,30 @@
-import time
-from app.exception import NotFound
-from flask import jsonify, current_app
-from app.exception import ParameterException
-from secrets import randbelow
 import datetime
-from app.config.constant import VERIFICATION_CODE_LENGTH
 import os
+import time
+from secrets import randbelow
+
+from flask import jsonify, current_app
+
+from app.config.constant import VERIFICATION_CODE_LENGTH
+from app.exception import NotFound
+from app.exception import ParameterException
+from app.myType import FileStorage
 
 
-def time2stamp(time_, format_='%Y/%m/%d %H:%M') -> int:
+def time2stamp(time_: str, format_: str = '%Y/%m/%d %H:%M') -> int:
     from wtforms.validators import StopValidation
     try:
         return int(time.mktime(time.strptime(time_, format_)))
-    except:
+    except Exception as e:
         # 停止验证
         raise StopValidation(message="日期格错误")
 
 
-def format_time(timestamp: int, format_='%Y/%m/%d %H:%M'):
+def format_time(timestamp: int, format_: str = '%Y/%m/%d %H:%M'):
     return time.strftime(format_, time.localtime(timestamp))
 
 
-def generate_res(status='success', **kwargs):
+def generate_res(status: str = 'success', **kwargs):
     status = {
         'status': status,
     }
@@ -33,7 +36,7 @@ def get_attr(keys: list, data: dict) -> list:
     return [data.get(key) for key in keys]
 
 
-def filters_filename(file) -> str:
+def filters_filename(file: FileStorage) -> str:
     from uuid import uuid1
     ext_name = file.content_type.split('/')[1]
     if ext_name not in current_app.config['ALLOWED_EXTENSIONS']:
@@ -58,7 +61,7 @@ def get_code_exp_stamp() -> int:
     return int(expire_time.timestamp())
 
 
-def security_remove_file(path):
+def security_remove_file(path: str):
     try:
         os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], path))
     except FileNotFoundError:
