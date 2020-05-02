@@ -122,12 +122,14 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+my_config
+
 # Pyre type checker
 .pyre/
 
 .idea
-secure.py
 build
 templates
 files/
 static/
+scp.sh

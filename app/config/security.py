@@ -1,15 +1,19 @@
 import os
 from datetime import timedelta
 
+# 如果设置该变量,则会在每个后台接口前添加相应的字符串
+API_SECURITY_STRING = os.getenv("API_SECURITY_STRING")
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+
 
 class SecurityConfig(object):
     SERVER_NAME = '127.0.0.1:5000'
     SECRET_KEY = '' or os.urandom(64)
-    MAIL_USERNAME = ''
-    MAIL_PASSWORD = ''
     UPLOAD_FOLDER = os.path.join(os.getenv('HOME'), 'files')
     # 存放日志文件夹名称
     LOG_DIR = 'log'
+
     # token过期时间
     JWT_REFRESH_TOKEN_EXPIRES = '' or timedelta(hours=1)
 
@@ -23,26 +27,26 @@ class SecurityConfig(object):
     # 验证码过期时间
     VERIFICATION_CODE_EXPIRE = '' or timedelta(minutes=5)
     # 错误处理集成     参见:https://sentry.io/for/flask/
-    SENTRY_DSN = ''
+    SENTRY_DSN = os.getenv('SENTRY_DSN')
 
 
 class ProductionConfig(SecurityConfig):
-    SERVER_NAME = '127.0.0.1'
+    SERVER_NAME = os.getenv('SERVER_NAME')
 
     # 数据库配置
-    SQLALCHEMY_DATABASE_URI = 'mysql+cymysql://root:root@172.17.0.1:3306/pro_blog?charset=utf8mb4'
+    SQLALCHEMY_DATABASE_URI = f'mysql+mysqldb://root:{os.getenv("MYSQL_ROOT_PASSWORD")}@172.19.0.10:3306/blog?charset=utf8mb4'
     # 上传图片文件夹
     UPLOAD_FOLDER = '/files'
-    SECRET_KEY = b''
-    JWT_SECRET_KEY = b''
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 
 
 class DevelopmentConfig(SecurityConfig):
-    SQLALCHEMY_DATABASE_URI = 'mysql+cymysql://root:root@127.0.0.1:3306/dev_blog?charset=utf8mb4'
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:s45pfu5QC6QOZ3iV@172.19.0.10:3306/blog?charset=utf8mb4'
 
 
 class TestingConfig(SecurityConfig):
-    SQLALCHEMY_DATABASE_URI = 'mysql+cymysql://root:root@127.0.0.1:3306/test_blog?charset=utf8mb4'
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:root@172.19.0.10:3306/test_blog?charset=utf8mb4'
 
 
 config = {

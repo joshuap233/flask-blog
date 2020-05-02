@@ -1,11 +1,14 @@
-FROM tiangolo/meinheld-gunicorn:python3.7
+FROM python:3.7.7-alpine3.11
 
-COPY ./app /app/app
+RUN echo http://mirrors.aliyun.com/alpine/v3.11/main/ > /etc/apk/repositories
 
-#COPY ./setup.py /app/setup.py
+RUN apk update && apk add libressl-dev libffi-dev build-base python3-dev mariadb-dev g++ make && rm -f /var/cache/apk/*
 
-COPY ./requirements.txt /app/requirements.txt
+WORKDIR /app
 
-RUN pip3 install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+COPY . .
+
+# specify pip soucre to boost install (China:https://mirrors.aliyun.com/pypi/simple/)
+RUN pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 ENV FLASK_ENV production

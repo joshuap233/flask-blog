@@ -10,7 +10,8 @@ def handle_error(e):
     if isinstance(e, HTTPException):
         pass
     current_app.logger.warning(e)
-    return e.get_response()
+    res = e.get_response() if hasattr(e, 'get_response') else e.args
+    return res
 
 
 @admin.errorhandler(413)

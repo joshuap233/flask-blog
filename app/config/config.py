@@ -1,12 +1,14 @@
+MAIL_SERVER = 'smtp.exmail.qq.com'
+MAIL_PORT = 465
+MAIL_USE_SSL = True
+MAIL_USE_TLS = False
+MAIL_DEBUG = True
+
+
 class BaseConfig(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 邮件服务器
-    MAIL_SERVER = 'smtp.exmail.qq.com'
-    MAIL_PORT = 465
-    MAIL_USE_SSL = True
-    MAIL_USE_TSL = False
-    MAIL_DEBUG = True
     # 分页功能,默认每页大小(如果前端没有传入)
     PAGESIZE = 10
     # 允许上传文件类型

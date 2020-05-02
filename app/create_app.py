@@ -34,10 +34,8 @@ def register_app_shell(app: FlaskInstance):
 
 
 def create_app(register_config: Callable[[FlaskInstance, str], None], *args, **kwargs) -> FlaskInstance:
-    config = kwargs.pop('env', None)
     app = Flask(*args, **kwargs)
-    config_name = config if config else app.env
-
+    config_name = app.env
     register_config(app, config_name)
     from app.config.config import config as common_config
     from app.config.security import config as security_config
