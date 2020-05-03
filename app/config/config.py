@@ -1,10 +1,3 @@
-MAIL_SERVER = 'smtp.exmail.qq.com'
-MAIL_PORT = 465
-MAIL_USE_SSL = True
-MAIL_USE_TLS = False
-MAIL_DEBUG = True
-
-
 class BaseConfig(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False

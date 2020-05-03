@@ -1,3 +1,12 @@
+TODO:
+ my_config update
+ add https 
+ BUG :font-end can not use
+
+开发 
+修改.env文件
+
+
 使用
 修改docker-compose配置
 - MYSQL_ROOT_PASSWORD //必填 数据库密码 (两个改MYSQL_ROOT_PASSWORD都要,并且必须相同)

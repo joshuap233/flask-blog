@@ -14,7 +14,7 @@ services:
         ipv4_address: 172.19.0.11
     ports:
       - "8000:8000"
-    command: gunicorn -c gunicorn.conf.py --preload --log-level=debug app.main:app
+    command: gunicorn -c gunicorn.conf.py app.main:app
     volumes:
       # must as same as config.security.ProductionConfig.UPLOAD_FOLDER
       - $HOME/blog_image:/files
@@ -27,6 +27,8 @@ services:
       MAIL_PASSWORD: ""
       MAIL_USERNAME: ""
       API_SECURITY_STRING: ""
+      MYSQL_ADDRESS: "172.19.0.10:3306"
+      UPLOAD_FOLDER: "/files"
   ngnix:
     restart: always
     build:

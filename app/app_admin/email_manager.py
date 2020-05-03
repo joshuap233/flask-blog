@@ -1,19 +1,10 @@
 from threading import Thread
 
 import yagmail
-# from flask import current_app
 
-from app.config.config import MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
-from app.config.security import MAIL_PASSWORD, MAIL_USERNAME
+from app.config.security import MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
 
 yag = yagmail.SMTP(user=MAIL_USERNAME, password=MAIL_PASSWORD, host=MAIL_SERVER, port=MAIL_PORT, smtp_ssl=MAIL_USE_SSL)
-
-# # 邮箱正文
-# contents = ['This is the body, and here is just text http://somedomain/image.png',
-#             'You can find an audio file attached.']
-#
-# # 发送邮件
-# yag.send('1056160446@qq.com', 'subject', contents)
 
 
 def send_async_email(mail_param):

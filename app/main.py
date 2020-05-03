@@ -10,7 +10,7 @@ from app.app_frontend import create_view_app
 APP_ROOT = os.path.join(os.path.dirname(__file__), '..')
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path=dotenv_path)
-
+print(os.getenv('DB_NAME'))
 app = create_view_app()
 adminApp = create_admin_app()
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
