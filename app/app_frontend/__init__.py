@@ -8,12 +8,11 @@ def register_blueprint(app: FlaskInstance):
     app.register_blueprint(api_blueprint)
 
 
-def register_config(app: FlaskInstance, config_name: str):
+def register_config(app: FlaskInstance):
     register_blueprint(app)
     # TODO 日志配置
-    if config_name == 'production':
-        register_logging()
-        register_log_query_and_response_time(app)
+    register_logging(app)
+    register_log_query_and_response_time(app)
 
 
 def create_view_app():

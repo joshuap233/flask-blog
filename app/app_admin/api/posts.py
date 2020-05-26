@@ -1,5 +1,6 @@
 from app.model.db import Post
-from app.model.view_model import PostsView, QueryView, PostView, IdView
+from app.app_admin.view_model import PostsView, PostView, IdView
+from app.model.view import QueryView
 from app.utils import generate_res
 from .blueprint import admin
 from ..token_manager import login_required

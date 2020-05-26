@@ -10,20 +10,26 @@ from app.app_frontend import create_view_app
 APP_ROOT = os.path.join(os.path.dirname(__file__), '..')
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path=dotenv_path)
-print(os.getenv('DB_NAME'))
+
 app = create_view_app()
+
 adminApp = create_admin_app()
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/admin': adminApp
 })
 
+# app = DispatcherMiddleware(frontendApp, {
+#     '/admin': adminApp
+# })
 
-@app.route('/')
-def font_end_view():
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path>')
+def font_end_view(path):
     return app.send_static_file('index.html')
 
 
-# 写成<path:path> 似乎会是catch all 失效
+# 写成<path:path> 似乎catch all 会失效
 @adminApp.route('/', defaults={'path': ''})
 @adminApp.route('/<path>')
 @adminApp.route('/post/<path>')

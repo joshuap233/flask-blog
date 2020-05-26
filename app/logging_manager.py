@@ -7,6 +7,7 @@ from flask import current_app, g, has_request_context, request
 from flask_sqlalchemy import get_debug_queries
 
 from app.myType import FlaskInstance, Response
+import os
 
 
 class RequestFormatter(logging.Formatter):
@@ -39,14 +40,23 @@ def logged(level: str = 'info', message: str = 'request log'):
     return decorate
 
 
-def register_logging(default_level=logging.INFO):
-    import os
+def set_log_file(config: dict, app: FlaskInstance):
+    from app.utils import create_dir
+    dir_path = os.path.join(app.config['LOG_DIR'], app.name)
+    create_dir(dir_path)
+    handlers = config['handlers']
+    handlers['file']['filename'] = os.path.join(dir_path, 'info.log')
+    handlers['error']['filename'] = os.path.join(dir_path, 'error.log')
+
+
+def register_logging(app: FlaskInstance, default_level=logging.INFO):
     import yaml
     path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, './config/log.yaml')
+    path = os.path.join(path, 'config/log.yaml')
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
+            set_log_file(config, app)
             logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)

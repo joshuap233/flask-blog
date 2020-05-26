@@ -13,7 +13,7 @@ else:
     host = os.getenv("HOST", "0.0.0.0")
     #  on a unix-like environment, ports < 1024 (like 80) will require superuser privileges.
     # fucking pycharm can not input chinese
-    # port need as same as config.security.py SERVER_NAME port
+    # port need as same as config.config.py SERVER_NAME port
     port = os.getenv("PORT", "5000")
 bind_env = os.getenv("BIND", None)
 use_loglevel = os.getenv("LOG_LEVEL", "info")

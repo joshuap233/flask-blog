@@ -7,7 +7,7 @@ from ..email_manager import (
 )
 from app.exception import EmailNotFound, EmailHasAdd
 from app.model.db import User
-from app.model.view_model import UserInfoView, LoginView
+from app.app_admin.view_model import UserInfoView, LoginView
 from ..token_manager import add_token_to_blacklist, login_required
 from app.utils import generate_res
 from ..validate.validate import (

@@ -41,6 +41,9 @@ def filters_filename(file: FileStorage) -> str:
     ext_name = file.content_type.split('/')[1]
     if ext_name not in current_app.config['ALLOWED_EXTENSIONS']:
         raise ParameterException('扩展名错误')
+    # split('+') 处理 content_type=('images/svg+xml')
+    if ext_name == 'svg+xml':
+        ext_name = ext_name.split('+')[0]
     return f'{str(uuid1())}.{ext_name}'
 
 
@@ -65,4 +68,10 @@ def security_remove_file(path: str):
     try:
         os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], path))
     except FileNotFoundError:
-        raise NotFound('文件不存在')
+        pass
+        # raise NotFound('文件不存在')
+
+
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)

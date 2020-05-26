@@ -4,7 +4,8 @@ from flask import request, current_app, send_from_directory
 
 from app.exception import NotFound
 from app.model.db import Post, Link, Tag
-from app.model.view_model import QueryView, ImagesView, ImageUrlView, NewImageView
+from app.app_admin.view_model import ImagesView, ImageUrlView, NewImageView
+from app.model.view import QueryView
 from app.utils import generate_res, filters_filename
 from app.utils import security_remove_file
 from .blueprint import admin

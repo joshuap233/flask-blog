@@ -10,7 +10,7 @@ from app.model.baseDB import Visibility
 class LoginValidate(JsonValidate):
     password = PasswordField('密码', validators=[
         DataRequired(message="密码不可为空"),
-        Regexp(r'^^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
+        Regexp(r'^^[a-zA-Z0-9!.@#$%^&*()_+]{6,20}$',
                message='用户名或密码错误'),
     ])
     username = StringField('用户名', validators=[
@@ -39,8 +39,8 @@ class RegisterValidate(JsonValidate):
 
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
-               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+'),
+        Regexp(r'^[a-zA-Z0-9.!@#$%^&*()_+]{6,20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,.!@#$%^&*()_+'),
     ])
     confirm_password = PasswordField('确认密码', validators=[
         DataRequired(message='请确认密码'),
@@ -131,13 +131,13 @@ class EmailCodeValidate(JsonValidate):
 class ResetPasswordValidate(JsonValidate):
     old_password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
-               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+        Regexp(r'^[a-zA-Z0-9.!@#$%^&*()_+]{6,20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,.!@#$%^&*()_+')
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
-               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+        Regexp(r'^[a-zA-Z0-9.!@#$%^&*()_+]{6,20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,.!@#$%^&*()_+')
     ])
     confirm_password = PasswordField('确认密码', validators=[
         DataRequired(message='请确认密码'),
@@ -146,7 +146,7 @@ class ResetPasswordValidate(JsonValidate):
 
 
 class RecoveryPasswordValidate(JsonValidate):
-    code = StringField('验证码', filter=[str], validators=[
+    code = StringField('验证码', filters=[str], validators=[
         Length(VERIFICATION_CODE_LENGTH, VERIFICATION_CODE_LENGTH, message='验证码错误')
     ])
     email = StringField('邮件', validators=[
@@ -154,8 +154,8 @@ class RecoveryPasswordValidate(JsonValidate):
     ])
     password = PasswordField('密码', validators=[
         DataRequired(message='密码不可为空'),
-        Regexp(r'^[a-zA-Z0-9!@#$%^&*()_+]{6,20}$',
-               message='密码长度为6-20个字符,可以为字母,数字,!@#$%^&*()_+')
+        Regexp(r'^[a-zA-Z0-9.!@#$%^&*()_+]{6,20}$',
+               message='密码长度为6-20个字符,可以为字母,数字,.!@#$%^&*()_+')
     ])
     confirm_password = PasswordField('确认密码', validators=[
         DataRequired(message='请确认密码'),

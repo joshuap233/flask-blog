@@ -1,7 +1,8 @@
 from flask import request
 
 from app.model.db import Tag
-from app.model.view_model import TagsView, QueryView, IdView
+from app.app_admin.view_model import TagsView, IdView
+from app.model.view import QueryView
 from app.utils import generate_res
 from ..validate.validate import TagValidate, DeleteValidate
 from .blueprint import admin

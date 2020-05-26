@@ -2,7 +2,7 @@ from threading import Thread
 
 import yagmail
 
-from app.config.security import MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
+from app.config.config import MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
 
 yag = yagmail.SMTP(user=MAIL_USERNAME, password=MAIL_PASSWORD, host=MAIL_SERVER, port=MAIL_PORT, smtp_ssl=MAIL_USE_SSL)
 

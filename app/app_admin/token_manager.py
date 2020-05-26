@@ -1,10 +1,11 @@
 from datetime import datetime
 from functools import wraps
 
-from flask import current_app
+from flask import current_app, g
 from flask_jwt_extended import (
     decode_token, JWTManager, get_raw_jwt, verify_jwt_refresh_token_in_request,
-    create_refresh_token, get_jwt_identity)
+    create_refresh_token, get_jwt_identity
+)
 
 from app.exception import EmailValidateException, AuthFailed
 
@@ -65,7 +66,8 @@ def login_required(func):
         # 自动刷新token
         refresh_space = current_app.config['JWT_MIN_REFRESH_SPACE']
         if refresh_space and remaining < refresh_space:
-            create_refresh_token(identity=identify)
+            g.refresh_token = create_refresh_token(identity=identify)
+            g.id = identify
         return func(*args, **kwargs)
 
     return decorate
