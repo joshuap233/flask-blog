@@ -11,10 +11,6 @@ def posts_view():
     query = QueryView(order_by=False)
     tid = query.filters.get('tid')
     posts = Post.paging_by_tid(
-        tid, **query.search_parameter,
-        visibility=Visibility.public.value
-    ) if tid else Post.paging_search(
-        **query.search_parameter,
-        visibility=Visibility.public.value
-    )
+        tid, **query.search_parameter, visibility=True
+    ) if tid else Post.paging_search(**query.search_parameter, visibility=True)
     return generate_res(data=PostsView(posts.items, query.page))

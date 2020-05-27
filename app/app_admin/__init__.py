@@ -1,7 +1,7 @@
 from app.create_app import create_app
 from app.logging_manager import register_logging, register_log_query_and_response_time
 from app.myType import FlaskInstance, Response
-from .token_manager import register_blacklist_loader, jwt, register_jwt_error
+from .token_manager import jwt
 from flask import g
 import json
 
@@ -28,9 +28,6 @@ def register_blueprint(app: FlaskInstance):
 def register_config(app: FlaskInstance):
     register_blueprint(app)
     register_refresh_token(app)
-
-    register_blacklist_loader()
-    register_jwt_error()
     jwt.init_app(app)
     register_logging(app)
     register_log_query_and_response_time(app)

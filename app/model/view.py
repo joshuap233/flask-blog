@@ -40,14 +40,10 @@ class QueryView:
     'totalCount':'1',
     'filter_by':{tid:1}
     """
-    # TODO:去除硬编码
-    # 列表为可排序字段名,分别为 标签名与 标签的文章数量 文章标题 状态(私密,公开,..) 评论数 修改日期 创建日期
-    sortable = ['name', 'count', 'title', 'visibility', 'comments', 'change_date', 'create_date']
-
     # 默认允许 order_by 参数查询
     def __init__(self, order_by=True):
         self.query = request.args
-        self.order_by = self._get_order_by() if order_by else None
+        self.order_by = self.query.get('orderBy') if order_by else None
         self.page = self._get_page()
         self.pagesize = self._get_pagesize()
         self.filters = self._get_filters()
@@ -81,15 +77,15 @@ class QueryView:
         filters['tid'] = tid if tid and tid > 0 else None
         return filters
 
-    def _get_order_by(self):
-        order_bys = self.query.get('orderBy')
-        order_by = []
-        if not order_bys:
-            # 默认按id降序
-            order_by.append(db.desc('id'))
-        else:
-            for ob in order_bys:
-                field = order_bys.get('field')
-                if field in self.sortable:
-                    order_by.append(db.desc(field) if ob.get('desc') else db.asc(field))
-        return order_by
+    # def _get_order_by(self):
+    #     order_bys = self.query.get('orderBy')
+    #     order_by = []
+    #     if not order_bys:
+    #         # 默认按id降序
+    #         order_by.append(db.desc('id'))
+    #     else:
+    #         for ob in order_bys:
+    #             field = order_bys.get('field')
+    #             if field in self.sortable:
+    #                 order_by.append(db.desc(field) if ob.get('desc') else db.asc(field))
+    #     return order_by

@@ -5,19 +5,19 @@ TODO:
 ## 开发: 
 顶层目录创建.env文件
 添加如下环境变量MAIL_PASSWORD,MAIL_USERNAME,API_SECURITY_STRING,SENTRY_DSN选填
-export FLASK_APP=app.main:app
-export FLASK_DEBUG=1
-export FLASK_ENV=development
-export MYSQL_ROOT_PASSWORD=root
-export MYSQL_ADDRESS=127.0.0.1:3306 # 数据库ip:端口
-export DB_NAME=pro_blog # 数据库名
-export SERVER_NAME=127.0.0.1:5000 # 服务器域名:端口
-export SECRET_KEY=   # 安全密钥,随机字符串,建议用os.urandom(32)生成
-export JWT_SECRET_KEY= # 安全密钥,建议随机字符串,建议用os.urandom(32)生成
-#export MAIL_PASSWORD=  #邮件密码
-#export MAIL_USERNAME=  #邮件用户名
-#export API_SECURITY_STRING=  # 接口添加随机字符串
-#export SENTRY_DSN=  # sentry  错误处理集成
+- FLASK_APP=app.main:app
+- FLASK_DEBUG=1
+- FLASK_ENV=development
+- MYSQL_ROOT_PASSWORD=root
+- MYSQL_ADDRESS=127.0.0.1:3306 # 数据库ip:端口
+- DB_NAME=pro_blog # 数据库名
+- SERVER_NAME=127.0.0.1:5000 # 服务器域名:端口
+- SECRET_KEY=   # 安全密钥,随机字符串,建议用os.urandom(32)生成
+- JWT_SECRET_KEY= # 安全密钥,建议随机字符串,建议用os.urandom(32)生成
+- \#MAIL_PASSWORD=  #邮件密码
+- \#MAIL_USERNAME=  #邮件用户名
+- \#API_SECURITY_STRING=  # 接口添加随机字符串
+- \#SENTRY_DSN=  # sentry  错误处理集成
 
 
 ## 使用:

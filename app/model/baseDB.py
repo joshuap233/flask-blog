@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from contextlib import contextmanager
 from enum import Enum, unique
 
@@ -114,12 +114,33 @@ class Visibility(Enum):
 
 
 # 提供分页查询功能
-class BaseSearch(Base):
+class Searchable(Base):
     __abstract__ = True
+
+    @abstractmethod
+    def __init__(self, *args, **kwargs):
+        # 可排序字段
+        self.sortable = []
+        super().__init__(*args, **kwargs)
 
     @classmethod
     @abstractmethod
     def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
-        order_by = [cls.id.asc()] if not order_by else order_by
+        order_by = cls._get_order_by(order_by)
         query = query if query else cls.query
         return query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)
+
+    @classmethod
+    def _get_order_by(cls, order_by):
+        res = []
+        if not order_by:
+            res.append(cls.id.desc())
+        else:
+            for item in order_by:
+                field = item.get('field')
+                if field in cls.sortable:
+                    res.append(
+                        getattr(cls, field).desc() if item.get('desc')
+                        else getattr(cls, field).asc()
+                    )
+        return res

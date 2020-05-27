@@ -19,7 +19,7 @@ services:
       - $HOME/blog_image:/files
       - $HOME/logs:/logs/web/
     environment:
-      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ROOT_PASSWORD: "adsfasdfasdddddddddddddd"
       SERVER_NAME: "127.0.0.1"
       SECRET_KEY: ""
       JWT_SECRET_KEY: ""

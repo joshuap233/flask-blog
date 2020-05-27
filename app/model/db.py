@@ -7,7 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
 from app.myType import WTForm
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
-from .baseDB import Base, db, BaseSearch, Visibility
+from .baseDB import Base, db, Searchable, Visibility
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -23,7 +23,7 @@ link_to_post = db.Table(
 )
 
 
-class Post(BaseSearch):
+class Post(Searchable):
     # 不能用set_attrs方法直接设置的字段列表
     blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +44,7 @@ class Post(BaseSearch):
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
 
     def __init__(self, *args, **kwargs):
+        self.sortable = ['change_date', 'create_date', 'title', 'visibility', 'comments']
         if 'comments' not in kwargs:
             kwargs['comments'] = self.__table__.c.comments.default.arg
         super().__init__(*args, **kwargs)
@@ -92,32 +93,30 @@ class Post(BaseSearch):
                 tag.posts for tag in Tag.query.filter(Tag.name.like(search)).all()
             ]]
             query = reduce(lambda pre, next_: pre.union(next_), queries)
-
-        if visibility:
-            query = query.filter_by(visibility=visibility)
+        query = query.filter_by(visibility=visibility) if visibility else query
         return super().paging_search(query=query, **kwargs)
 
     @classmethod
     def paging_by_tid(cls, tid: int, visibility: bool, **kwargs):
         query = Tag.search_by(id=tid).posts
-        if visibility:
-            query = query.filter_by(visibility=visibility)
-        order_by = kwargs.pop('order_by', [Post.id.asc()])
-        return super().paging_search(query=query, order_by=order_by, **kwargs)
+        query = query.filter_by(visibility=visibility) if visibility else query
+        # order_by = kwargs.pop('order_by', [Post.id.desc()])
+        return super().paging_search(query=query, **kwargs)
 
 
-class Tag(BaseSearch):
+class Tag(Searchable):
     blacklist = ['id', 'count']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
     describe = db.Column(db.String(128), default='')
     # 使用标签的文章数量
     count = db.Column(db.Integer, default=0)
-
     # 图片链接(用于图床)或图片名(本地)
     link_id = db.Column(db.Integer, db.ForeignKey('link.id'))
 
     def __init__(self, *args, **kwargs):
+        # 可排序字段
+        self.sortable = ['name', 'create_date']
         if 'count' not in kwargs:
             kwargs['count'] = self.__table__.c.count.default.arg
         super().__init__(*args, **kwargs)
@@ -127,10 +126,7 @@ class Tag(BaseSearch):
         search = filters.get('search')
         query = cls.query
         if search:
-            filters_ = [
-                cls.name.like(search),
-                cls.describe.like(search)
-            ]
+            filters_ = [cls.name.like(search), cls.describe.like(search)]
             queries = [cls.query.filter(filter_) for filter_ in filters_]
             query = reduce(lambda pre, next_: pre.union(next_), queries) if queries else query
         return super().paging_search(query=query, **kwargs)
@@ -272,12 +268,17 @@ class Code(Base):
 
 
 # 用于储存图片链接
-class Link(BaseSearch):
+class Link(Searchable):
     id = db.Column(db.Integer, primary_key=True)
     describe = db.Column(db.String(255), comment="链接描述")
     # 图片链接(用于图床)或图片名(本地)
     url = db.Column(db.String(255))
     tags = db.relationship('Tag', backref=db.backref('link', lazy=True))
+
+    def __init__(self, *args, **kwargs):
+        # 可排序字段
+        self.sortable = ['create_date']
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def paging_search(cls, filters: dict, **kwargs):
