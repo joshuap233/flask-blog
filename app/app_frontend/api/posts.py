@@ -10,7 +10,8 @@ from app.app_frontend.view_model import PostsView
 def posts_view():
     query = QueryView(order_by=False)
     tid = query.filters.get('tid')
+    visibility = Visibility.public.value
     posts = Post.paging_by_tid(
-        tid, **query.search_parameter, visibility=True
-    ) if tid else Post.paging_search(**query.search_parameter, visibility=True)
+        tid, **query.search_parameter, visibility=visibility
+    ) if tid else Post.paging_search(**query.search_parameter, visibility=visibility)
     return generate_res(data=PostsView(posts.items, query.page))

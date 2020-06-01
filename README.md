@@ -45,4 +45,4 @@ bash run_docker.sh
 
 - sqlalchemy 查询缓存
 - nginx 接口缓存
-- ngnix接口限浏览
+- nginx接口限浏览

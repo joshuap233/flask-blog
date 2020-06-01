@@ -134,3 +134,5 @@ files/
 static/
 scp.sh
 logs/
+memo.md
+node_modules/

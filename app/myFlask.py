@@ -4,12 +4,15 @@ from flask.json import JSONEncoder
 from app.config.config import API_SECURITY_STRING
 from app.model.view import BaseView
 from app.myType import Any
-import os
+
+
+def is_security(options):
+    return API_SECURITY_STRING and options.pop('security', True)
 
 
 class MyBlueprint(Blueprint):
     def route(self, rule: str, **options):
-        if API_SECURITY_STRING:
+        if is_security(options):
             rule = f'/{API_SECURITY_STRING}{rule}'
         return super(MyBlueprint, self).route(rule, **options)
 

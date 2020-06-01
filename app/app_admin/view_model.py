@@ -10,6 +10,21 @@ class IdView(BaseView):
         self.id = source.id
 
 
+class PostView(BaseView):
+    def __init__(self, post, article=True, excerpt=True):
+        self.id = post.id
+        self.title = post.title or ''
+        self.tags = [tag.name for tag in post.tags]
+        self.visibility = post.visibility
+        self.create_date = format_time(post.create_date)
+        self.change_date = format_time(post.change_date)
+        self.comments = post.comments
+        if article:
+            self.article = post.article or ''
+        if excerpt:
+            self.excerpt = post.excerpt
+
+
 # 格式化从数据库获取的文章
 class PostsView(BaseView, TableView):
     def __init__(self, posts: dict, page: int):
@@ -17,28 +32,7 @@ class PostsView(BaseView, TableView):
 
     @staticmethod
     def _fill(posts):
-        result = []
-        for item in posts:
-            post = PostView(item)
-            del post.article
-            del post.excerpt
-            result.append(post)
-        return result
-
-
-class PostView(BaseView):
-    def __init__(self, post):
-        self.id = post.id
-        self.title = post.title or ''
-        self.tags = [tag.name for tag in post.tags]
-        self.visibility = post.visibility
-        self.create_date = format_time(post.create_date)
-        self.change_date = format_time(post.change_date)
-        self.article = post.article or ''
-        self.excerpt = post.excerpt
-        # self.article_html = post.article_html or ''
-        # self.excerpt_html = post.article_html or ''
-        self.comments = post.comments
+        return [PostView(post, article=False, excerpt=False) for post in posts]
 
 
 # 格式化从数据库获取的标签
@@ -71,7 +65,6 @@ class UserInfoView(BaseView):
         self.icp = user.icp
         self.motto = user.motto
         self.set_field_not_None()
-        # self.email_is_validate = user.email_is_validate
         self.password = ''
 
 

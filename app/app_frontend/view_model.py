@@ -4,13 +4,16 @@ from app.model.db import Post, Tag
 
 
 class PostView(BaseView):
-    def __init__(self, post):
+    def __init__(self, post, excerpt=False, article=True):
         self.id = post.id
         self.title = post.title or ''
         self.tags = [{'id': tag.id, 'name': tag.name} for tag in post.tags]
         self.change_date = post.change_date
-        self.article = post.article_html
         self.comments = post.comments
+        if article:
+            self.article = post.article_html
+        if excerpt:
+            self.excerpt = post.excerpt_html
 
 
 class PostsView(BaseView):
@@ -20,12 +23,7 @@ class PostsView(BaseView):
 
     @staticmethod
     def _fill(posts):
-        content = []
-        for item in posts:
-            post = PostView(item)
-            del post.article
-            content.append(post)
-        return content
+        return [PostView(post, excerpt=True, article=True) for post in posts]
 
 
 class ImageUrlView(BaseView):

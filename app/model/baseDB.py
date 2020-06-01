@@ -59,8 +59,6 @@ class Base(db.Model):
     @classmethod
     def search_by(cls, **kwargs) -> db.Model:
         error = kwargs.pop('error', True)
-        # if 'id' in kwargs:
-        #     return cls.query.get_or_404(kwargs['id'], error=error)
         return cls.query.filter_by(**kwargs).first_or_404(error=error)
 
     def delete(self):

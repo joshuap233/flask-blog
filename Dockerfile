@@ -7,8 +7,14 @@ RUN apk update && apk add python3-dev mariadb-dev build-base  && rm -f /var/cach
 
 WORKDIR /app
 
-COPY . .
+#COPY . .
+
+COPY ./app ./app
+
+COPY ./gunicorn.conf.py .
+
+COPY ./requirements-pro.txt ./requirements.txt
 
 # specify pip soucre to boost install (China:https://mirrors.aliyun.com/pypi/simple/)
-RUN pip install -r requirements-pro.txt -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 

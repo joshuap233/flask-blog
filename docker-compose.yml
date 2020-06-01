@@ -1,6 +1,23 @@
 version: "3"
 
 services:
+  node:
+    restart: always
+    build:
+      context: ./node/
+      dockerfile: Dockerfile
+    container_name: node
+    networks:
+      blognetwork:
+        ipv4_address: 172.19.0.13
+    ports:
+      - "8888:8888"
+    depends_on:
+      - webapp
+      - nginx
+    environment:
+      - NODE_ENV=production
+    user: "node"
   webapp:
     build:
       context: .
@@ -19,8 +36,8 @@ services:
       - $HOME/blog_image:/files
       - $HOME/logs:/logs/web/
     environment:
-      MYSQL_ROOT_PASSWORD: "adsfasdfasdddddddddddddd"
-      SERVER_NAME: "127.0.0.1"
+      MYSQL_ROOT_PASSWORD: ""
+      SERVER_NAME: ""
       SECRET_KEY: ""
       JWT_SECRET_KEY: ""
       SENTRY_DSN: ""
@@ -31,12 +48,12 @@ services:
       UPLOAD_FOLDER: ""
       FLASK_ENV: ""
       LOG_DIR: ""
-  ngnix:
+  nginx:
     restart: always
     build:
       context: .
-      dockerfile: nginx/Dockerfile
-    container_name: ngnix
+      dockerfile: ./nginx/Dockerfile
+    container_name: nginx
     networks:
       blognetwork:
         ipv4_address: 172.19.0.12
@@ -48,6 +65,7 @@ services:
     volumes:
       - /data/certs/:/etc/nginx/certs
       - $HOME/blog_image:/static/images/
+      - $HOME/logs/nginx/:/var/log/nginx/
   database:
     build:
       context: ./mysql/

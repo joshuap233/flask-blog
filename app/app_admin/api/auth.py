@@ -16,7 +16,7 @@ from ..validate.validate import (
 from .blueprint import admin
 
 
-@admin.route('/sessions', methods=['POST'])
+@admin.route('/sessions', methods=['POST'], security=False)
 def login_view():
     form = LoginValidate().validate_api()
     user = User.search_by(**form.login)
@@ -32,20 +32,20 @@ def logout_view():
 
 
 # 用于验证是否登录
-@admin.route('/sessions')
+@admin.route('/sessions', security=False)
 @login_required
 def auth_view():
     return generate_res()
 
 
 # 检查是否注册
-@admin.route('/user/register')
+@admin.route('/user/register', security=False)
 def check_register_view():
     User.check_register()
     return generate_res()
 
 
-@admin.route('/user', methods=['POST'])
+@admin.route('/user', methods=['POST'], security=False)
 def register_view():
     User.check_register()
     form = RegisterValidate().validate_api()
@@ -77,7 +77,7 @@ def reset_password_view():
 
 
 # 找回密码
-@admin.route('/user/password/recovery', methods=['GET', 'PUT'])
+@admin.route('/user/password/recovery', methods=['GET', 'PUT'], security=False)
 def recovery_password_view():
     if request.method == 'PUT':
         form = RecoveryPasswordValidate().validate_api()
