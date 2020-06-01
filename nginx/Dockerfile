@@ -1,5 +1,7 @@
 FROM nginx:1.17.10-alpine
 
+RUN echo "Asia/shanghai" > /etc/timezone;
+
 RUN rm /etc/nginx/nginx.conf
 
 RUN rm /etc/nginx/conf.d/default.conf
