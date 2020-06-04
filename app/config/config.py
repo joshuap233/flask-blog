@@ -64,8 +64,8 @@ class ProductionConfig(BaseConfig):
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_ECHO = True
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    # SQLALCHEMY_ECHO = True
+    # SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_DATABASE_URI = f'mysql+mysqldb://root:{os.getenv("MYSQL_ROOT_PASSWORD")}@{os.getenv("MYSQL_ADDRESS")}' \
                               f'/{os.getenv("DB_NAME")}?charset=utf8mb4'
 

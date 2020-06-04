@@ -160,6 +160,15 @@ class Tag(Searchable):
                     break
         return count
 
+    @staticmethod
+    def get_visibility_tag():
+        tags = []
+        for tag in Tag.query:
+            for post in tag.posts:
+                if post.visibility == Visibility.public.value:
+                    tags.append(tag)
+                    break
+        return tags
 
 class User(Base):
     blacklist = ['id', 'password_hash']

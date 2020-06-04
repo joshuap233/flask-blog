@@ -1,40 +1,55 @@
-FROM node:14.3.0-alpine3.11
+FROM node:13.14.0-buster-slim
 
-RUN echo http://mirrors.aliyun.com/alpine/v3.11/main/  > /etc/apk/repositories
-RUN echo http://mirrors.aliyun.com/alpine/v3.11/community/  >> /etc/apk/repositories
-
-RUN apk update && apk add --no-cache chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont nodejs
-
-RUN npm set registry https://registry.npm.taobao.org/
-
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-RUN npm install puppeteer
+RUN echo "Asia/shanghai" > /etc/timezone;
 
 
-RUN addgroup -S pptruser && adduser -S -g pptruser pptruser \
-    && mkdir -p /home/pptruser/Downloads /app \
-    && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /app
+RUN  echo "deb http://mirrors.aliyun.com/debian/ buster main non-free contrib\
+\ndeb-src http://mirrors.aliyun.com/debian/ buster main non-free contrib\
+\ndeb http://mirrors.aliyun.com/debian-security buster/updates main\
+\ndeb http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib\
+\ndeb-src http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib\
+\ndeb http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib\
+\ndeb-src http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib" > /etc/apt/sources.list
 
+RUN apt-get update && apt-get install -y \
+	apt-transport-https \
+	ca-certificates \
+	curl \
+	gnupg \
+	--no-install-recommends \
+	&& curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+	&& echo "deb https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+	&& apt-get update && apt-get install -y \
+	google-chrome-stable \
+	fontconfig \
+	fonts-ipafont-gothic \
+	fonts-wqy-zenhei \
+	fonts-thai-tlwg \
+	fonts-kacst \
+	fonts-symbola \
+	fonts-noto \
+	fonts-freefont-ttf \
+	--no-install-recommends \
+	&& apt-get purge --auto-remove -y curl gnupg \
+	&& rm -rf /var/lib/apt/lists/*
 
-USER pptruser
+# Add Chrome as a user
+RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
+	&& mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
 
+# Run Chrome non-privileged
+USER chrome
 
-RUN mkdir -p app
+WORKDIR /home/chrome
 
-RUN npm set registry https://registry.npm.taobao.org/
+COPY ./ /home/chrome
 
-WORKDIR /app
-
-COPY ./ /app/
-
-RUN cd /app && npm install
-
-
+RUN cd /home/chrome/ && npm install --registry https://registry.npm.taobao.org/
 
 EXPOSE 8888
 
-CMD node ssr.js
+CMD google-chrome --disable-gpu --headless & node ssr.js
+
+# Autorun chrome headless with no GPU
+#ENTRYPOINT [ "google-chrome" ]
+#CMD [ "--headless", "--disable-gpu", "--remote-debugging-address=0.0.0.0", "--remote-debugging-port=9222" ]

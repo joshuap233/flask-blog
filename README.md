@@ -39,9 +39,16 @@ ssl_certificate_key /etc/nginx/certs/your_site_crt_file.key;
 nginx/project.nginx.config
 修改 shushugo.com 为自己的域名
 
+
+RUN apk add tzdata \
+  && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+  && echo "Asia/Shanghai" > /etc/timezone \
+  && apk del tzdata
+  
 ```bash
 apt install docker-compose
 bash run_docker.sh
+```
 
 - sqlalchemy 查询缓存
 - nginx 接口缓存

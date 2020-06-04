@@ -4,6 +4,7 @@ from app.myType import FlaskInstance, Response
 from .token_manager import jwt
 from flask import g
 import json
+from app.app_admin.cache import cache
 
 
 def register_refresh_token(app: FlaskInstance):
@@ -29,8 +30,10 @@ def register_config(app: FlaskInstance):
     register_blueprint(app)
     register_refresh_token(app)
     jwt.init_app(app)
-    register_logging(app)
-    register_log_query_and_response_time(app)
+    if app.env == 'production':
+        register_logging(app)
+        register_log_query_and_response_time(app)
+    cache.init_app(app)
 
 
 def create_admin_app():

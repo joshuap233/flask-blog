@@ -4,7 +4,6 @@ from app.logging_manager import register_sentry_sdk
 from app.model.baseDB import db
 from app.myFlask import Flask
 from app.myType import FlaskInstance, Callable
-import os
 from app.utils import create_dir
 
 migrate = Migrate(compare_type=True, compare_server_default=True)

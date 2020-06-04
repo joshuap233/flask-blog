@@ -5,6 +5,8 @@ echo killing old docker processes
 docker-compose --env-file /dev/null rm -fs
 
 echo building docker containers
-#docker-compose build --no-cache
+
 docker-compose --env-file /dev/null up --build -d --force-recreate
 #docker-compose --env-file /dev/null up --build -d
+
+

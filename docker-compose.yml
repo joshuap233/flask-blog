@@ -1,12 +1,14 @@
 version: "3"
 
 services:
-  node:
+  prerender:
     restart: always
     build:
       context: ./node/
       dockerfile: Dockerfile
-    container_name: node
+    container_name: prerender
+    cap_add:
+      - SYS_ADMIN
     networks:
       blognetwork:
         ipv4_address: 172.19.0.13
@@ -17,7 +19,6 @@ services:
       - nginx
     environment:
       - NODE_ENV=production
-    user: "node"
   webapp:
     build:
       context: .
@@ -35,19 +36,21 @@ services:
     volumes:
       - $HOME/blog_image:/files
       - $HOME/logs:/logs/web/
+      - /etc/localtime:/etc/localtime
     environment:
       MYSQL_ROOT_PASSWORD: ""
-      SERVER_NAME: ""
+      SERVER_NAME: "127.0.0.1"
       SECRET_KEY: ""
       JWT_SECRET_KEY: ""
       SENTRY_DSN: ""
       MAIL_PASSWORD: ""
       MAIL_USERNAME: ""
       API_SECURITY_STRING: ""
-      MYSQL_ADDRESS: ""
-      UPLOAD_FOLDER: ""
-      FLASK_ENV: ""
-      LOG_DIR: ""
+      MYSQL_ADDRESS: "172.19.0.10:3306"
+      UPLOAD_FOLDER: "/files"
+      FLASK_ENV: "production"
+      LOG_DIR: "/logs/web/"
+      LOG_LEVEL: 'error' # gunicorn 日志等级
   nginx:
     restart: always
     build:
@@ -66,6 +69,7 @@ services:
       - /data/certs/:/etc/nginx/certs
       - $HOME/blog_image:/static/images/
       - $HOME/logs/nginx/:/var/log/nginx/
+      - /etc/localtime:/etc/localtime
   database:
     build:
       context: ./mysql/
@@ -73,6 +77,7 @@ services:
     container_name: mysql
     volumes:
       - $HOME/mysql:/var/lib/mysql
+      - /etc/localtime:/etc/localtime
     environment:
       MYSQL_ROOT_PASSWORD: ""
     ports:
