@@ -1,6 +1,5 @@
 from faker import Faker
 from flask import url_for
-import os
 from app.model.db import User, db
 from app.utils import get_attr
 
@@ -8,9 +7,9 @@ faker = Faker('zh_CN')
 user = {
     'username': faker.name(),
     'nickname': faker.name(),
-    'email': os.getenv('MAIL_RECEVIER', 'exmaple@gmail.com'),
     'password': 'password123',
-    'confirm_password': 'password123'
+    'confirm_password': 'password123',
+    'email': 'aaaa@qq.com'
 }
 
 user_info = {
@@ -26,22 +25,17 @@ headers = {
 
 
 class TestUser(object):
+    def test_delete_user(self, client, app):
+        with app.app_context():
+            user = User.query.first()
+            db.session.delete(user)
+            db.session.commit()
+
     # 测试注册
     def test_register(self, client):
         res = client.post(
             url_for('admin.register_view'),
             json=user
-        )
-        assert b'success' in res.data
-
-        u = User.search_by(email=user['email'])
-        code = u.code.code
-        res = client.put(
-            url_for('admin.validate_email_view'),
-            json={
-                'email': user['email'],
-                'code': code
-            }
         )
         assert b'success' in res.data
 
@@ -86,31 +80,19 @@ class TestUser(object):
 
     def test_reset_email(self, client):
         res = client.get(
-            url_for('admin.reset_email_view'),
+            url_for('admin.email_view'),
             headers=headers
         )
         assert b'success' in res.data
         u = User.search_by(email=user['email'])
         code = u.code.code
-        new_email = 'newexample@gmail.com'
-        res = client.post(
-            url_for('admin.reset_email_view'),
+        new_email = 'bbbb@qq.com'
+        user['email'] = new_email
+        res = client.put(
+            url_for('admin.email_view'),
             json=dict(
                 email=new_email,
                 code=code
-            ),
-            headers=headers
-        )
-        assert b'success' in res.data
-
-        user['email'] = new_email
-        u = User.search_by(email=new_email)
-        code = u.code.code
-        res = client.put(
-            url_for('admin.validate_email_view'),
-            json=dict(
-                code=code,
-                email=new_email
             ),
             headers=headers
         )

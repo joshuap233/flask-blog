@@ -5,6 +5,7 @@ from app.model.baseDB import db
 from app.myFlask import Flask
 from app.myType import FlaskInstance, Callable
 from app.utils import create_dir
+from app.cache import cache
 
 migrate = Migrate(compare_type=True, compare_server_default=True)
 
@@ -31,11 +32,13 @@ def init_db(app: FlaskInstance):
 
 
 def create_app(register_config: Callable[[FlaskInstance], None], *args, **kwargs) -> FlaskInstance:
+    # env参数 用于单元测试
+    env = kwargs.pop('env')
     app = Flask(*args, **kwargs)
-    config_name = app.env
+    config_name = env if env else app.env
     # 注册config函数放在最前面(后面的配置会用到app.config)
-    from app.config.config import config as common_config
-    app.config.from_object(common_config[config_name]())
+    from app.config.config import config
+    app.config.from_object(config[config_name]())
 
     register_config(app)
     if config_name == 'production':
@@ -47,4 +50,5 @@ def create_app(register_config: Callable[[FlaskInstance], None], *args, **kwargs
 
     migrate.init_app(app, db)
     init_db(app)
+    cache.init_app(app)
     return app

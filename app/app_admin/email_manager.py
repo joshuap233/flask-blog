@@ -4,7 +4,22 @@ import yagmail
 
 from app.config.config import MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
 
-yag = yagmail.SMTP(user=MAIL_USERNAME, password=MAIL_PASSWORD, host=MAIL_SERVER, port=MAIL_PORT, smtp_ssl=MAIL_USE_SSL)
+
+class FakeMail:
+    def send(self, *args, **kwargs):
+        pass
+
+
+if MAIL_USERNAME and MAIL_PASSWORD:
+    yag = yagmail.SMTP(
+        user=MAIL_USERNAME,
+        password=MAIL_PASSWORD,
+        host=MAIL_SERVER,
+        port=MAIL_PORT,
+        smtp_ssl=MAIL_USE_SSL
+    )
+else:
+    yag = FakeMail()
 
 
 def send_async_email(mail_param):

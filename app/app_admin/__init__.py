@@ -4,12 +4,12 @@ from app.myType import FlaskInstance, Response
 from .token_manager import jwt
 from flask import g
 import json
-from app.app_admin.cache import cache
 
 
 def register_refresh_token(app: FlaskInstance):
     @app.after_request
     def after_all_request(response: Response):
+        # 用于刷新token
         if hasattr(g, 'refresh_token'):
             res = json.loads(response.get_data())
             if 'data' not in res:
@@ -33,14 +33,14 @@ def register_config(app: FlaskInstance):
     if app.env == 'production':
         register_logging(app)
         register_log_query_and_response_time(app)
-    cache.init_app(app)
 
 
-def create_admin_app():
+def create_admin_app(env=None):
     app = create_app(
         register_config,
         __name__,
         static_folder='static/',
         static_url_path='',
+        env=env
     )
     return app

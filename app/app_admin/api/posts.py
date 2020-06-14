@@ -6,6 +6,7 @@ from .blueprint import admin
 from ..token_manager import login_required
 from ..validate.validate import PostValidate, DeleteValidate
 from flask import request
+from app.cache import cache
 
 
 @admin.route('/posts', defaults={'pid': -1}, methods=['POST', 'DELETE'])
@@ -18,9 +19,11 @@ def post_view(pid):
         return generate_res(data=IdView(post))
     elif request.method == 'PUT':
         form = PostValidate().validate_api()
+        cache.delete_many(f'view//api/post/{pid}', 'view//api/posts', 'view//api/tags')
         Post.update_by_id(pid, **form.data)
         return generate_res()
     elif request.method == 'DELETE':
+        cache.delete_many('view//api/posts', 'view//api/tags')
         form = DeleteValidate().validate_api()
         for identify in form.id_list.data:
             Post.delete_by(id=identify)

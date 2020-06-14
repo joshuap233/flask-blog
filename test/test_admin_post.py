@@ -1,6 +1,7 @@
 import pytest
 from flask import url_for
-import random
+import json
+from app.signals import email_signals, login_signal_sender
 
 POST = {
     'id': -1,
@@ -11,6 +12,13 @@ POST = {
     'create_date': '2019/2/10 10:20',
     'change_date': '2019/10/2 2:10',
     'excerpt': '摘抄'
+}
+
+user_info = {
+    'username': 'username',
+    'nickname': 'nickname',
+    'password': 'password123',
+    'confirm_password': 'password123'
 }
 
 headers = {
@@ -29,25 +37,20 @@ headers = {
 """
 
 POST_QUERY = {
-    'filters': '[1, 2, 3]',
     'page': 0,
     'pageSize': 10,
     'search': 'title',
-    'orderBy': '[{field:"title",desc:True/False}]'
+    'orderBy': json.dumps([{"field": "title", "desc": True}])
 }
 
 
 def test_login(client):
-    user_info = {
-        'username': 'username',
-        'nickname': 'nickname',
-        'password': 'password123',
-        'confirm_password': 'password123'
-    }
-    client.post(
+    res = client.post(
         url_for('admin.register_view'),
         json=user_info
     )
+
+    assert b'success' in res.data
     res = client.post(
         url_for('admin.login_view'),
         json=user_info

@@ -44,14 +44,13 @@ def test_login(client):
 
 
 class Test_tags_view:
-
     # 测试带参查询
     def test_tags_get(self, client):
         res = client.get(url_for('admin.tags_view'), headers=headers)
         assert b'success' in res.data
         global TAGS
         global TAG
-        TAGS.extend(res.get_json()['data']['tags'])
+        TAGS.extend(res.get_json()['data']['values'])
         TAG = TAGS[0]
         assert len(TAGS) != 0
 
@@ -87,7 +86,7 @@ class Test_tags_view:
         # f = open(os.getenv('TEST_PIC_PATH'), "rb")
         import io
         res = client.post(
-            url_for('admin.tags_images_view', tid=TAG['id']),
+            url_for('admin.images_upload_view', source='tags', source_id=TAG['id']),
             data={'image': (io.BytesIO(b"my tag images"), 'tag1.jpg')},
             content_type='multipart/form-data',
             headers=headers
@@ -102,9 +101,9 @@ class Test_tags_view:
         # )
 
     def test_tags_delete(self, client):
-        res = client.delete(url_for('admin.tags_view', tid=TAG['id']), headers=headers, json=TAGS[0])
+        res = client.delete(url_for('admin.tags_view'), headers=headers, json={'id_list': [TAGS[0]['id']]})
         assert b'success' in res.data
 
         # 确认是否删除成功
-        res = client.delete(url_for('admin.tags_view', tid=TAG['id']), headers=headers, json=TAGS[0])
+        res = client.delete(url_for('admin.tags_view'), headers=headers, json={'id_list': [TAGS[0]['id']]})
         assert b'failed' in res.data

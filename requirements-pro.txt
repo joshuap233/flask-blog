@@ -30,4 +30,4 @@ Werkzeug==0.16.0
 WTForms==2.2.1
 yagmail==0.11.224
 dogpile.cache==0.9.2
-Flask-Caching==1.8.0
+Flask-Caching==1.9.0

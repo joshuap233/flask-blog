@@ -115,10 +115,11 @@ class Visibility(Enum):
 class Searchable(Base):
     __abstract__ = True
 
+    # 可排序字段
+    sortable = []
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
-        # 可排序字段
-        self.sortable = []
         super().__init__(*args, **kwargs)
 
     @classmethod
@@ -138,7 +139,8 @@ class Searchable(Base):
                 field = item.get('field')
                 if field in cls.sortable:
                     res.append(
-                        getattr(cls, field).desc() if item.get('desc')
+                        getattr(cls, field).desc()
+                        if item.get('desc')
                         else getattr(cls, field).asc()
                     )
         return res

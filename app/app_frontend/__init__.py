@@ -1,7 +1,6 @@
 from app.create_app import create_app
 from app.logging_manager import register_logging, register_log_query_and_response_time
 from app.myType import FlaskInstance
-from app.app_frontend.cache import cache
 
 
 def register_blueprint(app: FlaskInstance):
@@ -15,14 +14,14 @@ def register_config(app: FlaskInstance):
     if app.env == 'production':
         register_logging(app)
         register_log_query_and_response_time(app)
-    cache.init_app(app)
 
 
-def create_view_app():
+def create_view_app(env=None):
     app = create_app(
         register_config,
         __name__,
         static_folder='static/',
         static_url_path='',
+        env=env
     )
     return app

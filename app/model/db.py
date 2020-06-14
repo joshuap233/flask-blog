@@ -43,8 +43,10 @@ class Post(Searchable):
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
 
+    # 可排序字段
+    sortable = ['change_date', 'create_date', 'title', 'visibility', 'comments']
+
     def __init__(self, *args, **kwargs):
-        self.sortable = ['change_date', 'create_date', 'title', 'visibility', 'comments']
         if 'comments' not in kwargs:
             kwargs['comments'] = self.__table__.c.comments.default.arg
         super().__init__(*args, **kwargs)
@@ -114,9 +116,10 @@ class Tag(Searchable):
     # 图片链接(用于图床)或图片名(本地)
     link_id = db.Column(db.Integer, db.ForeignKey('link.id'))
 
+    sortable = ['name', 'create_date']
+
     def __init__(self, *args, **kwargs):
         # 可排序字段
-        self.sortable = ['name', 'create_date']
         if 'count' not in kwargs:
             kwargs['count'] = self.__table__.c.count.default.arg
         super().__init__(*args, **kwargs)
@@ -169,6 +172,7 @@ class Tag(Searchable):
                     tags.append(tag)
                     break
         return tags
+
 
 class User(Base):
     blacklist = ['id', 'password_hash']
@@ -284,9 +288,10 @@ class Link(Searchable):
     url = db.Column(db.String(255))
     tags = db.relationship('Tag', backref=db.backref('link', lazy=True))
 
+    sortable = ['create_date']
+
     def __init__(self, *args, **kwargs):
         # 可排序字段
-        self.sortable = ['create_date']
         super().__init__(*args, **kwargs)
 
     @classmethod

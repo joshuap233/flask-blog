@@ -1,8 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from .baseDB import db
-import json
 from urllib.parse import unquote
-
+import json
 from flask import current_app, request
 
 from app.exception import ParameterException
@@ -40,10 +39,11 @@ class QueryView:
     'totalCount':'1',
     'filter_by':{tid:1}
     """
+
     # 默认允许 order_by 参数查询
     def __init__(self, order_by=True):
         self.query = request.args
-        self.order_by = self.query.get('orderBy') if order_by else None
+        self.order_by = self._get_order_by()
         self.page = self._get_page()
         self.pagesize = self._get_pagesize()
         self.filters = self._get_filters()
@@ -77,15 +77,8 @@ class QueryView:
         filters['tid'] = tid if tid and tid > 0 else None
         return filters
 
-    # def _get_order_by(self):
-    #     order_bys = self.query.get('orderBy')
-    #     order_by = []
-    #     if not order_bys:
-    #         # 默认按id降序
-    #         order_by.append(db.desc('id'))
-    #     else:
-    #         for ob in order_bys:
-    #             field = order_bys.get('field')
-    #             if field in self.sortable:
-    #                 order_by.append(db.desc(field) if ob.get('desc') else db.asc(field))
-    #     return order_by
+    def _get_order_by(self):
+        order_by = self.query.get('orderBy', None)
+        if order_by:
+            order_by = json.loads(order_by)
+        return order_by

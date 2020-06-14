@@ -7,7 +7,8 @@ from app.myType import Any
 
 
 def is_security(options):
-    return API_SECURITY_STRING and options.pop('security', True)
+    # 不要调换顺序(flask.route 没有security参数
+    return options.pop('security', True) and API_SECURITY_STRING
 
 
 class MyBlueprint(Blueprint):
