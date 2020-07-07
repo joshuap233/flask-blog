@@ -1,4 +1,4 @@
-from wtforms import PasswordField, StringField, IntegerField, FieldList
+from wtforms import PasswordField, StringField, IntegerField, FieldList, BooleanField
 from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf, Optional
 from app.exception import ParameterException
 from app.utils import time2stamp
@@ -73,8 +73,12 @@ class PostValidate(JsonValidate):
     ], filters=[time2stamp])
     article = StringField('文章内容')
     article_html = StringField('文章内容')
+
+    isRichText = BooleanField('摘要是否为富文本')
     excerpt = StringField('摘要')
-    excerpt_html = StringField('摘要')
+    illustration = StringField('摘录插图')
+    excerpt_rich_text_html = StringField('摘录/富文本的html')
+    excerpt_rich_text = StringField('摘录/富文本')
 
 
 class UserValidate(JsonValidate):

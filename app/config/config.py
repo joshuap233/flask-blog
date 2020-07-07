@@ -19,7 +19,7 @@ class BaseConfig(object):
     # 分页功能,默认每页大小(如果前端没有传入)
     PAGESIZE = 10
     # 允许上传文件类型
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg+xml', 'gif'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg', 'gif'}
     # 文件最大大小
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     # 数据库最慢查询时间,超过该时间则记录日志

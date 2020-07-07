@@ -6,8 +6,7 @@ from app.exception import NotFound
 from app.model.db import Post, Link, Tag
 from app.app_admin.view_model import ImagesView, ImageUrlView, NewImageView
 from app.model.view import QueryView
-from app.utils import generate_res, filters_filename
-from app.utils import security_remove_file
+from app.utils import generate_res, save_img, security_remove_file
 from .blueprint import admin
 from ..token_manager import login_required
 from ..validate.validate import DeleteValidate, ChangeImageValidate
@@ -19,11 +18,7 @@ from ..validate.validate import DeleteValidate, ChangeImageValidate
 def images_upload_view(source, source_id):
     if source not in ['posts', 'tags']:
         raise NotFound()
-    path = current_app.config['UPLOAD_FOLDER']
-    # TODO: 文件校验(svg过滤,压缩处理
-    img = request.files.get('image')
-    filename = filters_filename(img)
-    img.save(os.path.join(path, filename))
+    filename = save_img()
     if source == 'tags':
         Tag.update_by_id(source_id, link=filename)
     elif source == 'posts':
@@ -54,11 +49,7 @@ def images_query_view(image_id):
         Link.update_by_id(image_id, **form.data)
         return generate_res()
     elif request.method == 'POST':
-        path = current_app.config['UPLOAD_FOLDER']
-        # images = request.files.getlist('image)
-        img = request.files.get('image')
-        filename = filters_filename(img)
-        img.save(os.path.join(path, filename))
+        filename = save_img()
         link = Link.create(url=filename)
         return generate_res(data=NewImageView(link))
     query = QueryView()

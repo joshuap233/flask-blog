@@ -1,7 +1,7 @@
 from app.model.db import Post
 from app.app_admin.view_model import PostsView, PostView, IdView
 from app.model.view import QueryView
-from app.utils import generate_res
+from app.utils import generate_res, save_base64_img
 from .blueprint import admin
 from ..token_manager import login_required
 from ..validate.validate import PostValidate, DeleteValidate
@@ -19,6 +19,7 @@ def post_view(pid):
         return generate_res(data=IdView(post))
     elif request.method == 'PUT':
         form = PostValidate().validate_api()
+        form.illustration.data = save_base64_img(form.illustration.data)
         cache.delete_many(f'view//api/post/{pid}', 'view//api/posts', 'view//api/tags')
         Post.update_by_id(pid, **form.data)
         return generate_res()

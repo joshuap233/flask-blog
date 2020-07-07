@@ -23,6 +23,9 @@ class PostView(BaseView):
             self.article = post.article or ''
         if excerpt:
             self.excerpt = post.excerpt
+            self.illustration = ImageUrlView(post.illustration.url).url if post.illustration else ''
+            self.excerpt_rich_text = post.excerpt_rich_text
+            self.isRichText = post.isRichText
 
 
 # 格式化从数据库获取的文章
@@ -81,6 +84,7 @@ class LoginView(BaseView):
     #     return user.email and not user.email_is_validate
 
 
+# 多张图片
 class ImagesView(BaseView, TableView):
     def __init__(self, links, page):
         super().__init__(links, page, Link)
@@ -95,12 +99,14 @@ class NewImagesView(BaseView):
         self.values = [NewImageView(link) for link in links]
 
 
+# 添加新图片时,发送图片id, 与链接
 class NewImageView(BaseView):
     def __init__(self, link):
         self.id = link.id
         self.image = ImageUrlView(link.url)
 
 
+# 图片详细信息
 class ImageView(BaseView):
     def __init__(self, link):
         self.id = link.id
@@ -122,6 +128,7 @@ class ImageView(BaseView):
         return relationship
 
 
+# 图片url
 class ImageUrlView(BaseView):
     def __init__(self, filename):
         self.name = filename

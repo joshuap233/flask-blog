@@ -32,15 +32,20 @@ class Post(Searchable):
     article = db.Column(LONGTEXT, comment='文章内容(json)', default='')
     # 用于渲染
     article_html = db.Column(LONGTEXT, comment='文章内容(html)', default='')
-    # 用于编辑
-    excerpt = db.Column(db.TEXT, comment="文章摘要(json)", default='')
-    # 用于渲染
-    excerpt_html = db.Column(db.TEXT, comment='文章摘要(html)', default='')
     change_date = db.Column(db.BigInteger, index=True)
-    visibility = db.Column(db.String(16), default=Visibility.privacy.value, comment='文章可见性:私密/公开')
     comments = db.Column(db.Integer, default=0, comment="评论数量")
 
+    excerpt = db.Column(db.String(300), comment="文章摘要(普通文本)", default='')
+    # 用于渲染
+    excerpt_rich_text_html = db.Column(db.TEXT, comment='文章摘要(富文本)(html)', default='')
+    # 摘录普通文本用于编辑
+    excerpt_rich_text = db.Column(db.TEXT, comment="文章摘要(富文本)(json)", default='')
+    visibility = db.Column(db.String(16), default=Visibility.privacy.value, comment='文章可见性:私密/公开')
+    # 摘录插图.一对一
+    illustration_id = db.Column(db.Integer, db.ForeignKey('link.id'), comment='插图链接id')
+    isRichText = db.Column(db.Boolean, default=False, comment='摘录是否为富文本')
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
+    # 文章图片
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
 
     # 可排序字段
@@ -55,17 +60,27 @@ class Post(Searchable):
         for key, value in attrs.items():
             if key == 'tags':
                 self._set_tags(value)
-                continue
-            if key == 'links':
+            elif key == 'links':
                 self._set_links(value)
-                continue
-            self._set_attr(key, value)
+            elif key == 'illustration':
+                self._set_illustration(value)
+            else:
+                self._set_attr(key, value)
+
+    def _set_illustration(self, url: str):
+        self.illustration = Link(url=url)
 
     def _set_links(self, url: str):
         self.links.append(Link(url=url))
 
     def _set_tags(self, tags: dict):
+        # 移除被删除的标签
+        for t in self.tags:
+            if t.name not in tags:
+                t.count -= 1
+                self.tags.remove(t)
         for tag in tags:
+            # 添加新标签
             tag = Tag.search_by(name=tag, error=False) or Tag(name=tag)
             if tag in self.tags:
                 continue
@@ -287,6 +302,7 @@ class Link(Searchable):
     # 图片链接(用于图床)或图片名(本地)
     url = db.Column(db.String(255))
     tags = db.relationship('Tag', backref=db.backref('link', lazy=True))
+    post_illustration = db.relationship('Post', backref=db.backref('illustration', lazy=True), uselist=False)
 
     sortable = ['create_date']
 

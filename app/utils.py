@@ -3,12 +3,48 @@ import os
 import time
 from secrets import randbelow
 
-from flask import jsonify, current_app
+from flask import jsonify, current_app, request
 
 from app.config.constant import VERIFICATION_CODE_LENGTH
 from app.exception import NotFound
 from app.exception import ParameterException
 from app.myType import FileStorage
+import base64
+from uuid import uuid1
+from mimetypes import guess_extension
+import imghdr
+
+
+def save_base64_img(base64_string) -> str:
+    if base64_string == '':
+        return ''
+    # 去除'data: 字符串"
+    base64_string = base64_string[5:]
+    img = base64.b64decode(base64_string.split(',', 1)[1])
+    path = current_app.config['UPLOAD_FOLDER']
+    filename = str(uuid1())
+
+    try:
+        img_ext = guess_extension(base64_string.split(';')[0])
+        if img_ext[1:] not in current_app.config['ALLOWED_EXTENSIONS']:
+            raise ParameterException('扩展名错误')
+    except Exception as e:
+        raise ParameterException('扩展名错误')
+
+    filename = filename + img_ext
+    path = os.path.join(path, filename)
+    with open(path, 'wb') as f:
+        f.write(img)
+    return filename
+
+
+def save_img() -> str:
+    # TODO: 文件校验(svg过滤,压缩处理
+    path = current_app.config['UPLOAD_FOLDER']
+    img = request.files.get('image')
+    filename = filters_filename(img)
+    img.save(os.path.join(path, filename))
+    return filename
 
 
 def time2stamp(time_: str, format_: str = '%Y/%m/%d %H:%M') -> int:
@@ -37,14 +73,10 @@ def get_attr(keys: list, data: dict) -> list:
 
 
 def filters_filename(file: FileStorage) -> str:
-    from uuid import uuid1
-    ext_name = file.content_type.split('/')[1]
-    if ext_name not in current_app.config['ALLOWED_EXTENSIONS']:
+    ext_name = guess_extension(file.content_type)
+    if ext_name[1:] not in current_app.config['ALLOWED_EXTENSIONS']:
         raise ParameterException('扩展名错误')
-    # split('+') 处理 content_type=('images/svg+xml')
-    if ext_name == 'svg+xml':
-        ext_name = ext_name.split('+')[0]
-    return f'{str(uuid1())}.{ext_name}'
+    return f'{str(uuid1())}{ext_name}'
 
 
 def generate_verification_code() -> str:
