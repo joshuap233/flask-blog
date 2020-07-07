@@ -1,6 +1,6 @@
-from flask import url_for
+from flask import url_for, current_app
 
-from app.model.db import Tag, Post, Link
+from app.model.db import Tag, Post, Link, Comment, Blog, CommentReply
 from app.utils import format_time
 from app.model.view import BaseView, TableView
 
@@ -76,13 +76,6 @@ class LoginView(BaseView):
         self.id = user.id
         self.token = user.generate_login_token()
 
-    #     if self.check_email_validate(user):
-    #         self.msg = '您的邮箱未验证'
-    #
-    # @staticmethod
-    # def check_email_validate(user):
-    #     return user.email and not user.email_is_validate
-
 
 # 多张图片
 class ImagesView(BaseView, TableView):
@@ -128,8 +121,82 @@ class ImageView(BaseView):
         return relationship
 
 
+# 获取所有标签名
+class AllTagsView(BaseView):
+    def __init__(self):
+        self.data = [
+            tag.name for tag in Tag.query.all()
+        ]
+
+
 # 图片url
 class ImageUrlView(BaseView):
     def __init__(self, filename):
         self.name = filename
         self.url = url_for('admin.send_images_view', filename=filename, _external=True) if filename else ''
+
+
+class BaseComment(BaseView):
+    def __init__(self, comment: Comment):
+        self.content = comment.content
+        self.ip = comment.ip
+        self.email = comment.email
+        self.nickname = comment.nickname
+        self.browser = comment.browser
+        self.system = comment.system
+        self.website = comment.website
+        self.show = comment.show
+
+
+class ReplyView(BaseComment):
+    def __init__(self, reply: CommentReply):
+        super(ReplyView, self).__init__(reply)
+        self.comment_id = reply.comment_id
+        self.parent_id = reply.parent_id
+
+
+class RepliesView(BaseView, TableView):
+    def __init__(self, replies, page):
+        super().__init__(replies, page, CommentReply)
+
+    @staticmethod
+    def _fill(replies):
+        return [ReplyView(reply) for reply in replies] if replies else []
+
+
+class CommentView(BaseComment):
+    def __init__(self, comment: Comment):
+        super(CommentView, self).__init__(comment)
+        self.post_id = comment.post_id
+        self.post_title = comment.posts.title
+        self.reply = RepliesView(self._get_replies(comment), 0)
+
+    @staticmethod
+    def _get_replies(comment):
+        # 获取前SUB_COMMENT_PAGE_SIZE个子评论
+        return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
+            current_app.config['SUB_COMMENT_PAGE_SIZE']).all()
+
+
+class CommentsView(BaseView, TableView):
+    def __init__(self, comment, page):
+        super().__init__(comment, page, Comment)
+
+    @staticmethod
+    def _fill(comments):
+        return [CommentView(comment) for comment in comments] if comments else []
+
+
+class BlogView(BaseView):
+    def __init__(self, blog: Blog):
+        self.id = blog.id
+        self.content = blog.content
+
+
+class BlogsView(BaseView, TableView):
+    def __init__(self, comment, page):
+        super().__init__(comment, page, Blog)
+
+    @staticmethod
+    def _fill(blogs):
+        return [BlogView(blog) for blog in blogs] if blogs else []

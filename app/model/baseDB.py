@@ -111,16 +111,18 @@ class Visibility(Enum):
     public = '公开'
 
 
+@unique
+class CommentEnum(Enum):
+    replay = '回复'
+    comment = '评论'
+
+
 # 提供分页查询功能
 class Searchable(Base):
     __abstract__ = True
 
     # 可排序字段
     sortable = []
-
-    @abstractmethod
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     @classmethod
     @abstractmethod
@@ -144,3 +146,23 @@ class Searchable(Base):
                         else getattr(cls, field).asc()
                     )
         return res
+
+
+class BaseComment(Searchable):
+    __abstract__ = True
+
+    content = db.Column(db.String(255), comment="评论内容")
+    ip = db.Column(db.String(16), comment="ip地址")
+    email = db.Column(db.String(256), comment="邮件地址")
+    nickname = db.Column(db.String(20), comment="昵称")
+    browser = db.Column(db.String(48), comment="浏览器类型/版本")
+    system = db.Column(db.String(12), comment="操作系统")
+    website = db.Column(db.String(256), comment="网站")
+    show = db.Column(db.Boolean, default=False, comment="评论是否显示/用于审核")
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+    @classmethod
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+        super().paging_search(page, per_page, order_by, query, **kwargs)

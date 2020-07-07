@@ -4,7 +4,7 @@ from app.exception import ParameterException
 from app.utils import time2stamp
 from .base import JsonValidate
 from app.config.constant import VERIFICATION_CODE_LENGTH
-from app.model.baseDB import Visibility
+from app.model.baseDB import Visibility, CommentEnum
 
 
 class LoginValidate(JsonValidate):
@@ -171,3 +171,40 @@ class ChangeImageValidate(JsonValidate):
     describe = StringField('摘要', validators=[
         Length(max=255, message="描述最大长度为300")
     ])
+
+
+class DeleteComment(JsonValidate):
+    id = IntegerField('需要删除的评论/回复 id', validators=[
+        DataRequired(message='不能为空'),
+    ])
+    type = StringField(
+        DataRequired(message='type不能为空'),
+        AnyOf(
+            [CommentEnum.replay.value, CommentEnum.comment.value],
+            message=f"type只能为{CommentEnum.replay.value}或{CommentEnum.comment.value}"
+        )
+    )
+
+
+class CheckComment(JsonValidate):
+    id = IntegerField('需要删除的评论/回复 id', validators=[
+        DataRequired(message='不能为空'),
+    ])
+    type = StringField(
+        DataRequired(message='type不能为空'),
+        AnyOf(
+            [CommentEnum.replay.value, CommentEnum.comment.value],
+            message=f"type只能为{CommentEnum.replay.value}或{CommentEnum.comment.value}"
+        )
+    )
+    show = BooleanField('显示/隐藏')
+
+
+class ModifyBlog(JsonValidate):
+    id = IntegerField('需要修改的日志id', validators=[
+        DataRequired(message='不能为空'),
+    ])
+
+    content = StringField(
+        Length(0, 255, message='日志最大长度为255')
+    )

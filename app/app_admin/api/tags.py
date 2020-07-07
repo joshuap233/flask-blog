@@ -1,7 +1,7 @@
 from flask import request
 
 from app.model.db import Tag
-from app.app_admin.view_model import TagsView, IdView
+from app.app_admin.view_model import TagsView, IdView, AllTagsView
 from app.model.view import QueryView
 from app.utils import generate_res
 from ..validate.validate import TagValidate, DeleteValidate
@@ -14,9 +14,7 @@ from app.cache import cache
 @admin.route('/posts/tags/all')
 @login_required
 def all_tags_view():
-    return generate_res(data=[
-        tag.name for tag in Tag.query.all()
-    ])
+    return generate_res(data=AllTagsView().data)
 
 
 # 获取所有标签,包含标签以及详细信息

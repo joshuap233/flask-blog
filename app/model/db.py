@@ -7,7 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
 from app.myType import WTForm
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
-from .baseDB import Base, db, Searchable, Visibility
+from .baseDB import Base, db, Searchable, Visibility, BaseComment
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -25,7 +25,6 @@ link_to_post = db.Table(
 
 class Post(Searchable):
     # 不能用set_attrs方法直接设置的字段列表
-    blacklist = ['id', 'comments']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), default='')
     # 用于编辑
@@ -47,7 +46,8 @@ class Post(Searchable):
     tags = db.relationship('Tag', secondary=tags_to_post, backref=db.backref('posts', lazy='dynamic'))
     # 文章图片
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
-
+    # 评论,前面名字取错,懒得改了
+    comments_ = db.relationship('Comment', backref=db.backref('posts', lazy=True))
     # 可排序字段
     sortable = ['change_date', 'create_date', 'title', 'visibility', 'comments']
 
@@ -122,7 +122,6 @@ class Post(Searchable):
 
 
 class Tag(Searchable):
-    blacklist = ['id', 'count']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
     describe = db.Column(db.String(128), default='')
@@ -134,7 +133,6 @@ class Tag(Searchable):
     sortable = ['name', 'create_date']
 
     def __init__(self, *args, **kwargs):
-        # 可排序字段
         if 'count' not in kwargs:
             kwargs['count'] = self.__table__.c.count.default.arg
         super().__init__(*args, **kwargs)
@@ -190,7 +188,6 @@ class Tag(Searchable):
 
 
 class User(Base):
-    blacklist = ['id', 'password_hash']
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(128))
     username = db.Column(db.String(128))
@@ -303,12 +300,7 @@ class Link(Searchable):
     url = db.Column(db.String(255))
     tags = db.relationship('Tag', backref=db.backref('link', lazy=True))
     post_illustration = db.relationship('Post', backref=db.backref('illustration', lazy=True), uselist=False)
-
     sortable = ['create_date']
-
-    def __init__(self, *args, **kwargs):
-        # 可排序字段
-        super().__init__(*args, **kwargs)
 
     @classmethod
     def paging_search(cls, filters: dict, **kwargs):
@@ -322,3 +314,40 @@ class Link(Searchable):
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)
+
+
+# 记录日常吐槽
+class Blog(Base):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(255), comment="内容")
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+
+# 文章下的评论
+class Comment(BaseComment):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_reply = db.relationship('CommentReply')
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+    @classmethod
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+        super().paging_search(page, per_page, order_by, query, **kwargs)
+
+
+# 评论的回复/回复的回复
+class CommentReply(BaseComment):
+    id = db.Column(db.Integer, primary_key=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), comment="文章评论回复id", nullable=True)
+    parent_id = db.Column(db.Integer, comment="回复的回复id", nullable=True)
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+    @classmethod
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+        super().paging_search(page, per_page, order_by, query, **kwargs)

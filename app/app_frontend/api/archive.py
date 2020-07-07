@@ -9,7 +9,6 @@
 # # @api.route('/archive')
 # # def archive():
 # #     query = QueryView()
-# #     # TODO :按时间排序
 # #     pagination = Post.search(**query.search_parameter)
 # #     data = []
 # #     for post in pagination.items:

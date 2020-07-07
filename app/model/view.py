@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from .baseDB import db
 from urllib.parse import unquote
 import json
 from flask import current_app, request
+from app.model.db import Comment, CommentReply, Blog
 
 from app.exception import ParameterException
 
@@ -29,6 +29,65 @@ class TableView(metaclass=ABCMeta):
         return [value for value in values] if values else []
 
 
+class BaseQueryView(metaclass=ABCMeta):
+    def __init__(self):
+        self.query = request.args
+        self.order_by = self._get_order_by()
+        self.page = self._get_page()
+        self.pagesize = self._get_pagesize()
+
+    @property
+    def search_parameter(self):
+        return dict(
+            order_by=self.order_by,
+            page=self.page,
+            per_page=self.pagesize,
+        )
+
+    @staticmethod
+    @abstractmethod
+    def _get_order_by() -> list:
+        return []
+
+    @staticmethod
+    @abstractmethod
+    def _get_pagesize() -> int:
+        return 1
+
+    def _get_page(self):
+        return int(self.query.get('page', 0)) + 1
+
+
+class CommentQueryView(BaseQueryView):
+    @staticmethod
+    def _get_order_by():
+        return [Comment.create_date.desc()]
+
+    @staticmethod
+    def _get_pagesize() -> int:
+        return current_app.config['COMMENT_PAGE_SIZE']
+
+
+class ReplyQueryView(BaseQueryView):
+    @staticmethod
+    def _get_order_by():
+        return [CommentReply.create_date.desc()]
+
+    @staticmethod
+    def _get_pagesize() -> int:
+        return current_app.config['SUB_COMMENT_PAGE_SIZE']
+
+
+class BlogQueryView(BaseQueryView):
+    @staticmethod
+    def _get_order_by():
+        return [Blog.create_date.desc()]
+
+    @staticmethod
+    def _get_pagesize() -> int:
+        return current_app.config['BLOG_PAGE_SIZE']
+
+
 class QueryView:
     """
     解析查询参数
@@ -41,7 +100,7 @@ class QueryView:
     """
 
     # 默认允许 order_by 参数查询
-    def __init__(self, order_by=True):
+    def __init__(self):
         self.query = request.args
         self.order_by = self._get_order_by()
         self.page = self._get_page()

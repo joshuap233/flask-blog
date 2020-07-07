@@ -18,6 +18,13 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 分页功能,默认每页大小(如果前端没有传入)
     PAGESIZE = 10
+    # 评论分页功能,默认每页大小(如果前端没有传入)
+    COMMENT_PAGE_SIZE = 10
+    # 评论的回复
+    SUB_COMMENT_PAGE_SIZE = 10
+
+    BLOG_PAGE_SIZE = 10
+
     # 允许上传文件类型
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg', 'gif'}
     # 文件最大大小

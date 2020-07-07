@@ -1,5 +1,3 @@
-import os
-
 from flask import request, current_app, send_from_directory
 
 from app.exception import NotFound
