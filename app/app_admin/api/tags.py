@@ -4,7 +4,7 @@ from app.model.db import Tag
 from app.app_admin.view_model import TagsView, IdView, AllTagsView
 from app.model.view import QueryView
 from app.utils import generate_res
-from ..validate.validate import TagValidate, DeleteValidate
+from app.app_admin.validate import TagValidate, DeleteValidate
 from .blueprint import admin
 from ..token_manager import login_required
 from app.signals import cache_signals, SIGNAL_SENDER

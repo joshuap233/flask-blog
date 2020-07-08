@@ -7,7 +7,7 @@ from app.model.view import QueryView
 from app.utils import generate_res, save_img, security_remove_file
 from .blueprint import admin
 from ..token_manager import login_required
-from ..validate.validate import DeleteValidate, ChangeImageValidate
+from app.app_admin.validate import DeleteValidate, ChangeImageValidate
 
 
 # 图片上传

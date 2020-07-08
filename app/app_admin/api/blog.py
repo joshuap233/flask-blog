@@ -3,9 +3,9 @@ from ..token_manager import login_required
 from flask import request
 from app.model.db import Blog
 from app.utils import generate_res
-from ..validate.validate import ModifyBlog
+from app.app_admin.validate import ModifyBlog
 from app.model.view import BlogQueryView
-from ..view_model import BlogsView
+from app.model.view import BlogsView
 
 
 @admin.route('/blog/<int:bid>', methods=['DELETE'])

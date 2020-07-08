@@ -25,6 +25,8 @@ link_to_post = db.Table(
 
 class Post(Searchable):
     # 不能用set_attrs方法直接设置的字段列表
+    blacklist = ['id', 'illustration_id']
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), default='')
     # 用于编辑
@@ -327,6 +329,8 @@ class Blog(Base):
 
 # 文章下的评论
 class Comment(BaseComment):
+    blacklist = ['id', 'comment_reply', 'post_id']
+
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     comment_reply = db.relationship('CommentReply')
@@ -338,11 +342,21 @@ class Comment(BaseComment):
     def paging_search(cls, page: int, per_page: int, order_by: dict = None, query=None, **kwargs):
         super().paging_search(page, per_page, order_by, query, **kwargs)
 
+    @staticmethod
+    def update_comment(**kwargs):
+        if 'post_id' in kwargs:
+            modal = Comment
+        else:
+            modal = CommentReply
+        return modal.create(**kwargs)
+
 
 # 评论的回复/回复的回复
 class CommentReply(BaseComment):
+    blacklist = ['id']
+
     id = db.Column(db.Integer, primary_key=True)
-    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), comment="文章评论回复id", nullable=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), comment="文章评论的回复id", nullable=True)
     parent_id = db.Column(db.Integer, comment="回复的回复id", nullable=True)
 
     def _set_attrs(self, attrs: dict):

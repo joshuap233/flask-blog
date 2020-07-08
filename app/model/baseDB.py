@@ -1,4 +1,4 @@
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from contextlib import contextmanager
 from enum import Enum, unique
 

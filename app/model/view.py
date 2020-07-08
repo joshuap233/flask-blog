@@ -147,3 +147,34 @@ class QueryView(BaseQueryView):
         if order_by:
             order_by = json.loads(order_by)
         return order_by
+
+
+class BlogView(BaseView):
+    def __init__(self, blog: Blog):
+        self.id = blog.id
+        self.content = blog.content
+
+
+class BlogsView(BaseView, TableView):
+    def __init__(self, comment, page):
+        super().__init__(comment, page, Blog)
+
+    @staticmethod
+    def _fill(blogs):
+        return [BlogView(blog) for blog in blogs] if blogs else []
+
+
+class BaseComment(BaseView):
+    def __init__(self, comment: Comment, show=True, email=True, ip=True):
+        self.id = comment.id
+        self.content = comment.content
+        self.nickname = comment.nickname
+        self.browser = comment.browser
+        self.system = comment.system
+        self.website = comment.website
+        if show:
+            self.show = comment.show
+        if email:
+            self.email = comment.email
+        if ip:
+            self.ip = comment.ip

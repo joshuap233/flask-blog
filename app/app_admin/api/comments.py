@@ -1,7 +1,7 @@
 from .blueprint import admin
 from ..token_manager import login_required
 from flask import request
-from ..validate.validate import DeleteComment, CheckComment
+from app.app_admin.validate import DeleteComment, CheckComment
 from app.model.db import Comment, CommentReply
 from app.model.baseDB import CommentEnum
 from app.utils import generate_res
@@ -35,4 +35,3 @@ def reply_view():
     query = ReplyQueryView()
     pagination = CommentReply.paging_search(**query.search_parameter)
     return generate_res(data=RepliesView(pagination.items, query.page))
-

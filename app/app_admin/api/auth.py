@@ -10,7 +10,7 @@ from app.model.db import User
 from app.app_admin.view_model import UserInfoView, LoginView
 from ..token_manager import add_token_to_blacklist, login_required, login_check_without_refresh
 from app.utils import generate_res
-from ..validate.validate import (
+from app.app_admin.validate import (
     RegisterValidate, UserValidate, LoginValidate, EmailCodeValidate,
     EmailValidate, RecoveryPasswordValidate, ResetPasswordValidate)
 from .blueprint import admin

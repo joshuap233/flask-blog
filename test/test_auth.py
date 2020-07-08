@@ -12,12 +12,6 @@ user = {
     'email': 'aaaa@qq.com'
 }
 
-user_info = {
-    'username': 'username',
-    'nickname': 'nickname',
-    'avatar': 'avatar',
-    'about': 'about'
-}
 headers = {
     'identify': '',
     'Authorization': ''

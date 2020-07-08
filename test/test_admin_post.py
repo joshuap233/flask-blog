@@ -1,6 +1,7 @@
 import pytest
 from flask import url_for
 import json
+from .data import user_info, headers
 
 POST = {
     'id': -1,
@@ -17,18 +18,6 @@ POST = {
     'excerpt_rich_text_html': '',
     'excerpt_rich_text': '',
     'isRichText': False
-}
-
-user_info = {
-    'username': 'username',
-    'nickname': 'nickname',
-    'password': 'password123',
-    'confirm_password': 'password123'
-}
-
-headers = {
-    'identify': '',
-    'Authorization': ''
 }
 
 """

@@ -1,6 +1,11 @@
-from app.model.view import BaseView, TableView
-from flask import url_for
-from app.model.db import Post, Tag
+from app.model.view import BaseView, TableView, BaseComment
+from flask import url_for, current_app
+from app.model.db import Post, Tag, Comment, CommentReply
+
+
+class IdView(BaseView):
+    def __init__(self, source):
+        self.id = source.id
 
 
 class PostView(BaseView):
@@ -70,4 +75,43 @@ class ArchiveView(BaseView, TableView):
 
     @staticmethod
     def _fill(posts):
-        return [PostView(post) for post in posts]
+        return [PostView(post, excerpt=False, article=False) for post in posts]
+
+
+class ReplyView(BaseComment):
+    def __init__(self, reply: CommentReply):
+        super(ReplyView, self).__init__(reply, show=False, email=False, ip=False)
+        self.comment_id = reply.comment_id
+        self.parent_id = reply.parent_id
+
+
+class RepliesView(BaseView, TableView):
+    def __init__(self, replies, page):
+        super().__init__(replies, page, CommentReply)
+
+    @staticmethod
+    def _fill(replies):
+        return [ReplyView(reply) for reply in replies] if replies else []
+
+
+class CommentView(BaseComment):
+    def __init__(self, comment: Comment):
+        super(CommentView, self).__init__(comment, show=False, email=False, ip=False)
+        self.post_id = comment.post_id
+        self.post_title = comment.posts.title
+        self.reply = RepliesView(self._get_replies(comment), 0)
+
+    @staticmethod
+    def _get_replies(comment):
+        # 获取前SUB_COMMENT_PAGE_SIZE个子评论
+        return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
+            current_app.config['SUB_COMMENT_PAGE_SIZE']).all()
+
+
+class CommentsView(BaseView, TableView):
+    def __init__(self, comment, page):
+        super().__init__(comment, page, Comment)
+
+    @staticmethod
+    def _fill(comments):
+        return [CommentView(comment) for comment in comments] if comments else []

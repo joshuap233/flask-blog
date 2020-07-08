@@ -1,6 +1,7 @@
 import random
 from faker import Faker
 from flask import url_for
+from .data import user_info, headers
 
 faker = Faker('zh_CN')
 
@@ -14,21 +15,10 @@ TAG = {
     'name': 'tags1',
     'describe': 'describe',
 }
-headers = {
-    'identify': '',
-    'Authorization': ''
-}
-
 TAGS = []
 
 
 def test_login(client):
-    user_info = {
-        'username': 'username',
-        'nickname': 'nickname',
-        'password': 'password123',
-        'confirm_password': 'password123'
-    }
     client.post(
         url_for('admin.register_view'),
         json=user_info

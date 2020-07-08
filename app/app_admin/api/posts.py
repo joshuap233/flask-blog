@@ -4,7 +4,7 @@ from app.model.view import QueryView
 from app.utils import generate_res, save_base64_img
 from .blueprint import admin
 from ..token_manager import login_required
-from ..validate.validate import PostValidate, DeleteValidate
+from app.app_admin.validate import PostValidate, DeleteValidate
 from flask import request
 from app.signals import cache_signals, SIGNAL_SENDER
 

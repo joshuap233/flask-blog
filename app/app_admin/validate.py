@@ -2,9 +2,9 @@ from wtforms import PasswordField, StringField, IntegerField, FieldList, Boolean
 from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf, Optional
 from app.exception import ParameterException
 from app.utils import time2stamp
-from .base import JsonValidate
 from app.config.constant import VERIFICATION_CODE_LENGTH
 from app.model.baseDB import Visibility, CommentEnum
+from app.model.validateBase import JsonValidate
 
 
 class LoginValidate(JsonValidate):
@@ -18,6 +18,7 @@ class LoginValidate(JsonValidate):
     ])
     email = StringField('邮件', validators=[
         Email(message='请输入有效的邮箱地址，比如：username@domain.com'),
+        Length(min=0, max=256, message="email长度超过最大值"),
         Optional()
     ])
 

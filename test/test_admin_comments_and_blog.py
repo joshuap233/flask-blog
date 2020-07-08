@@ -1,20 +1,5 @@
-from faker import Faker
 from flask import url_for
-
-faker = Faker('zh_CN')
-
-headers = {
-    'identify': '',
-    'Authorization': ''
-}
-
-user_info = {
-    'username': 'username',
-    'nickname': 'nickname',
-    'password': 'password123',
-    'confirm_password': 'password123'
-}
-TAGS = []
+from .data import headers, user_info
 
 
 def test_login(client):

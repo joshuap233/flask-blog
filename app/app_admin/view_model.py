@@ -1,8 +1,8 @@
 from flask import url_for, current_app
 
-from app.model.db import Tag, Post, Link, Comment, Blog, CommentReply
+from app.model.db import Tag, Post, Link, Comment, CommentReply
 from app.utils import format_time
-from app.model.view import BaseView, TableView
+from app.model.view import BaseView, TableView, BaseComment
 
 
 class IdView(BaseView):
@@ -136,18 +136,6 @@ class ImageUrlView(BaseView):
         self.url = url_for('admin.send_images_view', filename=filename, _external=True) if filename else ''
 
 
-class BaseComment(BaseView):
-    def __init__(self, comment: Comment):
-        self.content = comment.content
-        self.ip = comment.ip
-        self.email = comment.email
-        self.nickname = comment.nickname
-        self.browser = comment.browser
-        self.system = comment.system
-        self.website = comment.website
-        self.show = comment.show
-
-
 class ReplyView(BaseComment):
     def __init__(self, reply: CommentReply):
         super(ReplyView, self).__init__(reply)
@@ -185,18 +173,3 @@ class CommentsView(BaseView, TableView):
     @staticmethod
     def _fill(comments):
         return [CommentView(comment) for comment in comments] if comments else []
-
-
-class BlogView(BaseView):
-    def __init__(self, blog: Blog):
-        self.id = blog.id
-        self.content = blog.content
-
-
-class BlogsView(BaseView, TableView):
-    def __init__(self, comment, page):
-        super().__init__(comment, page, Blog)
-
-    @staticmethod
-    def _fill(blogs):
-        return [BlogView(blog) for blog in blogs] if blogs else []
