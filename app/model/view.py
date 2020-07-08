@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from urllib.parse import unquote
 import json
 from flask import current_app, request
-from app.model.db import Comment, CommentReply, Blog
+from app.model.db import Comment, CommentReply, Blog, Post
 
 from app.exception import ParameterException
 
@@ -17,7 +17,6 @@ class BaseView:
 
 
 class TableView(metaclass=ABCMeta):
-    @abstractmethod
     def __init__(self, values: dict, page: int, model):
         self.values = self._fill(values)
         self.page = page
@@ -88,7 +87,17 @@ class BlogQueryView(BaseQueryView):
         return current_app.config['BLOG_PAGE_SIZE']
 
 
-class QueryView:
+class ArchiveQueryView(BaseQueryView):
+    @staticmethod
+    def _get_order_by():
+        return [Post.create_date.desc()]
+
+    @staticmethod
+    def _get_pagesize() -> int:
+        return current_app.config['ARCHIVE_PAGE_SIZE']
+
+
+class QueryView(BaseQueryView):
     """
     解析查询参数
     'orderBy':'[{field:'title',desc:True/False}]
@@ -101,10 +110,7 @@ class QueryView:
 
     # 默认允许 order_by 参数查询
     def __init__(self):
-        self.query = request.args
-        self.order_by = self._get_order_by()
-        self.page = self._get_page()
-        self.pagesize = self._get_pagesize()
+        super().__init__()
         self.filters = self._get_filters()
 
     @property

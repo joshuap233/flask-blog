@@ -24,6 +24,7 @@ class BaseConfig(object):
     SUB_COMMENT_PAGE_SIZE = 10
 
     BLOG_PAGE_SIZE = 10
+    ARCHIVE_PAGE_SIZE = 10
 
     # 允许上传文件类型
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg', 'gif'}

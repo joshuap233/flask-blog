@@ -1,17 +1,22 @@
 import pytest
 from flask import url_for
 import json
-from app.signals import email_signals, login_signal_sender
 
 POST = {
     'id': -1,
     'title': 'title',
-    'article': 'contests',
     'tags': ['tags1', 'tags2', 'tags3'],
     'visibility': '私密',
     'create_date': '2019/2/10 10:20',
     'change_date': '2019/10/2 2:10',
-    'excerpt': '摘抄'
+
+    'excerpt': '摘抄',
+    'article': 'contests',
+    'article_html': 'article_html',
+    'illustration': '',
+    'excerpt_rich_text_html': '',
+    'excerpt_rich_text': '',
+    'isRichText': False
 }
 
 user_info = {

@@ -7,7 +7,7 @@ from app.utils import generate_res
 from ..validate.validate import TagValidate, DeleteValidate
 from .blueprint import admin
 from ..token_manager import login_required
-from app.cache import cache
+from app.signals import cache_signals, SIGNAL_SENDER
 
 
 # 获取所有标签,仅包含标签名
@@ -26,19 +26,19 @@ def tags_view(tid):
         tag = Tag.create()
         return generate_res(data=IdView(tag))
     elif request.method == 'PUT':
-        cache.delete('view//api/tags')
         form = TagValidate().validate_api()
         tag = Tag.search_by(id=tid)
         # 如果修改了标签名
         if tag.name != form.name.data:
             tag.check_repeat(name=form.name.data)
         tag.update(**form.data)
+        cache_signals.send(SIGNAL_SENDER['modifyTags'])
         return generate_res()
     elif request.method == 'DELETE':
-        cache.delete('view//api/tags')
         form = DeleteValidate().validate_api()
         for identify in form.id_list.data:
             Tag.delete_by(id=identify)
+        cache_signals.send(SIGNAL_SENDER['deleteTags'])
         return generate_res()
     query = QueryView()
     pagination = Tag.paging_search(**query.search_parameter)

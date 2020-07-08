@@ -335,7 +335,7 @@ class Comment(BaseComment):
         super()._set_attrs(attrs)
 
     @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query=None, **kwargs):
         super().paging_search(page, per_page, order_by, query, **kwargs)
 
 
@@ -349,5 +349,5 @@ class CommentReply(BaseComment):
         super()._set_attrs(attrs)
 
     @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query=None, **kwargs):
         super().paging_search(page, per_page, order_by, query, **kwargs)

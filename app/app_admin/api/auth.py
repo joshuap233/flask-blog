@@ -14,7 +14,7 @@ from ..validate.validate import (
     RegisterValidate, UserValidate, LoginValidate, EmailCodeValidate,
     EmailValidate, RecoveryPasswordValidate, ResetPasswordValidate)
 from .blueprint import admin
-from app.cache import cache
+from app.signals import cache_signals, SIGNAL_SENDER
 
 
 @admin.route('/sessions', methods=['POST'], security=False)
@@ -60,10 +60,10 @@ def register_view():
 @login_required
 def user_info_view():
     if request.method == 'PATCH':
-        cache.delete('view//api/user/info')
         form = UserValidate().validate_api()
         user = User.get_user()
         user.update(**form.data)
+        cache_signals.send(SIGNAL_SENDER['changeUserInfo'])
         return generate_res()
     user = User.get_user()
     return generate_res(data=UserInfoView(user))

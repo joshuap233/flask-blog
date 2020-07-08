@@ -4,6 +4,7 @@ from app.myType import FlaskInstance, Response
 from .token_manager import jwt
 from flask import g
 import json
+from app.signals import register_signal
 
 
 def register_refresh_token(app: FlaskInstance):
@@ -27,6 +28,7 @@ def register_blueprint(app: FlaskInstance):
 
 
 def register_config(app: FlaskInstance):
+    register_signal()
     register_blueprint(app)
     register_refresh_token(app)
     jwt.init_app(app)

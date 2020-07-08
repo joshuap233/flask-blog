@@ -1,4 +1,3 @@
-import os
 import random
 from faker import Faker
 from flask import url_for

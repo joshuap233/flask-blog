@@ -1,4 +1,4 @@
-from app.model.view import BaseView
+from app.model.view import BaseView, TableView
 from flask import url_for
 from app.model.db import Post, Tag
 
@@ -9,17 +9,16 @@ class PostView(BaseView):
         self.title = post.title or ''
         self.tags = [{'id': tag.id, 'name': tag.name} for tag in post.tags]
         self.change_date = post.change_date
-        self.comments = post.comments
+        self.comments = post.comments  # 评论数量
         if article:
             self.article = post.article_html
         if excerpt:
             self.excerpt = post.excerpt_html
 
 
-class PostsView(BaseView):
+class PostsView(BaseView, TableView):
     def __init__(self, posts, page):
-        self.content = self._fill(posts)
-        self.page = page
+        super(PostsView, self).__init__(posts, page, Post)
 
     @staticmethod
     def _fill(posts):
@@ -43,7 +42,7 @@ class TagView(BaseView):
 
 class TagsView(BaseView):
     def __init__(self, tags):
-        self.content = self._fill(tags)
+        self.values = self._fill(tags)
 
     @staticmethod
     def _fill(tags):
@@ -63,3 +62,12 @@ class UserInfoView(BaseView):
         # github: user.github
         # twitter: user.twitter
         # email: user.email
+
+
+class ArchiveView(BaseView, TableView):
+    def __init__(self, posts, page):
+        super(ArchiveView, self).__init__(posts, page, Post)
+
+    @staticmethod
+    def _fill(posts):
+        return [PostView(post) for post in posts]

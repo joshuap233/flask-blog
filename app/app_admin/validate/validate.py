@@ -69,8 +69,9 @@ class PostValidate(JsonValidate):
         DataRequired(message='change_date不能为空'),
     ], filters=[time2stamp])
     create_date = IntegerField('文章创建日期', validators=[
-        DataRequired(message='change_date不能为空'),
+        DataRequired(message='create_date不能为空'),
     ], filters=[time2stamp])
+
     article = StringField('文章内容')
     article_html = StringField('文章内容')
 
