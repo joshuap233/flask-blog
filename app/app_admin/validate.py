@@ -1,10 +1,11 @@
 from wtforms import PasswordField, StringField, IntegerField, FieldList, BooleanField
 from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, AnyOf, Optional
-from app.exception import ParameterException
-from app.utils import time2stamp
+
 from app.config.constant import VERIFICATION_CODE_LENGTH
+from app.exception import ParameterException
 from app.model.baseDB import Visibility, CommentEnum
 from app.model.validateBase import JsonValidate
+from app.utils import time2stamp
 
 
 class LoginValidate(JsonValidate):
@@ -175,30 +176,11 @@ class ChangeImageValidate(JsonValidate):
     ])
 
 
-class DeleteComment(JsonValidate):
-    id = IntegerField('需要删除的评论/回复 id', validators=[
-        DataRequired(message='不能为空'),
-    ])
-    type = StringField(
-        DataRequired(message='type不能为空'),
-        AnyOf(
-            [CommentEnum.replay.value, CommentEnum.comment.value],
-            message=f"type只能为{CommentEnum.replay.value}或{CommentEnum.comment.value}"
-        )
-    )
+class DeleteCommentValidate(JsonValidate):
+    id_list = FieldList(IntegerField('需要删除的评论id'), min_entries=1)
 
 
-class CheckComment(JsonValidate):
-    id = IntegerField('需要删除的评论/回复 id', validators=[
-        DataRequired(message='不能为空'),
-    ])
-    type = StringField(
-        DataRequired(message='type不能为空'),
-        AnyOf(
-            [CommentEnum.replay.value, CommentEnum.comment.value],
-            message=f"type只能为{CommentEnum.replay.value}或{CommentEnum.comment.value}"
-        )
-    )
+class CommentValidate(JsonValidate):
     show = BooleanField('显示/隐藏')
 
 

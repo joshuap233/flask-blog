@@ -1,7 +1,7 @@
 from flask import url_for
 
-from app.model.db import Tag, Post, Link, Comment, CommentReply
-from app.model.view import BaseView, TableView, BaseComment
+from app.model.db import Tag, Post, Link, Comment
+from app.model.view import BaseView, TableView
 from app.utils import format_time
 
 
@@ -136,35 +136,21 @@ class ImageUrlView(BaseView):
         self.url = url_for('admin.send_images_view', filename=filename, _external=True) if filename else ''
 
 
-class ReplyView(BaseComment):
-    def __init__(self, reply: CommentReply):
-        super(ReplyView, self).__init__(reply)
-        self.comment_id = reply.comment_id
-        self.parent_id = reply.parent_id
-
-
-class RepliesView(BaseView, TableView):
-    def __init__(self, replies, page):
-        super().__init__(replies, page, CommentReply)
-
-    @staticmethod
-    def _fill(replies):
-        return [ReplyView(reply) for reply in replies] if replies else []
-
-
-class CommentView(BaseComment):
+class CommentView(BaseView):
     def __init__(self, comment: Comment):
-        super(CommentView, self).__init__(comment)
+        self.id = comment.id
         self.post_id = comment.post_id
         self.post_title = comment.posts.title
-        # self.subRows = RepliesView(self._get_replies(comment), 0).values
-
-    @staticmethod
-    def _get_replies(comment):
-        # 获取前SUB_COMMENT_PAGE_SIZE个子评论
-        # return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
-        #     current_app.config['SUB_COMMENT_PAGE_SIZE']).all()
-        return comment.comment_reply.all()
+        self.content = comment.content
+        self.nickname = comment.nickname
+        self.browser = comment.browser
+        self.system = comment.system
+        self.website = comment.website
+        self.email = comment.email
+        self.create_date = comment.create_date
+        self.show = comment.show
+        self.email = comment.email
+        self.ip = comment.ip
 
 
 class CommentsView(BaseView, TableView):

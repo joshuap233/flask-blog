@@ -328,8 +328,10 @@ class Blog(Searchable):
         return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
 
 
-class BaseComment(Searchable):
-    __abstract__ = True
+class Comment(Searchable):
+    blacklist = ['id']
+
+    id = db.Column(db.Integer, primary_key=True)
 
     content = db.Column(db.TEXT, comment="评论内容")
     ip = db.Column(db.String(16), comment="ip地址")
@@ -342,6 +344,9 @@ class BaseComment(Searchable):
     browser = db.Column(db.String(48), comment="浏览器类型/版本")
     system = db.Column(db.String(12), comment="操作系统")
 
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), comment='文章id')
+    parent_id = db.Column(db.Integer, comment="父回复id", nullable=True)
+
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)
 
@@ -349,45 +354,10 @@ class BaseComment(Searchable):
     def paging_search(cls, page: int, per_page: int, query: Query = None, order_by=None):
         return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
 
-
-# 文章下的评论
-class Comment(BaseComment):
-    blacklist = ['id', 'comment_reply']
-
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'))
-    comment_reply = db.relationship('CommentReply', cascade="all, delete-orphan", passive_deletes=True, lazy='dynamic')
-
-    def _set_attrs(self, attrs: dict):
-        super()._set_attrs(attrs)
+    @classmethod
+    def update_comment(cls, **kwargs):
+        return cls.create(**kwargs)
 
     @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None):
-        query = cls.query.union(CommentReply.query)
-        return super().paging_search(page=page, per_page=per_page, order_by=order_by, query=query)
-
-    @staticmethod
-    def update_comment(**kwargs):
-        modal = CommentReply if (kwargs.get('parent_id', None) or kwargs.get('comment_id')) else Comment
-        return modal.create(**kwargs)
-
-
-# 评论的回复/回复的回复
-class CommentReply(BaseComment):
-    blacklist = ['id']
-
-    id = db.Column(db.Integer, primary_key=True)
-    comment_id = db.Column(
-        db.Integer,
-        db.ForeignKey('comment.id', ondelete='CASCADE'),
-        comment="文章评论的回复的id",
-        nullable=False
-    )
-    parent_id = db.Column(db.Integer, comment="回复的回复id", nullable=True)
-
-    def _set_attrs(self, attrs: dict):
-        super()._set_attrs(attrs)
-
-    @classmethod
-    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
-        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
+    def visibility(cls):
+        return cls.query.filter_by(show=True)

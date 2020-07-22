@@ -128,19 +128,3 @@ class BlogsView(BaseView, TableView):
         return [BlogView(blog) for blog in blogs] if blogs else []
 
 
-class BaseComment(BaseView):
-    def __init__(self, comment: Comment, show=True, email=True, ip=True):
-        self.id = comment.id
-        self.content = comment.content
-        self.nickname = comment.nickname
-        self.browser = comment.browser
-        self.system = comment.system
-        self.website = comment.website
-        self.email = comment.email
-        self.create_date = comment.create_date
-        if show:
-            self.show = comment.show
-        if email:
-            self.email = comment.email
-        if ip:
-            self.ip = comment.ip

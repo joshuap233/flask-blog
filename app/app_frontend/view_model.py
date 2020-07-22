@@ -1,7 +1,8 @@
-from app.model.view import BaseView, TableView, BaseComment
-from flask import url_for, current_app
-from app.model.db import Post, Tag, Comment, CommentReply
+from flask import url_for
+
+from app.model.db import Post, Tag, Comment
 from app.model.view import BaseQueryView
+from app.model.view import BaseView, TableView
 
 
 class IdView(BaseView):
@@ -76,35 +77,18 @@ class ArchiveView(BaseView, TableView):
         return [PostView(post, excerpt=False, article=False) for post in posts]
 
 
-class ReplyView(BaseComment):
-    def __init__(self, reply: CommentReply):
-        super(ReplyView, self).__init__(reply, show=False, email=False, ip=False)
-        self.comment_id = reply.comment_id
-        self.parent_id = reply.parent_id
-
-
-class RepliesView(BaseView, TableView):
-    def __init__(self, replies, page):
-        super().__init__(replies, page, CommentReply)
-
-    @staticmethod
-    def _fill(replies):
-        return [ReplyView(reply) for reply in replies] if replies else []
-
-
-class CommentView(BaseComment):
+class CommentView(BaseView):
     def __init__(self, comment: Comment):
-        super(CommentView, self).__init__(comment, show=False, email=False, ip=False)
-        # self.post_id = comment.post_id
-        # self.post_title = comment.posts.title
-        self.reply = RepliesView(self._get_replies(comment), 0)
-
-    @staticmethod
-    def _get_replies(comment):
-        # 获取前SUB_COMMENT_PAGE_SIZE个子评论
-        return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
-            current_app.config['PAGESIZE']
-        ).all()
+        self.id = comment.id
+        self.post_id = comment.post_id
+        self.content = comment.content
+        self.nickname = comment.nickname
+        self.browser = comment.browser
+        self.system = comment.system
+        self.website = comment.website
+        self.email = comment.email
+        self.create_date = comment.create_date
+        self.parent_id = comment.parent_id
 
 
 class CommentsView(BaseView, TableView):
