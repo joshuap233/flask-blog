@@ -1,8 +1,8 @@
-from flask import url_for, current_app
+from flask import url_for
 
 from app.model.db import Tag, Post, Link, Comment, CommentReply
-from app.utils import format_time
 from app.model.view import BaseView, TableView, BaseComment
+from app.utils import format_time
 
 
 class IdView(BaseView):
@@ -157,13 +157,14 @@ class CommentView(BaseComment):
         super(CommentView, self).__init__(comment)
         self.post_id = comment.post_id
         self.post_title = comment.posts.title
-        self.reply = RepliesView(self._get_replies(comment), 0)
+        # self.subRows = RepliesView(self._get_replies(comment), 0).values
 
     @staticmethod
     def _get_replies(comment):
         # 获取前SUB_COMMENT_PAGE_SIZE个子评论
-        return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
-            current_app.config['SUB_COMMENT_PAGE_SIZE']).all()
+        # return comment.comment_reply.order_by(CommentReply.create_date.desc()).limit(
+        #     current_app.config['SUB_COMMENT_PAGE_SIZE']).all()
+        return comment.comment_reply.all()
 
 
 class CommentsView(BaseView, TableView):

@@ -38,6 +38,13 @@ class Query(BaseQuery):
                 return None
         return rv
 
+    def total(self):
+        return self.count()
+
+    @classmethod
+    def search_by(cls, **kwargs):
+        return cls.filter_by(**kwargs)
+
 
 db = SQLAlchemy(query_class=Query)
 
@@ -71,6 +78,11 @@ class Base(db.Model):
         with db.auto_commit():
             db.session.delete(one)
 
+    @classmethod
+    def delete_all_by_id(cls, ids):
+        for identify in ids:
+            cls.delete_by(id=identify)
+
     def update(self, **kwargs):
         with db.auto_commit():
             self._set_attrs(kwargs)
@@ -93,7 +105,7 @@ class Base(db.Model):
     # 获取表的记录数
     @classmethod
     def total(cls):
-        return cls.query.count()
+        return cls.query.total()
 
     @abstractmethod
     def _set_attrs(self, attrs: dict):
@@ -122,17 +134,20 @@ class Searchable(Base):
     __abstract__ = True
 
     # 可排序字段
-    sortable = []
+    sortable = ['create_date', 'id', 'change_date']
 
     @classmethod
     @abstractmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None):
         order_by = cls._get_order_by(order_by)
         query = query if query else cls.query
         return query.order_by(*order_by).paginate(page=page, per_page=per_page, error_out=False)
 
     @classmethod
     def _get_order_by(cls, order_by):
+        """
+        order_by: [{field:'id',desc:True},{field:'create_date'}]
+        """
         res = []
         if not order_by:
             res.append(cls.id.desc())
@@ -142,27 +157,7 @@ class Searchable(Base):
                 if field in cls.sortable:
                     res.append(
                         getattr(cls, field).desc()
-                        if item.get('desc')
+                        if item.get('desc', None)
                         else getattr(cls, field).asc()
                     )
         return res
-
-
-class BaseComment(Searchable):
-    __abstract__ = True
-
-    content = db.Column(db.String(255), comment="评论内容")
-    ip = db.Column(db.String(16), comment="ip地址")
-    email = db.Column(db.String(256), comment="邮件地址")
-    nickname = db.Column(db.String(20), comment="昵称")
-    browser = db.Column(db.String(48), comment="浏览器类型/版本")
-    system = db.Column(db.String(12), comment="操作系统")
-    website = db.Column(db.String(256), comment="网站")
-    show = db.Column(db.Boolean, default=False, comment="评论是否显示/用于审核")
-
-    def _set_attrs(self, attrs: dict):
-        super()._set_attrs(attrs)
-
-    @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None, **kwargs):
-        super().paging_search(page, per_page, order_by, query, **kwargs)

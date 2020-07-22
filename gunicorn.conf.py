@@ -6,11 +6,11 @@ import os
 
 workers_per_core_str = os.getenv("WORKERS_PER_CORE", "2")
 web_concurrency_str = os.getenv("WEB_CONCURRENCY", None)
+host = os.getenv("HOST", "0.0.0.0")
 if os.getenv('FLASK_ENV', 'development') == 'production':
-    host = os.getenv("HOST", "0.0.0.0")
     port = os.getenv("PORT", "8000")
+    errorlog = "/logs/web/gunicorn.error.log"
 else:
-    host = os.getenv("HOST", "0.0.0.0")
     #  on a unix-like environment, ports < 1024 (like 80) will require superuser privileges.
     # port need as same as config.config.py SERVER_NAME port
     port = os.getenv("PORT", "5000")
@@ -35,7 +35,6 @@ loglevel = use_loglevel
 workers = web_concurrency
 bind = use_bind
 keepalive = 120
-errorlog = "/logs/web/gunicorn.error.log"
 
 # For debugging and testing
 log_data = {

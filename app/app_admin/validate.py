@@ -210,3 +210,11 @@ class ModifyBlog(JsonValidate):
     content = StringField(
         Length(0, 255, message='日志最大长度为255')
     )
+    isNew = BooleanField('是否是新日志')
+    change_date = IntegerField('日志修改日期', validators=[
+        DataRequired(message='日志修改日期不能为空'),
+    ], filters=[time2stamp])
+
+
+class DeleteBlog(JsonValidate):
+    id_list = FieldList(IntegerField('需要删除的日志id'), min_entries=1)

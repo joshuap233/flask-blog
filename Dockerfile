@@ -5,12 +5,12 @@ RUN echo "Asia/shanghai" > /etc/timezone;
 
 RUN echo http://mirrors.aliyun.com/alpine/v3.11/main/ > /etc/apk/repositories
 
-#RUN apk update && apk add libressl-dev libffi-dev build-base python3-dev mariadb-dev g++ make && rm -f /var/cache/apk/*
 RUN apk --no-cache update && apk --no-cache add python3-dev mariadb-dev build-base
 
 WORKDIR /app
 
 COPY ./app ./app
+
 
 COPY ./gunicorn.conf.py .
 

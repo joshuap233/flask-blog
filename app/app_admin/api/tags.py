@@ -7,7 +7,6 @@ from app.utils import generate_res
 from app.app_admin.validate import TagValidate, DeleteValidate
 from .blueprint import admin
 from ..token_manager import login_required
-from app.signals import cache_signals, SIGNAL_SENDER
 
 
 # 获取所有标签,仅包含标签名
@@ -32,13 +31,10 @@ def tags_view(tid):
         if tag.name != form.name.data:
             tag.check_repeat(name=form.name.data)
         tag.update(**form.data)
-        cache_signals.send(SIGNAL_SENDER['modifyTags'])
         return generate_res()
     elif request.method == 'DELETE':
         form = DeleteValidate().validate_api()
-        for identify in form.id_list.data:
-            Tag.delete_by(id=identify)
-        cache_signals.send(SIGNAL_SENDER['deleteTags'])
+        Tag.delete_all_by_id(form.id_list.data)
         return generate_res()
     query = QueryView()
     pagination = Tag.paging_search(**query.search_parameter)

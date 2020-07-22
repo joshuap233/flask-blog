@@ -51,8 +51,8 @@ def set_log_file(config: dict, app: FlaskInstance):
 
 def register_logging(app: FlaskInstance, default_level=logging.INFO):
     import yaml
-    path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(path, 'config/log.yaml')
+    # path = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(os.getcwd(), 'config/log.yaml')
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -96,6 +96,7 @@ def log_database_and_response_time():
         if query.duration >= current_app.config['SLOW_DB_QUERY_TIME']:
             query_list.append(query)
     response_time = time.time() - g.start_time
+    current_app.logger.info(f'response time')
     if not query_list:
         current_app.logger.info(f'response time:{response_time}')
     else:

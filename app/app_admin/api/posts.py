@@ -6,7 +6,6 @@ from .blueprint import admin
 from ..token_manager import login_required
 from app.app_admin.validate import PostValidate, DeleteValidate
 from flask import request
-from app.signals import cache_signals, SIGNAL_SENDER
 
 
 @admin.route('/posts', defaults={'pid': -1}, methods=['POST', 'DELETE'])
@@ -21,13 +20,10 @@ def post_view(pid):
         form = PostValidate().validate_api()
         form.illustration.data = save_base64_img(form.illustration.data)
         Post.update_by_id(pid, **form.data)
-        cache_signals.send(SIGNAL_SENDER['modifyPosts'], pid=pid)
         return generate_res()
     elif request.method == 'DELETE':
         form = DeleteValidate().validate_api()
-        for identify in form.id_list.data:
-            Post.delete_by(id=identify)
-        cache_signals.send(SIGNAL_SENDER['deletePost'])
+        Post.delete_all_by_id(form.id_list.data)
         return generate_res()
     post = Post.search_by(id=pid)
     return generate_res(data=PostView(post))

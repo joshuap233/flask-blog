@@ -7,7 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
 from app.myType import WTForm
 from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
-from .baseDB import Base, db, Searchable, Visibility, BaseComment
+from .baseDB import Base, db, Searchable, Visibility, Query
 
 tags_to_post = db.Table(
     'tags_to_post',
@@ -49,7 +49,13 @@ class Post(Searchable):
     # 文章图片
     links = db.relationship('Link', secondary=link_to_post, backref=db.backref('posts', lazy=True))
     # 评论,前面名字取错,懒得改了
-    comments_ = db.relationship('Comment', backref=db.backref('posts', lazy=True))
+    comments_ = db.relationship(
+        'Comment',
+        backref=db.backref('posts', lazy=True),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy='dynamic'
+    )
     # 可排序字段
     sortable = ['change_date', 'create_date', 'title', 'visibility', 'comments']
 
@@ -90,10 +96,14 @@ class Post(Searchable):
             tag.count += 1
 
     @classmethod
-    def total(cls, visibility: bool = False):
-        if not visibility:
-            return super().total()
-        return cls.query.filter_by(visibility=Visibility.public.value).count()
+    def total(cls, visibility: Visibility = Visibility.public.value):
+        if visibility == Visibility.public.value:
+            return cls.visibility_posts().total()
+        return super().total()
+
+    @classmethod
+    def visibility_posts(cls):
+        return cls.query.filter_by(visibility=Visibility.public.value)
 
     @classmethod
     def delete_by_id(cls, identify: int):
@@ -104,22 +114,21 @@ class Post(Searchable):
             db.session.delete(one)
 
     @classmethod
-    def paging_search(cls, filters: dict, visibility: bool = None, **kwargs):
-        search = filters.get('search')
-        query = cls.query
+    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
+        search = filters.get('search') if filters else None
+        query = query or cls.query
         if search:
             queries = [cls.query.filter(cls.title.like(search)), *[
                 tag.posts for tag in Tag.query.filter(Tag.name.like(search)).all()
             ]]
-            query = reduce(lambda pre, next_: pre.union(next_), queries)
-        query = query.filter_by(visibility=visibility) if visibility else query
-        return super().paging_search(query=query, **kwargs)
+            query = reduce(lambda pre, next_: pre.union(next_), queries, query)
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
 
     @classmethod
     def paging_by_tid(cls, tid: int, visibility: bool, **kwargs):
         query = Tag.search_by(id=tid).posts
-        query = query.filter_by(visibility=visibility) if visibility else query
-        # order_by = kwargs.pop('order_by', [Post.id.desc()])
+        if visibility:
+            query = query.filter_by(visibility=visibility)
         return super().paging_search(query=query, **kwargs)
 
 
@@ -140,14 +149,14 @@ class Tag(Searchable):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def paging_search(cls, filters: dict, **kwargs):
-        search = filters.get('search')
-        query = cls.query
+    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
+        search = filters.get('search') if filters else None
+        query = query or cls.query
         if search:
             filters_ = [cls.name.like(search), cls.describe.like(search)]
             queries = [cls.query.filter(filter_) for filter_ in filters_]
-            query = reduce(lambda pre, next_: pre.union(next_), queries) if queries else query
-        return super().paging_search(query=query, **kwargs)
+            query = reduce(lambda pre, next_: pre.union(next_), queries, query) if queries else query
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
 
     # 更新标签名时查重
     @classmethod
@@ -170,23 +179,12 @@ class Tag(Searchable):
     def total(cls, visibility: bool = False):
         if not visibility:
             return super().total()
-        count = 0
-        for tag in Tag.query.all():
-            for post in tag.posts.all():
-                if post.visibility == Visibility.public.value:
-                    count += 1
-                    break
-        return count
+        return cls.visibility_tags().total()
 
-    @staticmethod
-    def get_visibility_tag():
-        tags = []
-        for tag in Tag.query:
-            for post in tag.posts:
-                if post.visibility == Visibility.public.value:
-                    tags.append(tag)
-                    break
-        return tags
+    @classmethod
+    def visibility_tags(cls):
+        # query = Tag.query.filter(Tag.posts.has(visibility=Visibility.public.value'))
+        return Tag.query.join(Tag.posts, aliased=True).filter_by(visibility=Visibility.public.value)
 
 
 class User(Base):
@@ -224,9 +222,7 @@ class User(Base):
 
     @classmethod
     def reset_password(cls, form: WTForm):
-        """
-            登录状态下调用
-        """
+        """登录状态下调用"""
         uid = get_jwt_identity()
         user = cls.search_by(id=uid)
         user.update(password=form.password.data)
@@ -305,49 +301,74 @@ class Link(Searchable):
     sortable = ['create_date']
 
     @classmethod
-    def paging_search(cls, filters: dict, **kwargs):
+    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
         search = filters.get('search')
-        query = cls.query
+        query = query or cls.query
         if search:
             filters_ = [cls.describe.like(search)]
             queries = [cls.query.filter(filter_) for filter_ in filters_]
-            query = reduce(lambda pre, next_: pre.union(next_), queries) if queries else query
-        return super().paging_search(query=query, **kwargs)
+            query = reduce(lambda pre, next_: pre.union(next_), queries, query) if queries else query
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)
 
 
 # 记录日常吐槽
-class Blog(Base):
+class Blog(Searchable):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255), comment="内容")
-
-    def _set_attrs(self, attrs: dict):
-        super()._set_attrs(attrs)
-
-
-# 文章下的评论
-class Comment(BaseComment):
-    blacklist = ['id', 'comment_reply', 'post_id']
-
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    comment_reply = db.relationship('CommentReply')
+    change_date = db.Column(db.BigInteger, index=True)
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)
 
     @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query=None, **kwargs):
-        super().paging_search(page, per_page, order_by, query, **kwargs)
+    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
+
+
+class BaseComment(Searchable):
+    __abstract__ = True
+
+    content = db.Column(db.TEXT, comment="评论内容")
+    ip = db.Column(db.String(16), comment="ip地址")
+    email = db.Column(db.String(256), comment="邮件地址")
+    nickname = db.Column(db.String(20), comment="昵称")
+    website = db.Column(db.String(256), comment="网站")
+    show = db.Column(db.Boolean, default=False, comment="评论是否显示/用于审核")
+    avatar = db.Column(db.String(256), comment='头像')
+    # ua?
+    browser = db.Column(db.String(48), comment="浏览器类型/版本")
+    system = db.Column(db.String(12), comment="操作系统")
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+    @classmethod
+    def paging_search(cls, page: int, per_page: int, query: Query = None, order_by=None):
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)
+
+
+# 文章下的评论
+class Comment(BaseComment):
+    blacklist = ['id', 'comment_reply']
+
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'))
+    comment_reply = db.relationship('CommentReply', cascade="all, delete-orphan", passive_deletes=True, lazy='dynamic')
+
+    def _set_attrs(self, attrs: dict):
+        super()._set_attrs(attrs)
+
+    @classmethod
+    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query: Query = None):
+        query = cls.query.union(CommentReply.query)
+        return super().paging_search(page=page, per_page=per_page, order_by=order_by, query=query)
 
     @staticmethod
     def update_comment(**kwargs):
-        if 'post_id' in kwargs:
-            modal = Comment
-        else:
-            modal = CommentReply
+        modal = CommentReply if (kwargs.get('parent_id', None) or kwargs.get('comment_id')) else Comment
         return modal.create(**kwargs)
 
 
@@ -356,12 +377,17 @@ class CommentReply(BaseComment):
     blacklist = ['id']
 
     id = db.Column(db.Integer, primary_key=True)
-    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), comment="文章评论的回复id", nullable=True)
+    comment_id = db.Column(
+        db.Integer,
+        db.ForeignKey('comment.id', ondelete='CASCADE'),
+        comment="文章评论的回复的id",
+        nullable=False
+    )
     parent_id = db.Column(db.Integer, comment="回复的回复id", nullable=True)
 
     def _set_attrs(self, attrs: dict):
         super()._set_attrs(attrs)
 
     @classmethod
-    def paging_search(cls, page: int, per_page: int, order_by: dict = None, query=None, **kwargs):
-        super().paging_search(page, per_page, order_by, query, **kwargs)
+    def paging_search(cls, page: int, per_page: int, query: Query = None, filters: [dict, None] = None, order_by=None):
+        return super().paging_search(query=query, page=page, per_page=per_page, order_by=order_by)

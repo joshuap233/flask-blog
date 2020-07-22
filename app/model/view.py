@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 from urllib.parse import unquote
 import json
 from flask import current_app, request
-from app.model.db import Comment, CommentReply, Blog, Post
-
+from app.model.db import Comment, Blog
+from app.utils import format_time
 from app.exception import ParameterException
 
 
@@ -28,9 +28,9 @@ class TableView(metaclass=ABCMeta):
         return [value for value in values] if values else []
 
 
-class BaseQueryView(metaclass=ABCMeta):
+class BaseQueryView:
     def __init__(self):
-        self.query = request.args
+        self.queries = request.args
         self.order_by = self._get_order_by()
         self.page = self._get_page()
         self.pagesize = self._get_pagesize()
@@ -44,57 +44,20 @@ class BaseQueryView(metaclass=ABCMeta):
         )
 
     @staticmethod
-    @abstractmethod
     def _get_order_by() -> list:
-        return []
+        return [{'field': 'change_date'}]
 
-    @staticmethod
-    @abstractmethod
-    def _get_pagesize() -> int:
-        return 1
+    def _get_pagesize(self) -> int:
+        return int(self.queries.get('pageSize', current_app.config['PAGESIZE']))
 
     def _get_page(self):
-        return int(self.query.get('page', 0)) + 1
+        return int(self.queries.get('page', 0)) + 1
 
 
-class CommentQueryView(BaseQueryView):
+class CommentsQueryView(BaseQueryView):
     @staticmethod
-    def _get_order_by():
-        return [Comment.create_date.desc()]
-
-    @staticmethod
-    def _get_pagesize() -> int:
-        return current_app.config['COMMENT_PAGE_SIZE']
-
-
-class ReplyQueryView(BaseQueryView):
-    @staticmethod
-    def _get_order_by():
-        return [CommentReply.create_date.desc()]
-
-    @staticmethod
-    def _get_pagesize() -> int:
-        return current_app.config['SUB_COMMENT_PAGE_SIZE']
-
-
-class BlogQueryView(BaseQueryView):
-    @staticmethod
-    def _get_order_by():
-        return [Blog.create_date.desc()]
-
-    @staticmethod
-    def _get_pagesize() -> int:
-        return current_app.config['BLOG_PAGE_SIZE']
-
-
-class ArchiveQueryView(BaseQueryView):
-    @staticmethod
-    def _get_order_by():
-        return [Post.create_date.desc()]
-
-    @staticmethod
-    def _get_pagesize() -> int:
-        return current_app.config['ARCHIVE_PAGE_SIZE']
+    def _get_order_by() -> list:
+        return [{'field': 'create_date'}]
 
 
 class QueryView(BaseQueryView):
@@ -124,18 +87,18 @@ class QueryView(BaseQueryView):
 
     def _get_page(self):
         # 前端第一页为0,但sqlalchemy分页查询第一页为1
-        return int(self.query.get('page', 0)) + 1
+        return int(self.queries.get('page', 0)) + 1
 
     def _get_pagesize(self):
-        return int(self.query.get('pageSize', current_app.config['PAGESIZE']))
+        return int(self.queries.get('pageSize', current_app.config['PAGESIZE']))
 
     def _get_filters(self) -> {}:
         filters = {}
-        search = self.query.get('search')
+        search = self.queries.get('search')
         filters['search'] = f"%{unquote(search)}%" if search else None
         # 支持按标签查找
         try:
-            filter_by = json.loads(self.query.get('filter') or '{}')
+            filter_by = json.loads(self.queries.get('filter') or '{}')
             tid = int(filter_by.get('tid') or -1)
         except Exception as e:
             raise ParameterException(e.args)
@@ -143,7 +106,7 @@ class QueryView(BaseQueryView):
         return filters
 
     def _get_order_by(self):
-        order_by = self.query.get('orderBy', None)
+        order_by = self.queries.get('orderBy', None)
         if order_by:
             order_by = json.loads(order_by)
         return order_by
@@ -153,6 +116,7 @@ class BlogView(BaseView):
     def __init__(self, blog: Blog):
         self.id = blog.id
         self.content = blog.content
+        self.change_date = blog.change_date
 
 
 class BlogsView(BaseView, TableView):
@@ -172,6 +136,8 @@ class BaseComment(BaseView):
         self.browser = comment.browser
         self.system = comment.system
         self.website = comment.website
+        self.email = comment.email
+        self.create_date = comment.create_date
         if show:
             self.show = comment.show
         if email:

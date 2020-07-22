@@ -18,14 +18,6 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 分页功能,默认每页大小(如果前端没有传入)
     PAGESIZE = 10
-    # 评论分页功能,默认每页大小(如果前端没有传入)
-    COMMENT_PAGE_SIZE = 10
-    # 评论的回复
-    SUB_COMMENT_PAGE_SIZE = 10
-
-    BLOG_PAGE_SIZE = 10
-    ARCHIVE_PAGE_SIZE = 10
-
     # 允许上传文件类型
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg', 'gif'}
     # 文件最大大小
@@ -51,6 +43,8 @@ class BaseConfig(object):
     SENTRY_DSN = os.getenv('SENTRY_DSN')
     # app_admin存放日志文件夹名称
     LOG_DIR = os.path.join(os.getenv('HOME'), 'dev-logs')
+
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_size' : 100, 'pool_recycle' : 280}
 
 
 class ProductionConfig(BaseConfig):

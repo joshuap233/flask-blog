@@ -3,22 +3,25 @@ from ..token_manager import login_required
 from flask import request
 from app.model.db import Blog
 from app.utils import generate_res
-from app.app_admin.validate import ModifyBlog
-from app.model.view import BlogQueryView
-from app.model.view import BlogsView
+from app.app_admin.validate import ModifyBlog, DeleteBlog
+from app.model.view import BaseQueryView, BlogsView
+from ..view_model import IdView
 
 
-@admin.route('/blog/<int:bid>', methods=['DELETE'])
-@admin.route('/blog', defaults={'tid': -1}, methods=['PUT', 'GET'])
+@admin.route('/blog', methods=['PUT', 'GET', 'DELETE'])
 @login_required
-def blog_view(bid):
+def blog_view():
     if request.method == 'DELETE':
-        Blog.delete_by(id=bid)
+        form = DeleteBlog().validate_api()
+        Blog.delete_all_by_id(form.id_list.data)
         return generate_res()
     if request.method == 'PUT':
         form = ModifyBlog().validate_api()
-        Blog.update_by_id(id=form.id.data, **form.data)
+        if form.isNew.data:
+            blog = Blog.create(**form.data)
+            return generate_res(data=IdView(blog))
+        Blog.update_by_id(form.id.data, **form.data)
         return generate_res()
-    query = BlogQueryView()
+    query = BaseQueryView()
     pagination = Blog.paging_search(**query.search_parameter)
     return generate_res(data=BlogsView(pagination.items, query.page))

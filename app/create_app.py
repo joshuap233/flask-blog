@@ -5,7 +5,6 @@ from app.model.baseDB import db
 from app.myFlask import Flask
 from app.myType import FlaskInstance, Callable
 from app.utils import create_dir
-from app.cache import cache
 
 migrate = Migrate(compare_type=True, compare_server_default=True)
 
@@ -50,5 +49,5 @@ def create_app(register_config: Callable[[FlaskInstance], None], *args, **kwargs
 
     migrate.init_app(app, db)
     init_db(app)
-    cache.init_app(app)
+    # cache.init_app(app)
     return app
