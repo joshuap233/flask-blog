@@ -44,7 +44,7 @@ class BaseConfig(object):
     # app_admin存放日志文件夹名称
     LOG_DIR = os.path.join(os.getenv('HOME'), 'dev-logs')
 
-    SQLALCHEMY_ENGINE_OPTIONS = {'pool_size' : 100, 'pool_recycle' : 280}
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_size': 100, 'pool_recycle': 280, 'pool_pre_ping': True}
 
 
 class ProductionConfig(BaseConfig):

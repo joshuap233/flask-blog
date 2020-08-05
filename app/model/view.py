@@ -1,10 +1,11 @@
+import json
 from abc import ABCMeta, abstractmethod
 from urllib.parse import unquote
-import json
+
 from flask import current_app, request
-from app.model.db import Comment, Blog
-from app.utils import format_time
+
 from app.exception import ParameterException
+from app.model.db import Blog
 
 
 # 用于flask jsonify序列化
@@ -51,7 +52,12 @@ class BaseQueryView:
         return int(self.queries.get('pageSize', current_app.config['PAGESIZE']))
 
     def _get_page(self):
-        return int(self.queries.get('page', 0)) + 1
+        page = self.queries.get('page', 0)
+        try:
+            page = int(page) + 1
+        except ValueError:
+            page = 1
+        return page
 
 
 class CommentsQueryView(BaseQueryView):
@@ -126,5 +132,3 @@ class BlogsView(BaseView, TableView):
     @staticmethod
     def _fill(blogs):
         return [BlogView(blog) for blog in blogs] if blogs else []
-
-

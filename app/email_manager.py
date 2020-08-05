@@ -3,6 +3,7 @@ from threading import Thread
 import yagmail
 
 from app.config.config import MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT, MAIL_SERVER, MAIL_USE_SSL
+from app.model.db import User
 
 
 class FakeMail:
@@ -75,4 +76,13 @@ def send_recovery_pass_email(email, code):
         to=email,
         subject='修改密码',
         content=code
+    )
+
+
+def send_new_comments_email(content):
+    user = User.query.all()[0]
+    send_email(
+        to=user.email,
+        subject='新评论',
+        content=content
     )

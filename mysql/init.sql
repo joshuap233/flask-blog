@@ -1,1 +1,1 @@
-create database blog;
+create database  if not exists  blog;

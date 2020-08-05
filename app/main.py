@@ -1,9 +1,10 @@
 import os
 
 from dotenv import load_dotenv
+from flask import request
 from werkzeug import run_simple
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from flask import request
+
 from app.app_admin import create_admin_app
 from app.app_frontend import create_view_app
 
@@ -19,21 +20,15 @@ app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
 })
 
 
-# app = DispatcherMiddleware(frontendApp, {
-#     '/admin': adminApp
-# })
-
-@app.route('/logo.png')
-@app.route('/robots.txt')
-def frontend_static():
-    return app.send_static_file(request.path[1:])
-
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path>')
-@app.route('/article/<path>')
-def frontend_view(path):
-    return app.send_static_file('index.html')
+# @app.route('/robots.txt')
+# def frontend_static_view():
+#     print(request.path[1:])
+#     return app.send_static_file(request.path[1:])
+# @app.route('/', defaults={'path': ''})
+# @app.route('/<path>')
+# @app.route('/article/<path>')
+# def frontend_view(path):
+#     return app.send_static_file('index.html')
 
 
 # 写成<path:path> 似乎catch all 会失效

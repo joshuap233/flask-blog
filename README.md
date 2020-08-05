@@ -27,6 +27,7 @@
 - MAIL_PASSWORD #选填 邮件服务器密码
 - MAIL_USERNAME #选填 邮件服务器用户名
 - API_SECURITY_STRING #必填,随机字符串,用于加密api
+- COMMENT
 
 ### ssl 配置:
 - 修改 ./nginx/project.nginx.config
@@ -44,3 +45,4 @@ bash run_docker.sh
 ## TODO
 - 流量监测
 - 找回密码接口限制次数
+- nginx缓存

@@ -1,11 +1,12 @@
-from app.model.db import Post
+from flask import request
+
+from app.app_admin.validate import PostValidate, DeleteValidate
 from app.app_admin.view_model import PostsView, PostView, IdView
+from app.model.db import Post
 from app.model.view import QueryView
-from app.utils import generate_res, save_base64_img
+from app.utils import generate_res
 from .blueprint import admin
 from ..token_manager import login_required
-from app.app_admin.validate import PostValidate, DeleteValidate
-from flask import request
 
 
 @admin.route('/posts', defaults={'pid': -1}, methods=['POST', 'DELETE'])
@@ -18,7 +19,6 @@ def post_view(pid):
         return generate_res(data=IdView(post))
     elif request.method == 'PUT':
         form = PostValidate().validate_api()
-        form.illustration.data = save_base64_img(form.illustration.data)
         Post.update_by_id(pid, **form.data)
         return generate_res()
     elif request.method == 'DELETE':

@@ -18,6 +18,10 @@ class SQLAlchemy(_SQLAlchemy):
             self.session.rollback()
             raise UnknownException(e.args)
 
+    def apply_pool_defaults(self, app, options):
+        super().apply_pool_defaults(app, options)
+        # options["pool_pre_ping"] = True
+
 
 class Query(BaseQuery):
     def get_or_404(self, ident, description=None, error=True):

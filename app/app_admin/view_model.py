@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urljoin
+
 from flask import url_for
 
 from app.model.db import Tag, Post, Link, Comment
@@ -133,7 +136,14 @@ class AllTagsView(BaseView):
 class ImageUrlView(BaseView):
     def __init__(self, filename):
         self.name = filename
-        self.url = url_for('admin.send_images_view', filename=filename, _external=True) if filename else ''
+        self.url = urljoin(
+            os.getenv('SERVER'),
+            url_for(
+                'admin.send_images_view',
+                filename=filename,
+                # _external=True,
+                # _scheme=os.getenv('scheme') or 'https'
+            )) if filename else ''
 
 
 class CommentView(BaseView):

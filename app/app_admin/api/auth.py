@@ -1,22 +1,24 @@
 from flask import request
 
-from ..email_manager import (
+from app.api_limiter import limiter
+from app.app_admin.validate import (
+    RegisterValidate, UserValidate, LoginValidate, EmailCodeValidate,
+    EmailValidate, RecoveryPasswordValidate, ResetPasswordValidate)
+from app.app_admin.view_model import UserInfoView, LoginView
+from app.exception import EmailNotFound, EmailHasAdd
+from app.model.db import User
+from app.utils import generate_res
+from .blueprint import admin
+from app.email_manager import (
     send_register_success_email,
     send_recovery_pass_email, send_change_email_email, send_change_pass_warn,
     send_change_email_success_email
 )
-from app.exception import EmailNotFound, EmailHasAdd
-from app.model.db import User
-from app.app_admin.view_model import UserInfoView, LoginView
 from ..token_manager import add_token_to_blacklist, login_required, login_check_without_refresh
-from app.utils import generate_res
-from app.app_admin.validate import (
-    RegisterValidate, UserValidate, LoginValidate, EmailCodeValidate,
-    EmailValidate, RecoveryPasswordValidate, ResetPasswordValidate)
-from .blueprint import admin
 
 
 @admin.route('/sessions', methods=['POST'], security=False)
+@limiter.limit('10/hour')
 def login_view():
     form = LoginValidate().validate_api()
     user = User.search_by(**form.login)
@@ -40,12 +42,14 @@ def auth_view():
 
 # 检查是否注册
 @admin.route('/user/register', security=False)
+@limiter.limit('1/day')
 def check_register_view():
     User.check_register()
     return generate_res()
 
 
 @admin.route('/user', methods=['POST'], security=False)
+@limiter.limit('1/day')
 def register_view():
     User.check_register()
     form = RegisterValidate().validate_api()
@@ -78,6 +82,7 @@ def reset_password_view():
 
 # 找回密码
 @admin.route('/user/password/recovery', methods=['GET', 'PUT'], security=False)
+@limiter.limit('4/day')
 def recovery_password_view():
     if request.method == 'PUT':
         form = RecoveryPasswordValidate().validate_api()

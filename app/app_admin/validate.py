@@ -3,7 +3,7 @@ from wtforms.validators import DataRequired, EqualTo, Regexp, Email, Length, Any
 
 from app.config.constant import VERIFICATION_CODE_LENGTH
 from app.exception import ParameterException
-from app.model.baseDB import Visibility, CommentEnum
+from app.model.baseDB import Visibility
 from app.model.validateBase import JsonValidate
 from app.utils import time2stamp
 
@@ -79,7 +79,10 @@ class PostValidate(JsonValidate):
 
     isRichText = BooleanField('摘要是否为富文本')
     excerpt = StringField('摘要')
+    # base64
     illustration = StringField('摘录插图')
+    # BooleanField 不能加dataRequired,否则值为False会直接验证错误,显示没有这个值,真的坑.....
+    illustration_changed = BooleanField('验证插图是否改变,防止重复添加')
     excerpt_rich_text_html = StringField('摘录/富文本的html')
     excerpt_rich_text = StringField('摘录/富文本')
 

@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urljoin
+
 from flask import url_for
 
 from app.model.db import Post, Tag, Comment
@@ -36,7 +39,12 @@ class PostsView(BaseView, TableView):
 class ImageUrlView(BaseView):
     def __init__(self, filename):
         self.name = filename
-        self.url = url_for('api.send_images_view', filename=filename, _external=True)
+        self.url = urljoin(
+            os.getenv('SERVER'),
+            url_for(
+                'api.send_images_view',
+                filename=filename,
+            ))
 
 
 class TagView(BaseView):

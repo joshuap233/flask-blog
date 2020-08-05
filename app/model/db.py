@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.exception import AuthFailed, ValidateCodeException, RepeatException, UserHasRegister
 from app.myType import WTForm
-from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp
+from app.utils import generate_verification_code, get_code_exp_stamp, get_now_timestamp, save_base64_img
 from .baseDB import Base, db, Searchable, Visibility, Query
 
 tags_to_post = db.Table(
@@ -71,12 +71,14 @@ class Post(Searchable):
             elif key == 'links':
                 self._set_links(value)
             elif key == 'illustration':
-                self._set_illustration(value)
+                self._set_illustration(value, attrs.get('illustration_changed', False))
             else:
                 self._set_attr(key, value)
 
-    def _set_illustration(self, url: str):
-        self.illustration = Link(url=url)
+    def _set_illustration(self, value: str, changed: bool):
+        if changed:
+            url = save_base64_img(value)
+            self.illustration = Link(url=url)
 
     def _set_links(self, url: str):
         self.links.append(Link(url=url))
